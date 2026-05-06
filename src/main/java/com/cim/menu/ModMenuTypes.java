@@ -29,6 +29,10 @@ public class ModMenuTypes {
                 return new TurretLightMenu(windowId, inv, data);
             }));
 
+    public static final RegistryObject<MenuType<FuelTankMenu>> FUEL_TANK_MENU =
+            MENUS.register("fuel_tank_big",
+                    () -> IForgeMenuType.create((windowId, inv, data) -> new FuelTankMenu(windowId, inv, data)));
+
     public static final RegistryObject<MenuType<SmallSmelterMenu>> SMALL_SMELTER_MENU =
             MENUS.register("small_smelter_menu", () -> IForgeMenuType.create(SmallSmelterMenu::create));
 

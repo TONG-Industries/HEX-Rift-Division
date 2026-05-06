@@ -24,6 +24,7 @@ import com.cim.block.basic.industrial.rotation.MotorElectroBlock;
 import com.cim.block.basic.industrial.rotation.ShaftBlock;
 import com.cim.block.basic.necrosis.hive.HiveRootsBlock;
 
+import com.cim.multiblock.industrial.FuelTankBlock;
 import com.cim.multiblock.industrial.HeaterBlock;
 
 import com.cim.multiblock.industrial.SmelterBlock;
@@ -158,8 +159,8 @@ public class ModBlocks {
 
 
     public static final RegistryObject<Block> FUEL_TANK_BIG = registerBlock("fuel_tank_big",
-            () -> new Block(BlockBehaviour.Properties.of()
-                    .strength(1.0F, 5.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
+            () -> new FuelTankBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
     public static final RegistryObject<Block> SMALL_SMELTER = registerBlock("small_smelter",
             () -> new SmallSmelterBlock(BlockBehaviour.Properties.of()

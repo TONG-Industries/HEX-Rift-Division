@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "cim:block/fuel_tank_big"
-    }
+    "facing=north": { "model": "cim:block/fuel_tank_big" },
+    "facing=south": { "model": "cim:block/fuel_tank_big", "y": 180 },
+    "facing=west": { "model": "cim:block/fuel_tank_big", "y": 270 },
+    "facing=east": { "model": "cim:block/fuel_tank_big", "y": 90 }
   }
 }

@@ -11,6 +11,10 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
@@ -58,7 +62,17 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
         if (controllerPos != null) tag.putLong("ControllerPos", controllerPos.asLong());
         tag.putString("Role", role.getSerializedName());
     }
-
+    @NotNull
+    @Override
+    public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+        if (cap == ForgeCapabilities.FLUID_HANDLER && role == PartRole.FLUID_CONNECTOR && controllerPos != null && level != null) {
+            BlockEntity be = level.getBlockEntity(controllerPos);
+            if (be instanceof IFluidTankProvider provider) {
+                return provider.getFluidHandlerCapability().cast();
+            }
+        }
+        return super.getCapability(cap, side);
+    }
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);

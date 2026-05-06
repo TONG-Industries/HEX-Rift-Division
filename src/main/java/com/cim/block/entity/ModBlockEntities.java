@@ -11,6 +11,7 @@ import com.cim.block.entity.industrial.casting.SmallSmelterBlockEntity;
 import com.cim.block.entity.industrial.rotation.BearingBlockEntity;
 import com.cim.block.entity.industrial.rotation.MotorElectroBlockEntity;
 import com.cim.block.entity.industrial.rotation.ShaftBlockEntity;
+import com.cim.multiblock.industrial.FuelTankBlockEntity;
 import com.cim.multiblock.industrial.HeaterBlockEntity;
 
 import com.cim.block.entity.industrial.casting.CastingDescentBlockEntity;
@@ -50,6 +51,10 @@ public class ModBlockEntities {
                     BlockEntityType.Builder.of(HiveSoilBlockEntity::new, ModBlocks.HIVE_SOIL.get())
                             .build(null)
             );
+    public static final RegistryObject<BlockEntityType<FuelTankBlockEntity>> FUEL_TANK_BE =
+            BLOCK_ENTITIES.register("fuel_tank_big",
+                    () -> BlockEntityType.Builder.of(FuelTankBlockEntity::new,
+                            ModBlocks.FUEL_TANK_BIG.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<MillstoneBlockEntity>> MILLSTONE =
             BLOCK_ENTITIES.register("millstone",

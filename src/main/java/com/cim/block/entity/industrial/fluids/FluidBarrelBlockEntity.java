@@ -1,9 +1,6 @@
 package com.cim.block.entity.industrial.fluids;
 
-import com.cim.api.fluids.system.BarrelTier;
-import com.cim.api.fluids.system.BaseFluidType;
-import com.cim.api.fluids.system.FluidNetworkManager;
-import com.cim.api.fluids.system.FluidPropertyHelper;
+import com.cim.api.fluids.system.*;
 import com.cim.block.basic.ModBlocks;
 import com.cim.block.basic.industrial.fluids.FluidBarrelBlock;
 import com.cim.block.entity.ModBlockEntities;
@@ -53,7 +50,7 @@ import org.joml.Vector3f;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider {
+public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider, ITankWithMode {
 
     public static final int MAX_TRANSFER_RATE = 200;
     public static final int TOTAL_SLOTS = 5;
@@ -108,7 +105,19 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider 
         this.fluidTank = createTank(cap);
         this.networkFluidHandler = createNetworkHandler();
     }
+    @Override
+    public void changeMode() {
+        this.mode = (this.mode + 1) % 4;
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
 
+    @Override
+    public int getMode() {
+        return mode;
+    }
     private FluidTank createTank(int capacity) {
         return new FluidTank(capacity) {
             @Override protected void onContentsChanged() {
@@ -339,11 +348,6 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider 
         }
     }
 
-    public void changeMode() {
-        this.mode = (this.mode + 1) % 4;
-        setChanged();
-        if (level != null && !level.isClientSide) level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-    }
 
     @Override public void onLoad() {
         super.onLoad();

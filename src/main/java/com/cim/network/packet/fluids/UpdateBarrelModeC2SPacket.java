@@ -1,12 +1,12 @@
 package com.cim.network.packet.fluids;
 
+import com.cim.api.fluids.system.ITankWithMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
-import com.cim.block.entity.industrial.fluids.FluidBarrelBlockEntity;
 
 import java.util.function.Supplier;
 
@@ -32,8 +32,9 @@ public class UpdateBarrelModeC2SPacket {
             if (player != null) {
                 ServerLevel level = player.serverLevel();
                 BlockEntity be = level.getBlockEntity(pos);
-                if (be instanceof FluidBarrelBlockEntity barrel) {
-                    barrel.changeMode(); // Вызываем наш новый метод
+                // Универсальная проверка через интерфейс
+                if (be instanceof ITankWithMode tankWithMode) {
+                    tankWithMode.changeMode();
                 }
             }
         });

@@ -105,7 +105,14 @@ public class MultiblockPartBlock extends BaseEntityBlock {
             BlockPos ctrlPos = part.getControllerPos();
             BlockState ctrlState = level.getBlockState(ctrlPos);
             if (ctrlState.getBlock() instanceof IMultiblockController) {
-                return ctrlState.use(level, player, hand, new BlockHitResult(hit.getLocation(), hit.getDirection(), ctrlPos, hit.isInside()));
+                // Подменяем позицию в BlockHitResult на контроллер, чтобы сервер не отклонил из-за дальности
+                BlockHitResult newHit = new BlockHitResult(
+                        hit.getLocation(),
+                        hit.getDirection(),
+                        ctrlPos,
+                        hit.isInside()
+                );
+                return ctrlState.use(level, player, hand, newHit);
             }
         }
         return InteractionResult.PASS;
