@@ -21,6 +21,13 @@ public class BeamCollisionBlockEntity extends BlockEntity {
     // Данные векторов балки (сохраняем у ВСЕХ блоков для вычисления коллизии)
     private Vec3 startPos = null;
     private Vec3 endPos = null;
+    private int[] segmentsToRender = new int[0];
+
+    // Model Properties для DynamicBakedModel
+    public static final net.minecraftforge.client.model.data.ModelProperty<Vec3> START_POS = new net.minecraftforge.client.model.data.ModelProperty<>();
+    public static final net.minecraftforge.client.model.data.ModelProperty<Vec3> END_POS = new net.minecraftforge.client.model.data.ModelProperty<>();
+    public static final net.minecraftforge.client.model.data.ModelProperty<int[]> SEGMENTS = new net.minecraftforge.client.model.data.ModelProperty<>();
+    public static final net.minecraftforge.client.model.data.ModelProperty<BlockPos> MY_POS = new net.minecraftforge.client.model.data.ModelProperty<>();
 
     // Данные для обычных блоков коллизии
     private BlockPos masterPos = null;
@@ -30,10 +37,11 @@ public class BeamCollisionBlockEntity extends BlockEntity {
         super(ModBlockEntities.BEAM_COLLISION_BE.get(), pPos, pBlockState);
     }
 
-    public void setMasterData(Vec3 start, Vec3 end) {
+    public void setMasterData(Vec3 start, Vec3 end, int[] segments) {
         this.isMaster = true;
         this.startPos = start;
         this.endPos = end;
+        this.segmentsToRender = segments;
         this.setChanged();
         // Синхронизируем с клиентом для рендера
         if (this.level != null) {
@@ -41,11 +49,12 @@ public class BeamCollisionBlockEntity extends BlockEntity {
         }
     }
 
-    public void setSlaveData(BlockPos masterPos, Vec3 start, Vec3 end) {
+    public void setSlaveData(BlockPos masterPos, Vec3 start, Vec3 end, int[] segments) {
         this.isMaster = false;
         this.masterPos = masterPos;
         this.startPos = start;
         this.endPos = end;
+        this.segmentsToRender = segments;
         this.setChanged();
         // Рабам тоже шлем апдейт на клиент, чтобы у них сгенерировалась коллизия
         if (this.level != null) {
@@ -74,6 +83,10 @@ public class BeamCollisionBlockEntity extends BlockEntity {
             pTag.putDouble("EndZ", endPos.z);
         }
 
+        if (segmentsToRender != null && segmentsToRender.length > 0) {
+            pTag.putIntArray("Segments", segmentsToRender);
+        }
+
         if (!isMaster && masterPos != null) {
             pTag.put("MasterPos", NbtUtils.writeBlockPos(masterPos));
         }
@@ -87,6 +100,10 @@ public class BeamCollisionBlockEntity extends BlockEntity {
         if (pTag.contains("StartX")) {
             this.startPos = new Vec3(pTag.getDouble("StartX"), pTag.getDouble("StartY"), pTag.getDouble("StartZ"));
             this.endPos = new Vec3(pTag.getDouble("EndX"), pTag.getDouble("EndY"), pTag.getDouble("EndZ"));
+        }
+
+        if (pTag.contains("Segments")) {
+            this.segmentsToRender = pTag.getIntArray("Segments");
         }
 
         if (!isMaster) {
@@ -199,9 +216,17 @@ public class BeamCollisionBlockEntity extends BlockEntity {
             if (level.getBlockState(posOnLine).is(ModBlocks.BEAM_COLLISION.get())) {
                 level.removeBlock(posOnLine, false);
             }
-        }
-
-        // Удаляем самого мастера
+        }        // Удаляем самого мастера
         level.removeBlock(this.getBlockPos(), false);
+    }
+
+    @Override
+    public net.minecraftforge.client.model.data.ModelData getModelData() {
+        return net.minecraftforge.client.model.data.ModelData.builder()
+            .with(START_POS, startPos)
+            .with(END_POS, endPos)
+            .with(SEGMENTS, segmentsToRender)
+            .with(MY_POS, this.getBlockPos())
+            .build();
     }
 }

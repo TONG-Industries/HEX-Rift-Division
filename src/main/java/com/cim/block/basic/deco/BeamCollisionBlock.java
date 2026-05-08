@@ -39,7 +39,7 @@ public class BeamCollisionBlock extends BaseEntityBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState pState) {
-        return RenderShape.INVISIBLE; // Сам куб прозрачный
+        return RenderShape.MODEL;
     }
 
     @Nullable
