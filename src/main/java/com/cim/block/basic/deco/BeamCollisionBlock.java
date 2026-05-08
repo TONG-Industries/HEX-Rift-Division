@@ -23,6 +23,17 @@ public class BeamCollisionBlock extends BaseEntityBlock {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        if (level.getBlockEntity(pos) instanceof BeamCollisionBlockEntity beam) {
+            return beam.getCollisionShape();
+        }
+        return SHAPE;
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        if (level.getBlockEntity(pos) instanceof BeamCollisionBlockEntity beam) {
+            return beam.getCollisionShape();
+        }
         return SHAPE;
     }
 

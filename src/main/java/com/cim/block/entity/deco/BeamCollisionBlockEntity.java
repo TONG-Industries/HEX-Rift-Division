@@ -18,7 +18,7 @@ public class BeamCollisionBlockEntity extends BlockEntity {
 
     public boolean isDestroyed = false;
 
-    // Данные для "Мастера" (рендерера)
+    // Данные векторов балки (сохраняем у ВСЕХ блоков для вычисления коллизии)
     private Vec3 startPos = null;
     private Vec3 endPos = null;
 
@@ -41,10 +41,16 @@ public class BeamCollisionBlockEntity extends BlockEntity {
         }
     }
 
-    public void setSlaveData(BlockPos masterPos) {
+    public void setSlaveData(BlockPos masterPos, Vec3 start, Vec3 end) {
         this.isMaster = false;
         this.masterPos = masterPos;
+        this.startPos = start;
+        this.endPos = end;
         this.setChanged();
+        // Рабам тоже шлем апдейт на клиент, чтобы у них сгенерировалась коллизия
+        if (this.level != null) {
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+        }
     }
 
     public boolean isMaster() { return isMaster; }
@@ -59,14 +65,16 @@ public class BeamCollisionBlockEntity extends BlockEntity {
         super.saveAdditional(pTag);
         pTag.putBoolean("IsMaster", isMaster);
 
-        if (isMaster && startPos != null && endPos != null) {
+        if (startPos != null && endPos != null) {
             pTag.putDouble("StartX", startPos.x);
             pTag.putDouble("StartY", startPos.y);
             pTag.putDouble("StartZ", startPos.z);
             pTag.putDouble("EndX", endPos.x);
             pTag.putDouble("EndY", endPos.y);
             pTag.putDouble("EndZ", endPos.z);
-        } else if (!isMaster && masterPos != null) {
+        }
+
+        if (!isMaster && masterPos != null) {
             pTag.put("MasterPos", NbtUtils.writeBlockPos(masterPos));
         }
     }
@@ -76,12 +84,12 @@ public class BeamCollisionBlockEntity extends BlockEntity {
         super.load(pTag);
         this.isMaster = pTag.getBoolean("IsMaster");
 
-        if (isMaster) {
-            if (pTag.contains("StartX")) {
-                this.startPos = new Vec3(pTag.getDouble("StartX"), pTag.getDouble("StartY"), pTag.getDouble("StartZ"));
-                this.endPos = new Vec3(pTag.getDouble("EndX"), pTag.getDouble("EndY"), pTag.getDouble("EndZ"));
-            }
-        } else {
+        if (pTag.contains("StartX")) {
+            this.startPos = new Vec3(pTag.getDouble("StartX"), pTag.getDouble("StartY"), pTag.getDouble("StartZ"));
+            this.endPos = new Vec3(pTag.getDouble("EndX"), pTag.getDouble("EndY"), pTag.getDouble("EndZ"));
+        }
+
+        if (!isMaster) {
             if (pTag.contains("MasterPos")) {
                 this.masterPos = NbtUtils.readBlockPos(pTag.getCompound("MasterPos"));
             }
@@ -102,7 +110,56 @@ public class BeamCollisionBlockEntity extends BlockEntity {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
-    // --- КОРОБКА РЕНДЕРА ---
+    // --- КОРОБКА РЕНДЕРА И КОЛЛИЗИИ ---
+
+    private net.minecraft.world.phys.shapes.VoxelShape cachedShape = null;
+
+    public net.minecraft.world.phys.shapes.VoxelShape getCollisionShape() {
+        if (cachedShape == null) {
+            cachedShape = computeShape();
+        }
+        return cachedShape;
+    }
+
+    private net.minecraft.world.phys.shapes.VoxelShape computeShape() {
+        if (startPos == null || endPos == null) {
+            return net.minecraft.world.level.block.Block.box(5.0D, 5.0D, 5.0D, 11.0D, 11.0D, 11.0D);
+        }
+
+        net.minecraft.world.phys.shapes.VoxelShape shape = net.minecraft.world.phys.shapes.Shapes.empty();
+        Vec3 direction = endPos.subtract(startPos).normalize();
+        double distance = startPos.distanceTo(endPos);
+        double step = 0.125; // 8 шагов на блок для плавности
+        int steps = (int) (distance / step);
+
+        double radius = 3.0 / 16.0; // Радиус балки (примерно 6 пикселей)
+
+        BlockPos myPos = this.getBlockPos();
+        AABB myBox = new AABB(myPos);
+
+        for (int i = 0; i <= steps; i++) {
+            Vec3 point = startPos.add(direction.scale(i * step));
+            AABB pointBox = new AABB(point.x - radius, point.y - radius, point.z - radius,
+                                     point.x + radius, point.y + radius, point.z + radius);
+
+            if (pointBox.intersects(myBox)) {
+                // Переводим в локальные координаты (0..1)
+                AABB localBox = new AABB(
+                    pointBox.minX - myPos.getX(), pointBox.minY - myPos.getY(), pointBox.minZ - myPos.getZ(),
+                    pointBox.maxX - myPos.getX(), pointBox.maxY - myPos.getY(), pointBox.maxZ - myPos.getZ()
+                );
+                // Ограничиваем рамками 0..1 чтобы хитбоксы не вылезали за пределы этого блока
+                localBox = localBox.intersect(new AABB(0, 0, 0, 1, 1, 1));
+                
+                shape = net.minecraft.world.phys.shapes.Shapes.or(shape, net.minecraft.world.phys.shapes.Shapes.create(localBox));
+            }
+        }
+
+        if (shape.isEmpty()) {
+            return net.minecraft.world.level.block.Block.box(5.0D, 5.0D, 5.0D, 11.0D, 11.0D, 11.0D);
+        }
+        return shape.optimize();
+    }
 
     @Override
     public AABB getRenderBoundingBox() {

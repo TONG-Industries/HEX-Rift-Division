@@ -82,7 +82,7 @@ public class BeamPlacerItem extends Item {
                             masterPos = posOnLine;
                         } else {
                             // Остальные блоки просто знают, кто их Мастер (чтобы при поломке разрушить всю цепь)
-                            collisionBE.setSlaveData(masterPos);
+                            collisionBE.setSlaveData(masterPos, startVec, endVec);
                         }
                     }
                 }

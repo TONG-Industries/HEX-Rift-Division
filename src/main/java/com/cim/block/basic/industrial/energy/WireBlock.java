@@ -42,23 +42,19 @@ public class WireBlock extends BaseEntityBlock {
     public static final BooleanProperty UP = BlockStateProperties.UP;
     public static final BooleanProperty DOWN = BlockStateProperties.DOWN;
 
-    public static final Map<Direction, BooleanProperty> PROPERTIES_MAP =
-            ImmutableMap.of(
-                    Direction.NORTH, NORTH, Direction.SOUTH, SOUTH,
-                    Direction.WEST, WEST, Direction.EAST, EAST,
-                    Direction.UP, UP, Direction.DOWN, DOWN
-            );
+    public static final Map<Direction, BooleanProperty> PROPERTIES_MAP = ImmutableMap.of(
+            Direction.NORTH, NORTH, Direction.SOUTH, SOUTH,
+            Direction.WEST, WEST, Direction.EAST, EAST,
+            Direction.UP, UP, Direction.DOWN, DOWN);
 
     private static final VoxelShape CORE_SHAPE = Block.box(5.5, 5.5, 5.5, 10.5, 10.5, 10.5);
-    private static final Map<Direction, VoxelShape> ARM_SHAPES =
-            ImmutableMap.of(
-                    Direction.NORTH, Block.box(5.5, 5.5, 0, 10.5, 10.5, 5.5),
-                    Direction.SOUTH, Block.box(5.5, 5.5, 10.5, 10.5, 10.5, 16),
-                    Direction.WEST, Block.box(0, 5.5, 5.5, 5.5, 10.5, 10.5),
-                    Direction.EAST, Block.box(10.5, 5.5, 5.5, 16, 10.5, 10.5),
-                    Direction.UP, Block.box(5.5, 10.5, 5.5, 10.5, 16, 10.5),
-                    Direction.DOWN, Block.box(5.5, 0, 5.5, 10.5, 5.5, 10.5)
-            );
+    private static final Map<Direction, VoxelShape> ARM_SHAPES = ImmutableMap.of(
+            Direction.NORTH, Block.box(5.5, 5.5, 0, 10.5, 10.5, 5.5),
+            Direction.SOUTH, Block.box(5.5, 5.5, 10.5, 10.5, 10.5, 16),
+            Direction.WEST, Block.box(0, 5.5, 5.5, 5.5, 10.5, 10.5),
+            Direction.EAST, Block.box(10.5, 5.5, 5.5, 16, 10.5, 10.5),
+            Direction.UP, Block.box(5.5, 10.5, 5.5, 10.5, 16, 10.5),
+            Direction.DOWN, Block.box(5.5, 0, 5.5, 10.5, 5.5, 10.5));
 
     public WireBlock(Properties properties) {
         super(properties);
@@ -86,18 +82,21 @@ public class WireBlock extends BaseEntityBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        // [🔥 БЫЛО: this.getConnectionState(context.getLevel(), context.getClickedPos())]
-        return this.getConnectionState(context.getLevel(), context.getClickedPos()); // [ОСТАВЬ КАК ЕСТЬ, мы меняем getConnectionState]
+        // [🔥 БЫЛО: this.getConnectionState(context.getLevel(),
+        // context.getClickedPos())]
+        return this.getConnectionState(context.getLevel(), context.getClickedPos()); // [ОСТАВЬ КАК ЕСТЬ, мы меняем
+                                                                                     // getConnectionState]
     }
 
     @Override
     public BlockState updateShape(BlockState state, Direction facing, BlockState facingState,
-                                  LevelAccessor level, BlockPos currentPos, BlockPos facingPos) {
+            LevelAccessor level, BlockPos currentPos, BlockPos facingPos) {
         BooleanProperty property = getProperty(facing);
         boolean canConnect = canVisuallyConnectTo(level, facingPos, facing.getOpposite(), facingState);
 
         // [🔥 УМНАЯ РЕАКЦИЯ НА СОСЕДЕЙ]
-        // Если визуально мы соединились (например, рядом только что поставили генератор),
+        // Если визуально мы соединились (например, рядом только что поставили
+        // генератор),
         // заставляем сеть немедленно проверить этот новый блок!
         if (!level.isClientSide() && !state.getValue(property) && canConnect) {
             EnergyNetworkManager.get((ServerLevel) level).addNode(facingPos);
@@ -107,20 +106,30 @@ public class WireBlock extends BaseEntityBlock {
         return state.setValue(property, canConnect);
     }
 
-
-
     private BlockState getConnectionState(LevelAccessor level, BlockPos pos) {
         // [🔥 ИЗМЕНЕНО: Мы также получаем и передаем BlockState соседа]
         return this.defaultBlockState()
-                .setValue(DOWN,  canVisuallyConnectTo(level, pos.relative(Direction.DOWN),  Direction.UP,    level.getBlockState(pos.relative(Direction.DOWN))))
-                .setValue(UP,    canVisuallyConnectTo(level, pos.relative(Direction.UP),    Direction.DOWN,  level.getBlockState(pos.relative(Direction.UP))))
-                .setValue(NORTH, canVisuallyConnectTo(level, pos.relative(Direction.NORTH), Direction.SOUTH, level.getBlockState(pos.relative(Direction.NORTH))))
-                .setValue(SOUTH, canVisuallyConnectTo(level, pos.relative(Direction.SOUTH), Direction.NORTH, level.getBlockState(pos.relative(Direction.SOUTH))))
-                .setValue(WEST,  canVisuallyConnectTo(level, pos.relative(Direction.WEST),  Direction.EAST,  level.getBlockState(pos.relative(Direction.WEST))))
-                .setValue(EAST,  canVisuallyConnectTo(level, pos.relative(Direction.EAST),  Direction.WEST,  level.getBlockState(pos.relative(Direction.EAST))));
+                .setValue(DOWN,
+                        canVisuallyConnectTo(level, pos.relative(Direction.DOWN), Direction.UP,
+                                level.getBlockState(pos.relative(Direction.DOWN))))
+                .setValue(UP,
+                        canVisuallyConnectTo(level, pos.relative(Direction.UP), Direction.DOWN,
+                                level.getBlockState(pos.relative(Direction.UP))))
+                .setValue(NORTH,
+                        canVisuallyConnectTo(level, pos.relative(Direction.NORTH), Direction.SOUTH,
+                                level.getBlockState(pos.relative(Direction.NORTH))))
+                .setValue(SOUTH,
+                        canVisuallyConnectTo(level, pos.relative(Direction.SOUTH), Direction.NORTH,
+                                level.getBlockState(pos.relative(Direction.SOUTH))))
+                .setValue(WEST,
+                        canVisuallyConnectTo(level, pos.relative(Direction.WEST), Direction.EAST,
+                                level.getBlockState(pos.relative(Direction.WEST))))
+                .setValue(EAST, canVisuallyConnectTo(level, pos.relative(Direction.EAST), Direction.WEST,
+                        level.getBlockState(pos.relative(Direction.EAST))));
     }
 
-    private boolean canVisuallyConnectTo(LevelAccessor world, BlockPos neighborPos, Direction sideFromNeighbor, BlockState neighborState) {
+    private boolean canVisuallyConnectTo(LevelAccessor world, BlockPos neighborPos, Direction sideFromNeighbor,
+            BlockState neighborState) {
 
         // 1. К другим проводам?
         if (neighborState.is(this)) {
@@ -138,7 +147,6 @@ public class WireBlock extends BaseEntityBlock {
             }
             return sideFromNeighbor != facing && sideFromNeighbor != facing.getOpposite();
         }
-
 
         // 3.
         BlockEntity be = world.getBlockEntity(neighborPos);
@@ -158,7 +166,8 @@ public class WireBlock extends BaseEntityBlock {
             return true;
         }
 
-        return be.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ENERGY, sideFromNeighbor).isPresent();
+        return be.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ENERGY, sideFromNeighbor)
+                .isPresent();
     }
 
     public static BooleanProperty getProperty(Direction direction) {
@@ -171,7 +180,6 @@ public class WireBlock extends BaseEntityBlock {
             case DOWN -> DOWN;
         };
     }
-
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
