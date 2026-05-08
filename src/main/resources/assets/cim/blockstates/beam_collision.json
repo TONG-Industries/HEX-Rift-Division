@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "cim:block/beam_collision" }
+  }
+}

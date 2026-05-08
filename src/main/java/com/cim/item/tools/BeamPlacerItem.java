@@ -58,32 +58,66 @@ public class BeamPlacerItem extends Item {
 
             // --- АЛГОРИТМ ПРОКЛАДКИ ЛУЧА ---
             Vec3 direction = endVec.subtract(startVec).normalize();
-            double stepSize = 0.5; // Шагаем по полблока, чтобы не пропустить ни один куб
+            double stepSize = 0.5;
             int steps = (int) (distance / stepSize);
 
             boolean masterPlaced = false;
             BlockPos masterPos = null;
 
-            // Начинаем с i = 1, чтобы не заменить сам Блок А (откуда начинаем)
+            java.util.List<BlockPos> placedBlocks = new java.util.ArrayList<>();
+
             for (int i = 1; i < steps; i++) {
                 Vec3 stepVec = startVec.add(direction.scale(i * stepSize));
                 BlockPos posOnLine = BlockPos.containing(stepVec);
 
-                // Если по этим координатам воздух или вода (можно заменить)
-                if (level.getBlockState(posOnLine).canBeReplaced()) {
-                    level.setBlock(posOnLine, ModBlocks.BEAM_COLLISION.get().defaultBlockState(), 3);
+                if (level.getBlockState(posOnLine).canBeReplaced() || level.getBlockState(posOnLine).is(ModBlocks.BEAM_COLLISION.get())) {
+                    if (level.getBlockState(posOnLine).canBeReplaced()) {
+                        level.setBlock(posOnLine, ModBlocks.BEAM_COLLISION.get().defaultBlockState(), 3);
+                    }
+                    if (!placedBlocks.contains(posOnLine)) {
+                        placedBlocks.add(posOnLine);
+                    }
+                }
+            }
 
-                    BlockEntity be = level.getBlockEntity(posOnLine);
-                    if (be instanceof BeamCollisionBlockEntity collisionBE) {
-                        if (!masterPlaced) {
-                            // Самый первый пустой блок становится "Мастером". Он будет рендерить балку!
-                            collisionBE.setMasterData(startVec, endVec);
-                            masterPlaced = true;
-                            masterPos = posOnLine;
-                        } else {
-                            // Остальные блоки просто знают, кто их Мастер (чтобы при поломке разрушить всю цепь)
-                            collisionBE.setSlaveData(masterPos, startVec, endVec);
-                        }
+            // Распределяем сегменты рендера по блокам
+            int fullBlocks = (int) distance;
+            float remainder = (float) (distance - fullBlocks);
+            java.util.Map<BlockPos, java.util.List<Integer>> segmentMap = new java.util.HashMap<>();
+            
+            for (int i = 0; i <= fullBlocks; i++) {
+                if (i == fullBlocks && remainder <= 0.001f) break;
+                double segLength = (i == fullBlocks) ? remainder : 1.0;
+                Vec3 segCenter = startVec.add(direction.scale(i + segLength / 2.0));
+                
+                BlockPos closest = null;
+                double minDist = Double.MAX_VALUE;
+                for (BlockPos p : placedBlocks) {
+                    double dist = Vec3.atCenterOf(p).distanceTo(segCenter);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closest = p;
+                    }
+                }
+                
+                if (closest != null) {
+                    segmentMap.computeIfAbsent(closest, k -> new java.util.ArrayList<>()).add(i);
+                }
+            }
+
+            // Назначаем данные блокам
+            for (BlockPos posOnLine : placedBlocks) {
+                BlockEntity be = level.getBlockEntity(posOnLine);
+                if (be instanceof BeamCollisionBlockEntity collisionBE) {
+                    java.util.List<Integer> segs = segmentMap.getOrDefault(posOnLine, new java.util.ArrayList<>());
+                    int[] segArray = segs.stream().mapToInt(Integer::intValue).toArray();
+
+                    if (!masterPlaced) {
+                        collisionBE.setMasterData(startVec, endVec, segArray);
+                        masterPlaced = true;
+                        masterPos = posOnLine;
+                    } else {
+                        collisionBE.setSlaveData(masterPos, startVec, endVec, segArray);
                     }
                 }
             }

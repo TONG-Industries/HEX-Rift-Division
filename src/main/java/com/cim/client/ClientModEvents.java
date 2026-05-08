@@ -111,7 +111,6 @@ public class ClientModEvents {
         BlockEntityRenderers.register(ModBlockEntities.CONNECTOR_BE.get(), ConnectorRenderer::new);
         event.registerEntityRenderer(ModEntities.GRENADIER_ZOMBIE.get(), ZombieRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CASTING_DESCENT.get(), CastingDescentRenderer::new);
-        event.registerBlockEntityRenderer(ModBlockEntities.BEAM_COLLISION_BE.get(), BeamCollisionRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CASTING_POT.get(), com.cim.client.renderer.CastingPotRenderer::new);
 
         ModEntities.GRENADE_NUC_PROJECTILE.ifPresent(entityType ->
@@ -283,6 +282,16 @@ public class ClientModEvents {
                     // Оборачиваем оригинальную модель в наш хардкорный движок
                     event.getModels().put(location, new PipeBakedModel(original));
                 }
+            }
+        }
+
+        // Подмена модели для невидимых блоков коллизии балок
+        ModelResourceLocation beamBaseLocation = BlockModelShaper.stateToModelLocation(ModBlocks.BEAM_BLOCK.get().defaultBlockState());
+        BakedModel beamBaseModel = event.getModels().get(beamBaseLocation);
+        if (beamBaseModel != null) {
+            for (BlockState state : ModBlocks.BEAM_COLLISION.get().getStateDefinition().getPossibleStates()) {
+                ModelResourceLocation location = BlockModelShaper.stateToModelLocation(state);
+                event.getModels().put(location, new DynamicBeamModel(beamBaseModel));
             }
         }
     }
