@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import net.minecraftforge.common.util.LazyOptional;
 
 public class EnergyNetworkManager extends SavedData {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -90,7 +91,12 @@ public class EnergyNetworkManager extends SavedData {
                 newNetwork.addNode(currentNode);
 
                 for (Direction dir : Direction.values()) {
-                    EnergyNode neighbor = allNodes.get(currentNode.getPos().relative(dir).asLong());
+                    BlockPos neighborPos = currentNode.getPos().relative(dir);
+                    if (!canConnectElectrically(currentNode.getPos(), neighborPos, dir)) {
+                        continue;
+                    }
+
+                    EnergyNode neighbor = allNodes.get(neighborPos.asLong());
 
                     if (neighbor != null && !processedNodes.contains(neighbor)) {
                         processedNodes.add(neighbor);
@@ -179,6 +185,10 @@ public class EnergyNetworkManager extends SavedData {
         for (Direction dir : Direction.values()) {
             BlockPos neighborPos = pos.relative(dir);
             long neighborLong = neighborPos.asLong();
+
+            if (!canConnectElectrically(pos, neighborPos, dir)) {
+                continue;
+            }
 
             EnergyNode neighbor = allNodes.get(neighborLong);
 
@@ -304,6 +314,48 @@ public class EnergyNetworkManager extends SavedData {
     }
 
     // ==================== УТИЛИТЫ ====================
+
+    public boolean canConnectElectrically(BlockPos pos1, BlockPos pos2, Direction dir) {
+        if (!level.isLoaded(pos1) || !level.isLoaded(pos2)) {
+            // Если чанк выгружен, мы не можем прочитать BlockEntity. 
+            // Разрешаем соединение условно, чтобы не разорвать выгруженную сеть.
+            return true;
+        }
+
+        BlockEntity be1 = level.getBlockEntity(pos1);
+        BlockEntity be2 = level.getBlockEntity(pos2);
+
+        if (be1 == null || be2 == null) return false;
+
+        boolean can1 = checkConnection(be1, dir);
+        boolean can2 = checkConnection(be2, dir.getOpposite());
+
+        return can1 && can2;
+    }
+
+    private boolean checkConnection(BlockEntity be, Direction side) {
+        // Проверяем Connector
+        LazyOptional<IEnergyConnector> connCap = be.getCapability(ModCapabilities.ENERGY_CONNECTOR, side);
+        if (connCap.isPresent()) {
+            return connCap.resolve().map(c -> c.canConnectEnergy(side)).orElse(false);
+        }
+
+        // Проверяем Provider
+        LazyOptional<IEnergyProvider> provCap = be.getCapability(ModCapabilities.ENERGY_PROVIDER, side);
+        if (provCap.isPresent()) {
+            return provCap.resolve().map(c -> c.canConnectEnergy(side)).orElse(false);
+        }
+
+        // Проверяем Receiver
+        LazyOptional<IEnergyReceiver> recCap = be.getCapability(ModCapabilities.ENERGY_RECEIVER, side);
+        if (recCap.isPresent()) {
+            return recCap.resolve().map(c -> c.canConnectEnergy(side)).orElse(false);
+        }
+
+        // Если блока нет в нашей системе энергии, возможно это ванильный/другой мод Forge Energy?
+        // Наш менеджер работает только с нашей энергией, поэтому возвращаем false.
+        return false;
+    }
 
     public boolean hasNode(BlockPos pos) { return allNodes.containsKey(pos.asLong()); }
     public EnergyNode getNode(BlockPos pos) { return allNodes.get(pos.asLong()); }

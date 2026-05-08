@@ -20,6 +20,7 @@ import javax.annotation.Nullable;
 public class SwitchBlockEntity extends BlockEntity implements IEnergyConnector {
 
     private final LazyOptional<IEnergyConnector> hbmConnector = LazyOptional.of(() -> this);
+    public boolean isTriggered = false;
 
     public SwitchBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.SWITCH_BE.get(), pos, state);
@@ -81,5 +82,17 @@ public class SwitchBlockEntity extends BlockEntity implements IEnergyConnector {
             EnergyNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
         }
         hbmConnector.invalidate();
+    }
+
+    @Override
+    protected void saveAdditional(net.minecraft.nbt.CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.putBoolean("isTriggered", isTriggered);
+    }
+
+    @Override
+    public void load(net.minecraft.nbt.CompoundTag tag) {
+        super.load(tag);
+        isTriggered = tag.getBoolean("isTriggered");
     }
 }

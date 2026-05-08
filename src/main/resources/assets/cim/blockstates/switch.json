@@ -1,49 +1,49 @@
 {
   "variants": {
     "facing=north,powered=false": {
-      "model": "cim:block/switch_off"
-    },
-    "facing=north,powered=true": {
       "model": "cim:block/switch_on"
     },
+    "facing=north,powered=true": {
+      "model": "cim:block/switch_off"
+    },
     "facing=east,powered=false": {
-      "model": "cim:block/switch_off",
+      "model": "cim:block/switch_on",
       "y": 90
     },
     "facing=east,powered=true": {
-      "model": "cim:block/switch_on",
+      "model": "cim:block/switch_off",
       "y": 90
     },
     "facing=south,powered=false": {
-      "model": "cim:block/switch_off",
+      "model": "cim:block/switch_on",
       "y": 180
     },
     "facing=south,powered=true": {
-      "model": "cim:block/switch_on",
+      "model": "cim:block/switch_off",
       "y": 180
     },
     "facing=west,powered=false": {
-      "model": "cim:block/switch_off",
+      "model": "cim:block/switch_on",
       "y": 270
     },
     "facing=west,powered=true": {
-      "model": "cim:block/switch_on",
+      "model": "cim:block/switch_off",
       "y": 270
     },
     "facing=up,powered=false": {
-      "model": "cim:block/switch_off",
+      "model": "cim:block/switch_on",
       "x": 270
     },
     "facing=up,powered=true": {
-      "model": "cim:block/switch_on",
+      "model": "cim:block/switch_off",
       "x": 270
     },
     "facing=down,powered=false": {
-      "model": "cim:block/switch_off",
+      "model": "cim:block/switch_on",
       "x": 90
     },
     "facing=down,powered=true": {
-      "model": "cim:block/switch_on",
+      "model": "cim:block/switch_off",
       "x": 90
     }
   }

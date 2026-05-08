@@ -1,6 +1,5 @@
 package com.cim.block.entity.industrial.energy;
 
-
 import com.cim.api.energy.*;
 import com.cim.item.energy.EnergyCellItem;
 import net.minecraft.core.BlockPos;
@@ -26,6 +25,8 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
+
+import com.cim.block.basic.industrial.energy.MachineBatteryBlock;
 import com.cim.block.entity.ModBlockEntities;
 import com.cim.capability.ModCapabilities;
 import com.cim.menu.MachineBatteryMenu;
@@ -37,19 +38,21 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import javax.annotation.Nullable;
 
 /**
- * Энергохранилище-каркас с настраиваемыми режимами работы и слотами для энергоячеек.
- * Базовые параметры каркаса = 0. Все характеристики зависят от вставленных ячеек.
+ * Энергохранилище-каркас с настраиваемыми режимами работы и слотами для
+ * энергоячеек.
+ * Базовые параметры каркаса = 0. Все характеристики зависят от вставленных
+ * ячеек.
  *
  * 16 слотов для батареек:
- *   Слоты 0-3: CHARGE INPUT (незаряженные предметы кладут сюда)
- *   Слоты 4-7: CHARGE OUTPUT (заряженные перемещаются сюда)
- *   Слоты 8-11: DISCHARGE INPUT (заряженные предметы для разрядки)
- *   Слоты 12-15: DISCHARGE OUTPUT (разряженные перемещаются сюда)
+ * Слоты 0-3: CHARGE INPUT (незаряженные предметы кладут сюда)
+ * Слоты 4-7: CHARGE OUTPUT (заряженные перемещаются сюда)
+ * Слоты 8-11: DISCHARGE INPUT (заряженные предметы для разрядки)
+ * Слоты 12-15: DISCHARGE OUTPUT (разряженные перемещаются сюда)
  *
  * Режимы: 0 = BOTH, 1 = INPUT, 2 = OUTPUT, 3 = DISABLED
  */
-public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvider, IEnergyProvider, IEnergyReceiver, GeoBlockEntity
-{
+public class MachineBatteryBlockEntity extends BlockEntity
+        implements MenuProvider, IEnergyProvider, IEnergyReceiver, GeoBlockEntity {
 
     // ====================== КАРКАС: базовые параметры = 0 ======================
     private long capacity = 0;
@@ -66,13 +69,15 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
     private Priority priority = Priority.LOW;
     private long energyDelta = 0;
 
-    // ====================== СЛОТЫ ДЛЯ ЭНЕРГОЯЧЕЕК (4 штуки, 2x2) ======================
+    // ====================== СЛОТЫ ДЛЯ ЭНЕРГОЯЧЕЕК (4 штуки, 2x2)
+    // ======================
     public static final int CELL_SLOT_COUNT = 4;
     private final ItemStack[] cellSlots = new ItemStack[CELL_SLOT_COUNT];
     private final boolean[] cellEmpty = new boolean[CELL_SLOT_COUNT];
 
     // ====================== СЛОТЫ ДЛЯ БАТАРЕЕК (16 слотов) ======================
-    // 0-3: charge input, 4-7: charge output, 8-11: discharge input, 12-15: discharge output
+    // 0-3: charge input, 4-7: charge output, 8-11: discharge input, 12-15:
+    // discharge output
     public static final int TOTAL_ITEM_SLOTS = 16;
     public static final int CHARGE_INPUT_START = 0;
     public static final int CHARGE_INPUT_END = 4;
@@ -156,11 +161,16 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
     // ====================== МЕТОДЫ ЭНЕРГОЯЧЕЕК ======================
 
     public boolean insertCell(int slot, ItemStack stack) {
-        if (slot < 0 || slot >= CELL_SLOT_COUNT) return false;
-        if (!cellEmpty[slot]) return false;
-        if (stack.isEmpty()) return false;
-        if (!(stack.getItem() instanceof EnergyCellItem cell)) return false;
-        if (!cell.isValidCell(stack)) return false;
+        if (slot < 0 || slot >= CELL_SLOT_COUNT)
+            return false;
+        if (!cellEmpty[slot])
+            return false;
+        if (stack.isEmpty())
+            return false;
+        if (!(stack.getItem() instanceof EnergyCellItem cell))
+            return false;
+        if (!cell.isValidCell(stack))
+            return false;
 
         ItemStack cellStack = stack.split(1);
 
@@ -187,8 +197,10 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
     }
 
     public ItemStack extractCell(int slot) {
-        if (slot < 0 || slot >= CELL_SLOT_COUNT) return ItemStack.EMPTY;
-        if (cellEmpty[slot]) return ItemStack.EMPTY;
+        if (slot < 0 || slot >= CELL_SLOT_COUNT)
+            return ItemStack.EMPTY;
+        if (cellEmpty[slot])
+            return ItemStack.EMPTY;
 
         ItemStack extracted = cellSlots[slot].copy();
 
@@ -240,19 +252,22 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
     }
 
     public boolean isCellEmpty(int slot) {
-        if (slot < 0 || slot >= CELL_SLOT_COUNT) return true;
+        if (slot < 0 || slot >= CELL_SLOT_COUNT)
+            return true;
         return cellEmpty[slot];
     }
 
     public ItemStack getCellStack(int slot) {
-        if (slot < 0 || slot >= CELL_SLOT_COUNT) return ItemStack.EMPTY;
+        if (slot < 0 || slot >= CELL_SLOT_COUNT)
+            return ItemStack.EMPTY;
         return cellSlots[slot];
     }
 
     public int getFilledCellCount() {
         int count = 0;
         for (int i = 0; i < CELL_SLOT_COUNT; i++) {
-            if (!cellEmpty[i]) count++;
+            if (!cellEmpty[i])
+                count++;
         }
         return count;
     }
@@ -278,17 +293,23 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
-        if (hbmConnector.isPresent()) hbmConnector.invalidate();
-        if (lazyItemHandler.isPresent()) lazyItemHandler.invalidate();
-        if (hbmProvider.isPresent()) hbmProvider.invalidate();
-        if (hbmReceiver.isPresent()) hbmReceiver.invalidate();
-        if (feCapabilityProvider != null) feCapabilityProvider.invalidate();
+        if (hbmConnector.isPresent())
+            hbmConnector.invalidate();
+        if (lazyItemHandler.isPresent())
+            lazyItemHandler.invalidate();
+        if (hbmProvider.isPresent())
+            hbmProvider.invalidate();
+        if (hbmReceiver.isPresent())
+            hbmReceiver.invalidate();
+        if (feCapabilityProvider != null)
+            feCapabilityProvider.invalidate();
     }
 
     // ====================== TICK ======================
 
     public static void tick(Level level, BlockPos pos, BlockState state, MachineBatteryBlockEntity be) {
-        if (level.isClientSide) return;
+        if (level.isClientSide)
+            return;
 
         EnergyNetworkManager manager = EnergyNetworkManager.get((ServerLevel) level);
         if (!manager.hasNode(pos)) {
@@ -322,7 +343,8 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
         }
         if (needRecalc) {
             recalculateCellStats();
-            if (energy > capacity) energy = capacity;
+            if (energy > capacity)
+                energy = capacity;
             setChanged();
         }
     }
@@ -336,10 +358,12 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
     private void chargeItems() {
         for (int i = CHARGE_INPUT_START; i < CHARGE_INPUT_END; i++) {
             ItemStack stack = itemHandler.getStackInSlot(i);
-            if (stack.isEmpty()) continue;
+            if (stack.isEmpty())
+                continue;
 
             long spaceAvailable = capacity - energy;
-            if (energy <= 0 && spaceAvailable <= 0) continue; // нет энергии для зарядки
+            if (energy <= 0 && spaceAvailable <= 0)
+                continue; // нет энергии для зарядки
 
             boolean charged = false;
 
@@ -347,9 +371,11 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
             var hbmCap = stack.getCapability(ModCapabilities.ENERGY_RECEIVER);
             if (hbmCap.isPresent()) {
                 hbmCap.ifPresent(target -> {
-                    if (!target.canReceive()) return;
+                    if (!target.canReceive())
+                        return;
                     long toTransfer = Math.min(unchargingSpeed, energy);
-                    if (toTransfer <= 0) return;
+                    if (toTransfer <= 0)
+                        return;
                     long accepted = target.receiveEnergy(toTransfer, false);
                     if (accepted > 0) {
                         this.energy -= accepted;
@@ -359,9 +385,11 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
             } else {
                 // Forge Energy
                 stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(target -> {
-                    if (!target.canReceive()) return;
+                    if (!target.canReceive())
+                        return;
                     long wanted = Math.min(unchargingSpeed, energy);
-                    if (wanted <= 0) return;
+                    if (wanted <= 0)
+                        return;
                     int maxTransfer = (int) Math.min(wanted, Integer.MAX_VALUE);
                     int accepted = target.receiveEnergy(maxTransfer, false);
                     if (accepted > 0) {
@@ -384,23 +412,28 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
 
     /**
      * Разрядка предметов из слотов 8-11 (discharge input).
-     * Когда предмет полностью разряжен, перемещаем в слоты 12-15 (discharge output).
+     * Когда предмет полностью разряжен, перемещаем в слоты 12-15 (discharge
+     * output).
      */
     private void dischargeItems() {
         for (int i = DISCHARGE_INPUT_START; i < DISCHARGE_INPUT_END; i++) {
             ItemStack stack = itemHandler.getStackInSlot(i);
-            if (stack.isEmpty()) continue;
+            if (stack.isEmpty())
+                continue;
 
             long spaceAvailable = capacity - energy;
-            if (spaceAvailable <= 0) continue;
+            if (spaceAvailable <= 0)
+                continue;
 
             // Попробуем HBM capability
             var hbmCap = stack.getCapability(ModCapabilities.ENERGY_PROVIDER);
             if (hbmCap.isPresent()) {
                 hbmCap.ifPresent(source -> {
-                    if (!source.canExtract()) return;
+                    if (!source.canExtract())
+                        return;
                     long toExtract = Math.min(chargingSpeed, capacity - energy);
-                    if (toExtract <= 0) return;
+                    if (toExtract <= 0)
+                        return;
                     long extracted = source.extractEnergy(toExtract, false);
                     if (extracted > 0) {
                         this.energy += extracted;
@@ -410,9 +443,11 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
             } else {
                 // Forge Energy
                 stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(source -> {
-                    if (!source.canExtract()) return;
+                    if (!source.canExtract())
+                        return;
                     long wanted = Math.min(chargingSpeed, capacity - energy);
-                    if (wanted <= 0) return;
+                    if (wanted <= 0)
+                        return;
                     int maxTransfer = (int) Math.min(wanted, Integer.MAX_VALUE);
                     int extracted = source.extractEnergy(maxTransfer, false);
                     if (extracted > 0) {
@@ -472,7 +507,8 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
 
     private void moveItem(int fromSlot, int toSlot) {
         ItemStack source = itemHandler.getStackInSlot(fromSlot);
-        if (source.isEmpty()) return;
+        if (source.isEmpty())
+            return;
 
         ItemStack existing = itemHandler.getStackInSlot(toSlot);
         if (existing.isEmpty()) {
@@ -546,12 +582,14 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
 
     @Override
     public boolean canConnectEnergy(Direction side) {
-        return true;
+        Direction facing = this.getBlockState().getValue(MachineBatteryBlock.FACING);
+        return side == facing.getOpposite();
     }
 
     @Override
     public long extractEnergy(long maxExtract, boolean simulate) {
-        if (!canExtract()) return 0;
+        if (!canExtract())
+            return 0;
         long energyExtracted = Math.min(this.energy, Math.min(this.unchargingSpeed, maxExtract));
         if (!simulate && energyExtracted > 0) {
             setEnergyStored(this.energy - energyExtracted);
@@ -567,7 +605,8 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
 
     @Override
     public long receiveEnergy(long maxReceive, boolean simulate) {
-        if (!canReceive()) return 0;
+        if (!canReceive())
+            return 0;
         long energyReceived = Math.min(this.capacity - this.energy, Math.min(this.chargingSpeed, maxReceive));
         if (!simulate && energyReceived > 0) {
             setEnergyStored(this.energy + energyReceived);
@@ -603,7 +642,8 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
         }
 
         LazyOptional<T> feCap = feCapabilityProvider.getCapability(cap, side);
-        if (feCap.isPresent()) return feCap;
+        if (feCap.isPresent())
+            return feCap;
 
         return super.getCapability(cap, side);
     }
@@ -637,7 +677,8 @@ public class MachineBatteryBlockEntity extends BlockEntity implements MenuProvid
         }
 
         recalculateCellStats();
-        if (energy > capacity) energy = capacity;
+        if (energy > capacity)
+            energy = capacity;
     }
 
     @Override

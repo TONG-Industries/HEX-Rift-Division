@@ -468,7 +468,11 @@ public class EnergyNetwork {
         while (!queue.isEmpty()) {
             EnergyNode current = queue.poll();
             for (Direction dir : Direction.values()) {
-                EnergyNode neighbor = manager.getNode(current.getPos().relative(dir));
+                BlockPos neighborPos = current.getPos().relative(dir);
+                if (!manager.canConnectElectrically(current.getPos(), neighborPos, dir)) {
+                    continue;
+                }
+                EnergyNode neighbor = manager.getNode(neighborPos);
                 if (neighbor != null && nodes.contains(neighbor) && allReachableNodes.add(neighbor)) {
                     queue.add(neighbor);
                 }

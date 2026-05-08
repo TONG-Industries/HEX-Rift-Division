@@ -139,9 +139,6 @@ public class WireBlock extends BaseEntityBlock {
             return sideFromNeighbor != facing && sideFromNeighbor != facing.getOpposite();
         }
 
-        if (block instanceof MachineBatteryBlock) {
-            return true;
-        }
 
         // 3.
         BlockEntity be = world.getBlockEntity(neighborPos);

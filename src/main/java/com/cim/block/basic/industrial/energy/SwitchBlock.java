@@ -94,29 +94,39 @@ public class SwitchBlock extends BaseEntityBlock {
         return InteractionResult.SUCCESS;
     }
 
-    // [НОВОЕ] Реакция на сигнал красного камня
+
+
     @Override
     public void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock, BlockPos neighborPos, boolean isMoving) {
-        super.neighborChanged(state, level, pos, neighborBlock, neighborPos, isMoving);
-
         if (level.isClientSide) return;
 
+        BlockEntity entity = level.getBlockEntity(pos);
+        if (!(entity instanceof SwitchBlockEntity switchEntity)) return;
+
         boolean hasRedstoneSignal = level.hasNeighborSignal(pos);
-        boolean isPowered = state.getValue(POWERED);
 
-        // Если есть сигнал и рубильник выключен — включаем
-        // Если сигнал пропал и рубильник включен — выключаем
-        if (hasRedstoneSignal != isPowered) {
-            // Создаём фейковый BlockHitResult для вызова use()
-            BlockHitResult fakeHit = new BlockHitResult(
-                    Vec3.atCenterOf(pos),
-                    state.getValue(FACING),
-                    pos,
-                    false
-            );
+        if (hasRedstoneSignal && !switchEntity.isTriggered) {
+            // Фронт (переход 0 -> 1): переключаем состояние
+            switchEntity.isTriggered = true;
+            boolean isPowered = !state.getValue(POWERED);
+            BlockState newState = state.setValue(POWERED, isPowered);
+            level.setBlock(pos, newState, 3);
+            switchEntity.setBlockState(newState);
 
-            // Вызываем use с null вместо player — он не используется в логике
-            use(state, level, pos, null, InteractionHand.MAIN_HAND, fakeHit);
+            EnergyNetworkManager manager = EnergyNetworkManager.get((ServerLevel) level);
+            manager.removeNode(pos);
+
+            if (isPowered) {
+                level.playSound(null, pos, ModSounds.LEVER1.get(), SoundSource.BLOCKS, 0.3f, 1.0f);
+                manager.addNode(pos);
+            } else {
+                level.playSound(null, pos, ModSounds.LEVER1.get(), SoundSource.BLOCKS, 0.3f, 0.9f);
+            }
+            level.updateNeighborsAt(pos, this);
+
+        } else if (!hasRedstoneSignal && switchEntity.isTriggered) {
+            // Спад (переход 1 -> 0): сбрасываем флаг, но не меняем состояние рубильника
+            switchEntity.isTriggered = false;
         }
     }
 
@@ -126,8 +136,6 @@ public class SwitchBlock extends BaseEntityBlock {
             if (state.getValue(POWERED)) {
                 EnergyNetworkManager.get((ServerLevel) level).addNode(pos);
             }
-            // Проверяем сигнал при установке
-            neighborChanged(state, level, pos, state.getBlock(), pos, false);
         }
         super.onPlace(state, level, pos, oldState, isMoving);
     }
