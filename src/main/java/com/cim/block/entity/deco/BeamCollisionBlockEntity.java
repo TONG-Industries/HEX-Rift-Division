@@ -70,6 +70,7 @@ public class BeamCollisionBlockEntity extends BlockEntity {
     public void addMasterData(Vec3 start, Vec3 end, int[] segments) {
         if (!hasBeam(start, end)) {
             this.beams.add(new BeamData(start, end, segments, true, null));
+            this.cachedShape = null;
             this.setChanged();
             if (this.level != null) {
                 this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
@@ -80,6 +81,7 @@ public class BeamCollisionBlockEntity extends BlockEntity {
     public void addSlaveData(BlockPos masterPos, Vec3 start, Vec3 end, int[] segments) {
         if (!hasBeam(start, end)) {
             this.beams.add(new BeamData(start, end, segments, false, masterPos));
+            this.cachedShape = null;
             this.setChanged();
             if (this.level != null) {
                 this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
@@ -114,6 +116,7 @@ public class BeamCollisionBlockEntity extends BlockEntity {
     public void load(CompoundTag pTag) {
         super.load(pTag);
         this.beams.clear();
+        this.cachedShape = null;
         if (pTag.contains("BeamsList")) {
             net.minecraft.nbt.ListTag listTag = pTag.getList("BeamsList", 10); // 10 is CompoundTag type
             for (int i = 0; i < listTag.size(); i++) {
