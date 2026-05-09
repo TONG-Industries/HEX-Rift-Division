@@ -159,6 +159,9 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
+        // Устанавливаем RenderType для технических блоков балок, чтобы Sodium не применял к ним агрессивное отсечение
+        net.minecraft.client.renderer.ItemBlockRenderTypes.setRenderLayer(ModBlocks.BEAM_COLLISION.get(), net.minecraft.client.renderer.RenderType.cutout());
+
         // 1. Инициализируем загрузку кастомной 3D модели для Flywheel
         event.enqueueWork(() -> {
             VisualizerRegistry.setVisualizer(ModBlockEntities.SHAFT_BE.get(), new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.cim.block.entity.industrial.rotation.ShaftBlockEntity>() {

@@ -59,16 +59,29 @@ public class BeamPlacerItem extends Item {
             // --- АЛГОРИТМ ПРОКЛАДКИ ЛУЧА ---
             Vec3 direction = endVec.subtract(startVec).normalize();
             double stepSize = 0.5;
-            int steps = (int) (distance / stepSize);
+            int steps = (int) Math.ceil(distance / stepSize);
 
             boolean masterPlaced = false;
             BlockPos masterPos = null;
 
             java.util.List<BlockPos> placedBlocks = new java.util.ArrayList<>();
 
-            for (int i = 1; i < steps; i++) {
-                Vec3 stepVec = startVec.add(direction.scale(i * stepSize));
+            for (int i = 1; i <= steps; i++) {
+                double currentDist = Math.min(i * stepSize, distance - 0.01);
+                Vec3 stepVec = startVec.add(direction.scale(currentDist));
                 BlockPos posOnLine = BlockPos.containing(stepVec);
+
+                // Если оригинальная позиция занята твердым блоком (не заменяема и не балка),
+                // ищем соседний пустой блок, чтобы не создавать огромных "слепых зон" для рендера!
+                if (!level.getBlockState(posOnLine).canBeReplaced() && !level.getBlockState(posOnLine).is(ModBlocks.BEAM_COLLISION.get())) {
+                    for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.values()) {
+                        BlockPos adj = posOnLine.relative(dir);
+                        if (level.getBlockState(adj).canBeReplaced() || level.getBlockState(adj).is(ModBlocks.BEAM_COLLISION.get())) {
+                            posOnLine = adj;
+                            break;
+                        }
+                    }
+                }
 
                 if (level.getBlockState(posOnLine).canBeReplaced() || level.getBlockState(posOnLine).is(ModBlocks.BEAM_COLLISION.get())) {
                     if (level.getBlockState(posOnLine).canBeReplaced()) {
@@ -113,11 +126,11 @@ public class BeamPlacerItem extends Item {
                     int[] segArray = segs.stream().mapToInt(Integer::intValue).toArray();
 
                     if (!masterPlaced) {
-                        collisionBE.setMasterData(startVec, endVec, segArray);
+                        collisionBE.addMasterData(startVec, endVec, segArray);
                         masterPlaced = true;
                         masterPos = posOnLine;
                     } else {
-                        collisionBE.setSlaveData(masterPos, startVec, endVec, segArray);
+                        collisionBE.addSlaveData(masterPos, startVec, endVec, segArray);
                     }
                 }
             }
