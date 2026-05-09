@@ -14,102 +14,122 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class BeamCollisionBlockEntity extends BlockEntity {
-    private boolean isMaster = false;
+    public static class BeamData {
+        public Vec3 startPos;
+        public Vec3 endPos;
+        public int[] segmentsToRender;
+        public boolean isMaster;
+        public BlockPos masterPos;
 
+        public BeamData(Vec3 startPos, Vec3 endPos, int[] segmentsToRender, boolean isMaster, BlockPos masterPos) {
+            this.startPos = startPos;
+            this.endPos = endPos;
+            this.segmentsToRender = segmentsToRender;
+            this.isMaster = isMaster;
+            this.masterPos = masterPos;
+        }
+
+        public CompoundTag serialize() {
+            CompoundTag tag = new CompoundTag();
+            tag.putDouble("StartX", startPos.x);
+            tag.putDouble("StartY", startPos.y);
+            tag.putDouble("StartZ", startPos.z);
+            tag.putDouble("EndX", endPos.x);
+            tag.putDouble("EndY", endPos.y);
+            tag.putDouble("EndZ", endPos.z);
+            tag.putIntArray("Segments", segmentsToRender);
+            tag.putBoolean("IsMaster", isMaster);
+            if (!isMaster && masterPos != null) {
+                tag.put("MasterPos", NbtUtils.writeBlockPos(masterPos));
+            }
+            return tag;
+        }
+
+        public static BeamData deserialize(CompoundTag tag) {
+            Vec3 start = new Vec3(tag.getDouble("StartX"), tag.getDouble("StartY"), tag.getDouble("StartZ"));
+            Vec3 end = new Vec3(tag.getDouble("EndX"), tag.getDouble("EndY"), tag.getDouble("EndZ"));
+            int[] segments = tag.getIntArray("Segments");
+            boolean isMaster = tag.getBoolean("IsMaster");
+            BlockPos master = isMaster ? null : (tag.contains("MasterPos") ? NbtUtils.readBlockPos(tag.getCompound("MasterPos")) : null);
+            return new BeamData(start, end, segments, isMaster, master);
+        }
+    }
+
+    private final java.util.List<BeamData> beams = new java.util.concurrent.CopyOnWriteArrayList<>();
     public boolean isDestroyed = false;
 
-    // Данные векторов балки (сохраняем у ВСЕХ блоков для вычисления коллизии)
-    private Vec3 startPos = null;
-    private Vec3 endPos = null;
-    private int[] segmentsToRender = new int[0];
-
     // Model Properties для DynamicBakedModel
-    public static final net.minecraftforge.client.model.data.ModelProperty<Vec3> START_POS = new net.minecraftforge.client.model.data.ModelProperty<>();
-    public static final net.minecraftforge.client.model.data.ModelProperty<Vec3> END_POS = new net.minecraftforge.client.model.data.ModelProperty<>();
-    public static final net.minecraftforge.client.model.data.ModelProperty<int[]> SEGMENTS = new net.minecraftforge.client.model.data.ModelProperty<>();
+    public static final net.minecraftforge.client.model.data.ModelProperty<java.util.List<BeamData>> BEAMS_LIST = new net.minecraftforge.client.model.data.ModelProperty<>();
     public static final net.minecraftforge.client.model.data.ModelProperty<BlockPos> MY_POS = new net.minecraftforge.client.model.data.ModelProperty<>();
-
-    // Данные для обычных блоков коллизии
-    private BlockPos masterPos = null;
 
     public BeamCollisionBlockEntity(BlockPos pPos, BlockState pBlockState) {
         // Обязательно замени на свой BEAM_COLLISION_BE из ModBlockEntities!
         super(ModBlockEntities.BEAM_COLLISION_BE.get(), pPos, pBlockState);
     }
 
-    public void setMasterData(Vec3 start, Vec3 end, int[] segments) {
-        this.isMaster = true;
-        this.startPos = start;
-        this.endPos = end;
-        this.segmentsToRender = segments;
-        this.setChanged();
-        // Синхронизируем с клиентом для рендера
-        if (this.level != null) {
-            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+    public void addMasterData(Vec3 start, Vec3 end, int[] segments) {
+        if (!hasBeam(start, end)) {
+            this.beams.add(new BeamData(start, end, segments, true, null));
+            this.cachedShape = null;
+            this.setChanged();
+            if (this.level != null) {
+                this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+            }
         }
     }
 
-    public void setSlaveData(BlockPos masterPos, Vec3 start, Vec3 end, int[] segments) {
-        this.isMaster = false;
-        this.masterPos = masterPos;
-        this.startPos = start;
-        this.endPos = end;
-        this.segmentsToRender = segments;
-        this.setChanged();
-        // Рабам тоже шлем апдейт на клиент, чтобы у них сгенерировалась коллизия
-        if (this.level != null) {
-            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+    public void addSlaveData(BlockPos masterPos, Vec3 start, Vec3 end, int[] segments) {
+        if (!hasBeam(start, end)) {
+            this.beams.add(new BeamData(start, end, segments, false, masterPos));
+            this.cachedShape = null;
+            this.setChanged();
+            if (this.level != null) {
+                this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+            }
         }
     }
 
-    public boolean isMaster() { return isMaster; }
-    public Vec3 getStartPos() { return startPos; }
-    public Vec3 getEndPos() { return endPos; }
-    public BlockPos getMasterPos() { return masterPos; }
+    private boolean hasBeam(Vec3 start, Vec3 end) {
+        for (BeamData data : beams) {
+            if (data.startPos.distanceToSqr(start) < 0.01 && data.endPos.distanceToSqr(end) < 0.01) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public java.util.List<BeamData> getBeams() { return beams; }
 
     // --- СОХРАНЕНИЕ NBT ---
 
     @Override
     protected void saveAdditional(CompoundTag pTag) {
         super.saveAdditional(pTag);
-        pTag.putBoolean("IsMaster", isMaster);
-
-        if (startPos != null && endPos != null) {
-            pTag.putDouble("StartX", startPos.x);
-            pTag.putDouble("StartY", startPos.y);
-            pTag.putDouble("StartZ", startPos.z);
-            pTag.putDouble("EndX", endPos.x);
-            pTag.putDouble("EndY", endPos.y);
-            pTag.putDouble("EndZ", endPos.z);
+        net.minecraft.nbt.ListTag listTag = new net.minecraft.nbt.ListTag();
+        for (BeamData data : beams) {
+            listTag.add(data.serialize());
         }
-
-        if (segmentsToRender != null && segmentsToRender.length > 0) {
-            pTag.putIntArray("Segments", segmentsToRender);
-        }
-
-        if (!isMaster && masterPos != null) {
-            pTag.put("MasterPos", NbtUtils.writeBlockPos(masterPos));
-        }
+        pTag.put("BeamsList", listTag);
     }
 
     @Override
     public void load(CompoundTag pTag) {
         super.load(pTag);
-        this.isMaster = pTag.getBoolean("IsMaster");
-
-        if (pTag.contains("StartX")) {
-            this.startPos = new Vec3(pTag.getDouble("StartX"), pTag.getDouble("StartY"), pTag.getDouble("StartZ"));
-            this.endPos = new Vec3(pTag.getDouble("EndX"), pTag.getDouble("EndY"), pTag.getDouble("EndZ"));
-        }
-
-        if (pTag.contains("Segments")) {
-            this.segmentsToRender = pTag.getIntArray("Segments");
-        }
-
-        if (!isMaster) {
-            if (pTag.contains("MasterPos")) {
-                this.masterPos = NbtUtils.readBlockPos(pTag.getCompound("MasterPos"));
+        this.beams.clear();
+        this.cachedShape = null;
+        if (pTag.contains("BeamsList")) {
+            net.minecraft.nbt.ListTag listTag = pTag.getList("BeamsList", 10); // 10 is CompoundTag type
+            for (int i = 0; i < listTag.size(); i++) {
+                this.beams.add(BeamData.deserialize(listTag.getCompound(i)));
             }
+        } else if (pTag.contains("StartX")) {
+            // Легаси-поддержка старых балок, если они остались в мире
+            Vec3 start = new Vec3(pTag.getDouble("StartX"), pTag.getDouble("StartY"), pTag.getDouble("StartZ"));
+            Vec3 end = new Vec3(pTag.getDouble("EndX"), pTag.getDouble("EndY"), pTag.getDouble("EndZ"));
+            int[] segments = pTag.contains("Segments") ? pTag.getIntArray("Segments") : new int[0];
+            boolean isM = pTag.getBoolean("IsMaster");
+            BlockPos mPos = (!isM && pTag.contains("MasterPos")) ? NbtUtils.readBlockPos(pTag.getCompound("MasterPos")) : null;
+            this.beams.add(new BeamData(start, end, segments, isM, mPos));
         }
     }
 
@@ -127,6 +147,24 @@ public class BeamCollisionBlockEntity extends BlockEntity {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
+    @Override
+    public void onDataPacket(net.minecraft.network.Connection net, ClientboundBlockEntityDataPacket pkt) {
+        super.onDataPacket(net, pkt);
+        if (this.level != null && this.level.isClientSide) {
+            this.requestModelDataUpdate();
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
+    @Override
+    public void handleUpdateTag(CompoundTag tag) {
+        super.handleUpdateTag(tag);
+        if (this.level != null && this.level.isClientSide) {
+            this.requestModelDataUpdate();
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
     // --- КОРОБКА РЕНДЕРА И КОЛЛИЗИИ ---
 
     private net.minecraft.world.phys.shapes.VoxelShape cachedShape = null;
@@ -139,85 +177,112 @@ public class BeamCollisionBlockEntity extends BlockEntity {
     }
 
     private net.minecraft.world.phys.shapes.VoxelShape computeShape() {
-        if (startPos == null || endPos == null) {
+        if (beams.isEmpty()) {
             return net.minecraft.world.level.block.Block.box(5.0D, 5.0D, 5.0D, 11.0D, 11.0D, 11.0D);
         }
 
-        net.minecraft.world.phys.shapes.VoxelShape shape = net.minecraft.world.phys.shapes.Shapes.empty();
-        Vec3 direction = endPos.subtract(startPos).normalize();
-        double distance = startPos.distanceTo(endPos);
-        double step = 0.125; // 8 шагов на блок для плавности
-        int steps = (int) (distance / step);
-
-        double radius = 3.0 / 16.0; // Радиус балки (примерно 6 пикселей)
-
+        net.minecraft.world.phys.shapes.VoxelShape finalShape = net.minecraft.world.phys.shapes.Shapes.empty();
         BlockPos myPos = this.getBlockPos();
         AABB myBox = new AABB(myPos);
+        double radius = 3.0 / 16.0;
 
-        for (int i = 0; i <= steps; i++) {
-            Vec3 point = startPos.add(direction.scale(i * step));
-            AABB pointBox = new AABB(point.x - radius, point.y - radius, point.z - radius,
-                                     point.x + radius, point.y + radius, point.z + radius);
+        for (BeamData data : beams) {
+            Vec3 direction = data.endPos.subtract(data.startPos).normalize();
+            double distance = data.startPos.distanceTo(data.endPos);
+            double step = 0.125;
+            int steps = (int) (distance / step);
 
-            if (pointBox.intersects(myBox)) {
-                // Переводим в локальные координаты (0..1)
-                AABB localBox = new AABB(
-                    pointBox.minX - myPos.getX(), pointBox.minY - myPos.getY(), pointBox.minZ - myPos.getZ(),
-                    pointBox.maxX - myPos.getX(), pointBox.maxY - myPos.getY(), pointBox.maxZ - myPos.getZ()
-                );
-                // Ограничиваем рамками 0..1 чтобы хитбоксы не вылезали за пределы этого блока
-                localBox = localBox.intersect(new AABB(0, 0, 0, 1, 1, 1));
-                
-                shape = net.minecraft.world.phys.shapes.Shapes.or(shape, net.minecraft.world.phys.shapes.Shapes.create(localBox));
+            for (int i = 0; i <= steps; i++) {
+                Vec3 point = data.startPos.add(direction.scale(i * step));
+                AABB pointBox = new AABB(point.x - radius, point.y - radius, point.z - radius,
+                                         point.x + radius, point.y + radius, point.z + radius);
+
+                if (pointBox.intersects(myBox)) {
+                    AABB localBox = new AABB(
+                        pointBox.minX - myPos.getX(), pointBox.minY - myPos.getY(), pointBox.minZ - myPos.getZ(),
+                        pointBox.maxX - myPos.getX(), pointBox.maxY - myPos.getY(), pointBox.maxZ - myPos.getZ()
+                    );
+                    localBox = localBox.intersect(new AABB(0, 0, 0, 1, 1, 1));
+                    finalShape = net.minecraft.world.phys.shapes.Shapes.or(finalShape, net.minecraft.world.phys.shapes.Shapes.create(localBox));
+                }
             }
         }
 
-        if (shape.isEmpty()) {
+        if (finalShape.isEmpty()) {
             return net.minecraft.world.level.block.Block.box(5.0D, 5.0D, 5.0D, 11.0D, 11.0D, 11.0D);
         }
-        return shape.optimize();
+        return finalShape.optimize();
     }
 
     @Override
     public AABB getRenderBoundingBox() {
-        if (isMaster && startPos != null && endPos != null) {
-            // Теперь коробка точно охватывает пространство между центрами блоков!
-            return new AABB(startPos, endPos).inflate(1.0);
+        AABB box = super.getRenderBoundingBox();
+        for (BeamData data : beams) {
+            if (data.isMaster) {
+                box = box.minmax(new AABB(data.startPos, data.endPos).inflate(1.0));
+            }
         }
-        return super.getRenderBoundingBox();
+        return box;
+    }
+
+    public void removeBeamData(Vec3 start, Vec3 end) {
+        beams.removeIf(data -> data.startPos.distanceToSqr(start) < 0.01 && data.endPos.distanceToSqr(end) < 0.01);
+        cachedShape = null;
+        this.setChanged();
+        if (this.level != null) {
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+            if (beams.isEmpty()) {
+                this.level.removeBlock(this.getBlockPos(), false);
+            }
+        }
     }
 
     public void breakEntireBeam(net.minecraft.world.level.Level level) {
-        // Если балка уже в процессе разрушения, отменяем
-        if (this.isDestroyed || this.startPos == null || this.endPos == null) return;
+        if (this.isDestroyed || beams.isEmpty()) return;
         this.isDestroyed = true;
 
-        // 1. Считаем длину и дропаем предметы
-        double distance = this.startPos.distanceTo(this.endPos);
-        int amountToDrop = (int) Math.ceil(distance);
+        // Копируем список, так как removeBeamData будет модифицировать его
+        java.util.List<BeamData> beamsCopy = new java.util.ArrayList<>(this.beams);
 
-        ItemStack dropStack = new ItemStack(ModBlocks.BEAM_BLOCK.get(), amountToDrop);
-        Containers.dropItemStack(level, this.getBlockPos().getX(), this.getBlockPos().getY(), this.getBlockPos().getZ(), dropStack);
+        for (BeamData data : beamsCopy) {
+            double distance = data.startPos.distanceTo(data.endPos);
+            int amountToDrop = (int) Math.ceil(distance);
 
-        // 2. Уничтожаем все невидимые блоки коллизии на линии
-        Vec3 direction = this.endPos.subtract(this.startPos).normalize();
-        double stepSize = 0.5;
-        int steps = (int) (distance / stepSize);
+            ItemStack dropStack = new ItemStack(ModBlocks.BEAM_BLOCK.get(), amountToDrop);
+            Containers.dropItemStack(level, this.getBlockPos().getX(), this.getBlockPos().getY(), this.getBlockPos().getZ(), dropStack);
 
-        for (int i = 1; i < steps; i++) {
-            Vec3 stepVec = this.startPos.add(direction.scale(i * stepSize));
-            BlockPos posOnLine = BlockPos.containing(stepVec);
+            Vec3 direction = data.endPos.subtract(data.startPos).normalize();
+            double stepSize = 0.5;
+            int steps = (int) (distance / stepSize);
 
-            BlockEntity be = level.getBlockEntity(posOnLine);
-            if (be instanceof BeamCollisionBlockEntity slaveBE) {
-                slaveBE.isDestroyed = true; // Блокируем вызов у рабов, чтобы предметы не выпали 10 раз
+            for (int i = 1; i < steps; i++) {
+                Vec3 stepVec = data.startPos.add(direction.scale(i * stepSize));
+                BlockPos posOnLine = BlockPos.containing(stepVec);
+
+                // Очищаем блоки вдоль линии (оригинальный путь)
+                removeBeamDataFromPos(level, posOnLine, data.startPos, data.endPos);
+                
+                // Проверяем соседние блоки на случай смещенных служебных блоков
+                for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.values()) {
+                    removeBeamDataFromPos(level, posOnLine.relative(dir), data.startPos, data.endPos);
+                }
             }
+        }
+    }
 
-            if (level.getBlockState(posOnLine).is(ModBlocks.BEAM_COLLISION.get())) {
-                level.removeBlock(posOnLine, false);
-            }
-        }        // Удаляем самого мастера
-        level.removeBlock(this.getBlockPos(), false);
+    private void removeBeamDataFromPos(net.minecraft.world.level.Level level, BlockPos pos, Vec3 start, Vec3 end) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof BeamCollisionBlockEntity slaveBE) {
+            slaveBE.removeBeamData(start, end);
+        }
+    }
+
+    @Override
+    public net.minecraftforge.client.model.data.ModelData getModelData() {
+        return net.minecraftforge.client.model.data.ModelData.builder()
+            .with(BEAMS_LIST, new java.util.ArrayList<>(beams)) // Отдаем копию
+            .with(MY_POS, this.getBlockPos())
+            .build();
     }
 
     @Override

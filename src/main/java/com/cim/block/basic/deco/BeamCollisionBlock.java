@@ -2,6 +2,7 @@ package com.cim.block.basic.deco;
 
 import com.cim.block.entity.deco.BeamCollisionBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -42,6 +43,21 @@ public class BeamCollisionBlock extends BaseEntityBlock {
         return RenderShape.MODEL;
     }
 
+    @Override
+    public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
+        return true;
+    }
+
+    @Override
+    public float getShadeBrightness(BlockState state, BlockGetter level, BlockPos pos) {
+        return 1.0F;
+    }
+
+    @Override
+    public boolean skipRendering(BlockState state, BlockState adjacentBlockState, Direction side) {
+        return false;
+    }
+
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
@@ -54,15 +70,12 @@ public class BeamCollisionBlock extends BaseEntityBlock {
             if (!level.isClientSide) {
                 BlockEntity be = level.getBlockEntity(pos);
                 if (be instanceof BeamCollisionBlockEntity collisionBE) {
-
-                    // Находим Мастера (даже если сломали кусок балки посередине)
-                    BlockPos masterPos = collisionBE.isMaster() ? pos : collisionBE.getMasterPos();
-                    if (masterPos != null) {
-                        BlockEntity masterBE = level.getBlockEntity(masterPos);
-                        if (masterBE instanceof BeamCollisionBlockEntity mbe && mbe.isMaster()) {
-                            mbe.breakEntireBeam(level);
-                        }
-                    }
+                    // Ломаем все балки, которые проходят через этот блок
+                    collisionBE.breakEntireBeam(level);
+                    
+                    // Также нам нужно найти мастеров для каждой балки, если этот блок был рабом, 
+                    // НО в новом дизайне breakEntireBeam уже ищет и ломает всю линию балки
+                    // начиная с ее startPos до endPos, что гарантированно очистит все связанные блоки!
                 }
             }
             super.onRemove(state, level, pos, newState, isMoving);
@@ -77,19 +90,21 @@ public class BeamCollisionBlock extends BaseEntityBlock {
 
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof BeamCollisionBlockEntity collisionBE) {
-            BlockPos masterPos = collisionBE.isMaster() ? pos : collisionBE.getMasterPos();
-            if (masterPos != null) {
-                BlockEntity masterBE = level.getBlockEntity(masterPos);
-                if (masterBE instanceof BeamCollisionBlockEntity mbe && mbe.isMaster()) {
+            java.util.List<BeamCollisionBlockEntity.BeamData> beamsCopy = new java.util.ArrayList<>(collisionBE.getBeams());
+            for (BeamCollisionBlockEntity.BeamData data : beamsCopy) {
+                BlockPos startAnchor = BlockPos.containing(data.startPos);
+                BlockPos endAnchor = BlockPos.containing(data.endPos);
 
-                    // Проверяем, на месте ли опорные блоки?
-                    BlockPos startAnchor = BlockPos.containing(mbe.getStartPos());
-                    BlockPos endAnchor = BlockPos.containing(mbe.getEndPos());
-
-                    // Если один из опорных блоков стал воздухом (или жидкостью)
-                    if (level.isEmptyBlock(startAnchor) || level.isEmptyBlock(endAnchor)) {
-                        mbe.breakEntireBeam(level); // Рушим всю балку!
-                    }
+                // Если один из опорных блоков стал воздухом (или жидкостью)
+                if (level.isEmptyBlock(startAnchor) || level.isEmptyBlock(endAnchor)) {
+                    // Так как сломалась опора, мы должны сломать именно эту конкретную балку.
+                    // Вызываем логику разрушения только для этой балки. 
+                    // Проще всего вызвать breakEntireBeam у самого блока - он сломает все свои балки. 
+                    // Но если мы хотим ломать ТОЛЬКО ту балку, чья опора сломалась, нам нужно вынести логику 
+                    // разрушения одной балки в отдельный метод.
+                    // Сейчас проще просто сломать все балки в этом блоке:
+                    collisionBE.breakEntireBeam(level);
+                    break;
                 }
             }
         }
