@@ -1,5 +1,7 @@
 package com.trd.block.entity.weapons;
 
+import com.trd.block.entity.industrial.energy.EnergyNodeBlockEntity;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -34,14 +36,12 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
 
-public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBlockEntity, IEnergyReceiver, IEnergyConnector {
+public class TurretLightPlacerBlockEntity extends EnergyNodeBlockEntity implements GeoBlockEntity {
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final TurretAmmoContainer ammoContainer = new TurretAmmoContainer();
     private final LazyOptional<ItemStackHandler> itemHandlerOptional = LazyOptional.of(() -> ammoContainer);
 
-    private long energyStored = 0;
-    private final long MAX_ENERGY = 100000;
     private final long MAX_RECEIVE = 10000;
 
     private int respawnTimer = 0;
@@ -66,16 +66,13 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     // Кэш здоровья для GUI (0-100)
     private int cachedHealth = 0;
 
-    private final LazyOptional<IEnergyReceiver> hbmReceiverOptional = LazyOptional.of(() -> this);
-    private final LazyOptional<IEnergyStorage> forgeEnergyOptional = LazyOptional.of(
-            () -> new LongEnergyWrapper(this, LongEnergyWrapper.BitMode.LOW)
-    );
 
     private UUID turretUUID;
     private UUID ownerUUID;
 
     public TurretLightPlacerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TURRET_LIGHT_PLACER_BE.get(), pos, state);
+        this.capacity = 100000; // MAX_ENERGY
         this.ammoContainer.setOnContentsChanged(this::setChanged);
     }
 
@@ -85,15 +82,15 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
 
         // [НОВОЕ] Зарядка от батарейки в слоте 10
         ItemStack batteryStack = entity.ammoContainer.getStackInSlot(10);
-        if (!batteryStack.isEmpty() && entity.energyStored < entity.MAX_ENERGY) {
+        if (!batteryStack.isEmpty() && entity.energy < entity.capacity) {
             // 1. Пробуем Forge Energy (FE)
             batteryStack.getCapability(ForgeCapabilities.ENERGY).ifPresent(energyStorage -> {
                 if (energyStorage.canExtract()) {
-                    int maxReceive = (int) Math.min(entity.MAX_RECEIVE, entity.MAX_ENERGY - entity.energyStored);
+                    int maxReceive = (int) Math.min(entity.MAX_RECEIVE, entity.capacity - entity.energy);
                     if (maxReceive > 0) {
                         int extracted = energyStorage.extractEnergy(maxReceive, false);
                         if (extracted > 0) {
-                            entity.energyStored += extracted;
+                            entity.energy += extracted;
                             entity.setChanged();
                         }
                     }
@@ -101,13 +98,13 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
             });
 
             // 2. Если FE не сработал и буфер ещё не полон — пробуем HBM
-            if (entity.energyStored < entity.MAX_ENERGY) {
+            if (entity.energy < entity.capacity) {
                 batteryStack.getCapability(ModCapabilities.ENERGY_PROVIDER).ifPresent(provider -> {
                     if (provider.canExtract()) {
-                        long maxReceive = Math.min(entity.MAX_RECEIVE, entity.MAX_ENERGY - entity.energyStored);
+                        long maxReceive = Math.min(entity.MAX_RECEIVE, entity.capacity - entity.energy);
                         long extracted = provider.extractEnergy(maxReceive, false);
                         if (extracted > 0) {
-                            entity.energyStored += extracted;
+                            entity.energy += extracted;
                             entity.setChanged();
                         }
                     }
@@ -171,8 +168,8 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
             if (needsHeal) totalDrain = DRAIN_HEALING;
             else if (isTracking) totalDrain = DRAIN_TRACKING;
 
-            if (entity.energyStored >= totalDrain) {
-                entity.energyStored -= totalDrain;
+            if (entity.energy >= totalDrain) {
+                entity.energy -= totalDrain;
                 existingTurret.setPowered(true);
                 if (needsHeal) existingTurret.healFromPower(HEAL_PER_TICK);
                 if (totalDrain > 0) entity.setChanged();
@@ -222,8 +219,8 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
             if (entity.respawnTimer > 0) {
                 // Тикаем таймер, только если буфер ПОЧТИ полон.
                 // (MAX - DRAIN) нужно, чтобы таймер не останавливался на 99975 энергии.
-                if (entity.energyStored >= entity.MAX_ENERGY - DRAIN_HEALING) {
-                    entity.energyStored -= DRAIN_HEALING;
+                if (entity.energy >= entity.capacity - DRAIN_HEALING) {
+                    entity.energy -= DRAIN_HEALING;
                     entity.respawnTimer--;
                     entity.setChanged();
                 }
@@ -235,7 +232,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
             // Б) Режим первого запуска (таймер 0)
             else {
                 // Ждем полного заряда
-                if (entity.energyStored >= entity.MAX_ENERGY) {
+                if (entity.energy >= entity.capacity) {
                     readyToSpawn = true;
                 }
             }
@@ -246,7 +243,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
 
                 // 🔥 ГЛАВНОЕ ИЗМЕНЕНИЕ: Списываем половину буфера при спавне
                 if (entity.turretUUID != null) {
-                    entity.energyStored -= (entity.MAX_ENERGY / 2); // -50,000 HE
+                    entity.energy -= (entity.capacity / 2); // -50,000 HE
                     entity.setChanged();
                 }
             }
@@ -274,11 +271,6 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     @Override
     public void setRemoved() {
         super.setRemoved();
-        if (this.level != null && !this.level.isClientSide) {
-            EnergyNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
-        }
-        hbmReceiverOptional.invalidate();
-        forgeEnergyOptional.invalidate();
         itemHandlerOptional.invalidate();
     }
 
@@ -291,7 +283,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     }
 
     private static void handleTurretDeath(TurretLightPlacerBlockEntity entity) {
-        entity.energyStored = 0;
+        entity.energy = 0;
         entity.turretUUID = null;
         entity.respawnTimer = RESPAWN_DELAY_TICKS;
         entity.setChanged();
@@ -323,28 +315,16 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     public TurretAmmoContainer getAmmoContainer() { return ammoContainer; }
     public void setOwner(UUID owner) { this.ownerUUID = owner; setChanged(); }
 
-    @Override public long receiveEnergy(long amount, boolean simulate) {
-        if (!canReceive()) return 0;
-        long energyReceived = Math.min(MAX_ENERGY - energyStored, Math.min(MAX_RECEIVE, amount));
-        if (!simulate && energyReceived > 0) { energyStored += energyReceived; setChanged(); }
-        return energyReceived;
-    }
-    @Override public long getEnergyStored() { return energyStored; }
-    @Override public void setEnergyStored(long energy) { this.energyStored = Math.max(0, Math.min(energy, MAX_ENERGY)); setChanged(); }
-    @Override public long getMaxEnergyStored() { return MAX_ENERGY; }
-    @Override public boolean canReceive() { return energyStored < MAX_ENERGY; }
     @Override public long getReceiveSpeed() { return MAX_RECEIVE; }
-    @Override public Priority getPriority() { return Priority.NORMAL; }
+    @Override public long getProvideSpeed() { return 0; }
     @Override public boolean canConnectEnergy(Direction side) { return side != Direction.UP; }
 
-    public int getEnergyStoredInt() { return (int) Math.min(energyStored, Integer.MAX_VALUE); }
-    public int getMaxEnergyStoredInt() { return (int) Math.min(MAX_ENERGY, Integer.MAX_VALUE); }
+    public int getEnergyStoredInt() { return (int) Math.min(energy, Integer.MAX_VALUE); }
+    public int getMaxEnergyStoredInt() { return (int) Math.min(capacity, Integer.MAX_VALUE); }
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (side == Direction.UP) return super.getCapability(cap, side);
-        if (cap == ModCapabilities.ENERGY_RECEIVER || cap == ModCapabilities.ENERGY_CONNECTOR) return hbmReceiverOptional.cast();
-        if (cap == ForgeCapabilities.ENERGY) return forgeEnergyOptional.cast();
         if (cap == ForgeCapabilities.ITEM_HANDLER) return itemHandlerOptional.cast();
         return super.getCapability(cap, side);
     }
@@ -352,8 +332,6 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
-        hbmReceiverOptional.invalidate();
-        forgeEnergyOptional.invalidate();
         itemHandlerOptional.invalidate();
     }
 
@@ -361,7 +339,6 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("AmmoContainer", ammoContainer.serializeNBT());
-        tag.putLong("Energy", energyStored);
         if (ownerUUID != null) tag.putUUID("OwnerUUID", ownerUUID);
         if (turretUUID != null) tag.putUUID("TurretUUID", turretUUID);
         tag.putInt("RespawnTimer", respawnTimer);
@@ -380,7 +357,6 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         super.load(tag);
         if (tag.contains("AmmoContainer")) ammoContainer.deserializeNBT(tag.getCompound("AmmoContainer"));
         if (tag.hasUUID("OwnerUUID")) ownerUUID = tag.getUUID("OwnerUUID");
-        if (tag.contains("Energy")) energyStored = tag.getLong("Energy");
         if (tag.hasUUID("TurretUUID")) turretUUID = tag.getUUID("TurretUUID");
         if (tag.contains("RespawnTimer")) respawnTimer = tag.getInt("RespawnTimer");
         isSwitchedOn = tag.getBoolean("SwitchedOn");
@@ -443,7 +419,7 @@ public class TurretLightPlacerBlockEntity extends BlockEntity implements GeoBloc
         @Override public void set(int index, int value) {
             switch (index) {
                 // ИСПРАВЛЕНИЕ: Устанавливаем энергию напрямую в поле
-                case 0 -> TurretLightPlacerBlockEntity.this.energyStored = value;
+                case 0 -> TurretLightPlacerBlockEntity.this.energy = value;
                 // Макс энергию менять через GUI обычно не нужно, пропускаем case 1
 
                 // Статус вычисляемый, его нельзя "установить", пропускаем case 2

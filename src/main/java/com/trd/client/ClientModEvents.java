@@ -98,17 +98,17 @@ public class ClientModEvents {
         MenuScreens.register(ModMenuTypes.SMELTER_MENU.get(), GUISmelter::new);
         MenuScreens.register(ModMenuTypes.FUEL_TANK_MENU.get(), GUIFuelTank::new);
         
-        BlockEntityRenderers.register(ModBlockEntities.MOTOR_ELECTRO_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
-        BlockEntityRenderers.register(ModBlockEntities.SHAFT_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
-        BlockEntityRenderers.register(ModBlockEntities.BEARING_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
-        BlockEntityRenderers.register(ModBlockEntities.TACHOMETER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
-        BlockEntityRenderers.register(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.MOTOR_ELECTRO_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.SHAFT_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.BEARING_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.TACHOMETER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
 
-//        BlockEntityRenderers.register(ModBlockEntities.WIND_GEN_FLUGER_BE.get(), WindGenFlugerRenderer::new);
-        BlockEntityRenderers.register(ModBlockEntities.TURRET_LIGHT_PLACER_BE.get(), TurretLightPlacerRenderer::new);
-//        BlockEntityRenderers.register(ModBlockEntities.DRILL_HEAD_BE.get(), DrillHeadRenderer::new);
-        BlockEntityRenderers.register(ModBlockEntities.MACHINE_BATTERY_BE.get(), MachineBatteryRenderer::new);
-        BlockEntityRenderers.register(ModBlockEntities.CONNECTOR_BE.get(), ConnectorRenderer::new);
+//        event.registerBlockEntityRenderer(ModBlockEntities.WIND_GEN_FLUGER_BE.get(), WindGenFlugerRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.TURRET_LIGHT_PLACER_BE.get(), TurretLightPlacerRenderer::new);
+//        event.registerBlockEntityRenderer(ModBlockEntities.DRILL_HEAD_BE.get(), DrillHeadRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.MACHINE_BATTERY_BE.get(), MachineBatteryRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.CONNECTOR_BE.get(), ConnectorRenderer::new);
         event.registerEntityRenderer(ModEntities.GRENADIER_ZOMBIE.get(), ZombieRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CASTING_DESCENT.get(), CastingDescentRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CASTING_POT.get(), com.trd.client.renderer.CastingPotRenderer::new);

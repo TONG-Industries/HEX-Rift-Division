@@ -51,22 +51,18 @@ import javax.annotation.Nullable;
  *
  * Режимы: 0 = BOTH, 1 = INPUT, 2 = OUTPUT, 3 = DISABLED
  */
-public class MachineBatteryBlockEntity extends BlockEntity
-        implements MenuProvider, IEnergyProvider, IEnergyReceiver, GeoBlockEntity {
+public class MachineBatteryBlockEntity extends EnergyNodeBlockEntity
+        implements MenuProvider, GeoBlockEntity {
 
     // ====================== КАРКАС: базовые параметры = 0 ======================
-    private long capacity = 0;
     private long chargingSpeed = 0;
     private long unchargingSpeed = 0;
-    private long energy = 0;
     private long lastEnergy = 0;
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     // Один режим работы (без редстоун-сигнала)
     // 0 = BOTH, 1 = INPUT, 2 = OUTPUT, 3 = DISABLED
-    public int mode = 0;
-    private Priority priority = Priority.LOW;
     private long energyDelta = 0;
 
     // ====================== СЛОТЫ ДЛЯ ЭНЕРГОЯЧЕЕК (4 штуки, 2x2)
@@ -110,18 +106,12 @@ public class MachineBatteryBlockEntity extends BlockEntity
     };
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
-    private LazyOptional<IEnergyProvider> hbmProvider = LazyOptional.empty();
-    private LazyOptional<IEnergyReceiver> hbmReceiver = LazyOptional.empty();
-    private LazyOptional<IEnergyConnector> hbmConnector = LazyOptional.empty();
-
-    private PackedEnergyCapabilityProvider feCapabilityProvider;
 
     protected final ContainerData data;
 
     public MachineBatteryBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MACHINE_BATTERY_BE.get(), pos, state);
 
-        this.capacity = 0;
         this.chargingSpeed = 0;
         this.unchargingSpeed = 0;
 
@@ -129,8 +119,6 @@ public class MachineBatteryBlockEntity extends BlockEntity
             cellSlots[i] = ItemStack.EMPTY;
             cellEmpty[i] = true;
         }
-
-        this.feCapabilityProvider = new PackedEnergyCapabilityProvider(this);
 
         // ContainerData: 2 поля (mode, priority)
         this.data = new ContainerData() {
@@ -278,14 +266,6 @@ public class MachineBatteryBlockEntity extends BlockEntity
     public void onLoad() {
         super.onLoad();
         lazyItemHandler = LazyOptional.of(() -> itemHandler);
-        hbmProvider = LazyOptional.of(() -> this);
-        hbmReceiver = LazyOptional.of(() -> this);
-        hbmConnector = LazyOptional.of(() -> this);
-
-        if (level != null && !level.isClientSide) {
-            com.trd.api.energy.EnergyNetworkManager.get(
-                    (net.minecraft.server.level.ServerLevel) level).addNode(worldPosition);
-        }
 
         recalculateCellStats();
     }
@@ -293,16 +273,8 @@ public class MachineBatteryBlockEntity extends BlockEntity
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
-        if (hbmConnector.isPresent())
-            hbmConnector.invalidate();
         if (lazyItemHandler.isPresent())
             lazyItemHandler.invalidate();
-        if (hbmProvider.isPresent())
-            hbmProvider.invalidate();
-        if (hbmReceiver.isPresent())
-            hbmReceiver.invalidate();
-        if (feCapabilityProvider != null)
-            feCapabilityProvider.invalidate();
     }
 
     // ====================== TICK ======================
@@ -312,9 +284,6 @@ public class MachineBatteryBlockEntity extends BlockEntity
             return;
 
         EnergyNetworkManager manager = EnergyNetworkManager.get((ServerLevel) level);
-        if (!manager.hasNode(pos)) {
-            manager.addNode(pos);
-        }
 
         long gameTime = level.getGameTime();
 
@@ -543,23 +512,6 @@ public class MachineBatteryBlockEntity extends BlockEntity
         return this.unchargingSpeed;
     }
 
-    // --- IEnergyProvider & IEnergyReceiver ---
-    @Override
-    public long getEnergyStored() {
-        return this.energy;
-    }
-
-    @Override
-    public long getMaxEnergyStored() {
-        return this.capacity;
-    }
-
-    @Override
-    public void setEnergyStored(long energy) {
-        this.energy = Math.max(0, Math.min(this.capacity, energy));
-        setChanged();
-    }
-
     @Override
     public long getProvideSpeed() {
         return this.unchargingSpeed;
@@ -571,54 +523,11 @@ public class MachineBatteryBlockEntity extends BlockEntity
     }
 
     @Override
-    public Priority getPriority() {
-        return this.priority;
-    }
-
-    public void setPriority(Priority p) {
-        this.priority = p;
-        setChanged();
-    }
-
-    @Override
     public boolean canConnectEnergy(Direction side) {
         Direction facing = this.getBlockState().getValue(MachineBatteryBlock.FACING);
         return side == facing.getOpposite();
     }
 
-    @Override
-    public long extractEnergy(long maxExtract, boolean simulate) {
-        if (!canExtract())
-            return 0;
-        long energyExtracted = Math.min(this.energy, Math.min(this.unchargingSpeed, maxExtract));
-        if (!simulate && energyExtracted > 0) {
-            setEnergyStored(this.energy - energyExtracted);
-        }
-        return energyExtracted;
-    }
-
-    @Override
-    public boolean canExtract() {
-        int m = getCurrentMode();
-        return (m == 0 || m == 2) && this.energy > 0 && this.unchargingSpeed > 0;
-    }
-
-    @Override
-    public long receiveEnergy(long maxReceive, boolean simulate) {
-        if (!canReceive())
-            return 0;
-        long energyReceived = Math.min(this.capacity - this.energy, Math.min(this.chargingSpeed, maxReceive));
-        if (!simulate && energyReceived > 0) {
-            setEnergyStored(this.energy + energyReceived);
-        }
-        return energyReceived;
-    }
-
-    @Override
-    public boolean canReceive() {
-        int m = getCurrentMode();
-        return (m == 0 || m == 1) && this.energy < this.capacity && this.chargingSpeed > 0;
-    }
 
     // --- Capabilities ---
     @Override
@@ -626,24 +535,6 @@ public class MachineBatteryBlockEntity extends BlockEntity
         if (cap == ForgeCapabilities.ITEM_HANDLER) {
             return lazyItemHandler.cast();
         }
-
-        if (cap == ModCapabilities.ENERGY_CONNECTOR) {
-            return hbmConnector.cast();
-        }
-
-        int m = getCurrentMode();
-
-        if (cap == ModCapabilities.ENERGY_PROVIDER && (m == 0 || m == 2)) {
-            return hbmProvider.cast();
-        }
-
-        if (cap == ModCapabilities.ENERGY_RECEIVER && (m == 0 || m == 1)) {
-            return hbmReceiver.cast();
-        }
-
-        LazyOptional<T> feCap = feCapabilityProvider.getCapability(cap, side);
-        if (feCap.isPresent())
-            return feCap;
 
         return super.getCapability(cap, side);
     }
@@ -653,14 +544,8 @@ public class MachineBatteryBlockEntity extends BlockEntity
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        this.energy = tag.getLong("Energy");
         this.lastEnergy = tag.getLong("lastEnergy");
         this.energyDelta = tag.getLong("energyDelta");
-        this.mode = tag.getInt("mode");
-        if (tag.contains("priority")) {
-            int priorityIndex = tag.getInt("priority");
-            this.priority = Priority.values()[Math.max(0, Math.min(priorityIndex, Priority.values().length - 1))];
-        }
         if (tag.contains("Inventory")) {
             itemHandler.deserializeNBT(tag.getCompound("Inventory"));
         }
@@ -684,11 +569,8 @@ public class MachineBatteryBlockEntity extends BlockEntity
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
-        tag.putLong("Energy", this.energy);
-        tag.putInt("mode", this.mode);
         tag.putLong("lastEnergy", this.lastEnergy);
         tag.putLong("energyDelta", this.energyDelta);
-        tag.putInt("priority", this.priority.ordinal());
         tag.put("Inventory", itemHandler.serializeNBT());
 
         for (int i = 0; i < CELL_SLOT_COUNT; i++) {
@@ -732,25 +614,6 @@ public class MachineBatteryBlockEntity extends BlockEntity
         }
     }
 
-    @Override
-    public void setRemoved() {
-        super.setRemoved();
-        if (this.level != null && !this.level.isClientSide) {
-            EnergyNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
-        }
-    }
-
-    @Override
-    public CompoundTag getUpdateTag() {
-        CompoundTag tag = super.getUpdateTag();
-        saveAdditional(tag);
-        return tag;
-    }
-
-    @Override
-    public Packet<ClientGamePacketListener> getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this);
-    }
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
