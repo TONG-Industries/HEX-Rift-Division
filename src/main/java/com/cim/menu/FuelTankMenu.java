@@ -24,12 +24,10 @@ public class FuelTankMenu extends AbstractContainerMenu {
         this.data = data;
 
         entity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
-            // fill input, fill output, drain input, drain output как в бочке
             this.addSlot(new SlotItemHandler(handler, 0, 102, 8));
             this.addSlot(new SlotItemHandler(handler, 1, 102, 44));
             this.addSlot(new SlotItemHandler(handler, 2, 124, 8));
             this.addSlot(new SlotItemHandler(handler, 3, 124, 44));
-            // protector slot – тот же x=40, y=8 как в бочке
             this.addSlot(new SlotItemHandler(handler, 4, 40, 8));
         });
 
@@ -48,6 +46,10 @@ public class FuelTankMenu extends AbstractContainerMenu {
     public int getCapacity() { return blockEntity.getCapacity(); }
     public int getMode() { return data.get(0); }
 
+    public FuelTankBlockEntity getBlockEntity() {
+        return this.blockEntity;
+    }
+
     @Override
     public boolean stillValid(Player player) {
         return blockEntity.getLevel() != null &&
@@ -55,8 +57,6 @@ public class FuelTankMenu extends AbstractContainerMenu {
                 player.distanceToSqr(blockEntity.getBlockPos().getCenter()) < 64.0;
     }
 
-    // Инвентарь и хотбар – координаты как в бочке (y=66 для первого слота инвентаря,
-    // хотбар y=124, но у бочки высота 148, поэтому хотбар на y=124)
     private void addPlayerInventory(Inventory playerInventory) {
         for (int i = 0; i < 3; ++i) {
             for (int l = 0; l < 9; ++l) {
@@ -78,16 +78,26 @@ public class FuelTankMenu extends AbstractContainerMenu {
         if (slot != null && slot.hasItem()) {
             ItemStack slotStack = slot.getItem();
             stack = slotStack.copy();
-            if (index < 4) { // из слотов цистерны в инвентарь
-                if (!this.moveItemStackTo(slotStack, 4, 40, true)) return ItemStack.EMPTY;
-            } else { // из инвентаря в слоты цистерны
+
+            // Из цистерны (0-4) в инвентарь (5-41)
+            if (index < 5) {
+                if (!this.moveItemStackTo(slotStack, 5, 41, true)) {
+                    return ItemStack.EMPTY;
+                }
+            } else {
+                // Из инвентаря в цистерну
                 if (!this.moveItemStackTo(slotStack, 0, 1, false) &&   // fill input
-                        !this.moveItemStackTo(slotStack, 2, 3, false)) {   // drain input
+                        !this.moveItemStackTo(slotStack, 2, 3, false) &&   // drain input
+                        !this.moveItemStackTo(slotStack, 4, 5, false)) {   // protector
                     return ItemStack.EMPTY;
                 }
             }
-            if (slotStack.isEmpty()) slot.set(ItemStack.EMPTY);
-            else slot.setChanged();
+
+            if (slotStack.isEmpty()) {
+                slot.set(ItemStack.EMPTY);
+            } else {
+                slot.setChanged();
+            }
         }
         return stack;
     }

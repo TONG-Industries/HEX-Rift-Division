@@ -1,6 +1,7 @@
 package com.cim.client.overlay.gui;
 
 import com.cim.api.fluids.ModFluids;
+import com.cim.item.ModItems;
 import com.cim.main.CrustalIncursionMod;
 import com.cim.menu.FuelTankMenu;
 import net.minecraft.ChatFormatting;
@@ -14,6 +15,8 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -23,12 +26,17 @@ import java.util.List;
 public class GUIFuelTank extends AbstractContainerScreen<FuelTankMenu> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(CrustalIncursionMod.MOD_ID, "textures/gui/storage/fluid_tank_gui.png");
-    // Используем ту же текстуру, что и у бочки (там есть кнопка и фон)
 
     private static final int TANK_X = 62;
     private static final int TANK_Y = 8;
     private static final int TANK_W = 34;
     private static final int TANK_H = 52;
+
+    private static final int SHIELD_X = 62;
+    private static final int SHIELD_Y = 8;
+    private static final int SHIELD_W = 34;
+    private static final int SHIELD_H = 52;
+
     private static final int MODE_X = 41;
     private static final int MODE_Y = 45;
     private static final int MODE_SIZE = 15;
@@ -36,7 +44,7 @@ public class GUIFuelTank extends AbstractContainerScreen<FuelTankMenu> {
     public GUIFuelTank(FuelTankMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 148; // как у бочки
+        this.imageHeight = 148;
     }
 
     @Override
@@ -94,9 +102,25 @@ public class GUIFuelTank extends AbstractContainerScreen<FuelTankMenu> {
         int y = this.topPos;
         graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight);
 
-        // Кнопка режима (такая же как в бочке)
         int mode = menu.getMode();
         graphics.blit(TEXTURE, x + MODE_X, y + MODE_Y, 177, mode * 16, MODE_SIZE, MODE_SIZE);
+
+        // Рендер визуального щита протектора (цистерна неуязвима, эффект чисто декоративный)
+        ItemStack protectorStack = menu.getSlot(4).getItem();
+        if (!protectorStack.isEmpty()) {
+            Item item = protectorStack.getItem();
+            int vOffset = -1;
+            if (item == ModItems.PROTECTOR_STEEL.get()) {
+                vOffset = 104;
+            } else if (item == ModItems.PROTECTOR_LEAD.get()) {
+                vOffset = 52;
+            } else if (item == ModItems.PROTECTOR_TUNGSTEN.get()) {
+                vOffset = 0;
+            }
+            if (vOffset != -1) {
+                graphics.blit(TEXTURE, x + SHIELD_X, y + SHIELD_Y, 193, vOffset, SHIELD_W, SHIELD_H);
+            }
+        }
 
         renderFluid(graphics, x + TANK_X, y + TANK_Y, TANK_W, TANK_H);
     }
@@ -122,7 +146,6 @@ public class GUIFuelTank extends AbstractContainerScreen<FuelTankMenu> {
                 gui.blit(guiTexture, drawX, drawY, 0, 0, segWidth, segHeight, 16, 16);
             }
         }
-        // Линия поверхности
         int surfaceY = y + height - fluidHeight;
         gui.fill(x, surfaceY, x + width, surfaceY + 1, 0x40FFFFFF);
         gui.setColor(1.0F, 1.0F, 1.0F, 1.0F);

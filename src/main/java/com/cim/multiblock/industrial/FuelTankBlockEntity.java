@@ -1,12 +1,12 @@
 package com.cim.multiblock.industrial;
 
 import com.cim.api.fluids.system.FluidNetworkManager;
-
 import com.cim.api.fluids.system.ITankWithMode;
-import com.cim.item.tools.InfiniteFluidBarrelItem;
-import com.cim.multiblock.system.IFluidTankProvider;
 import com.cim.block.entity.ModBlockEntities;
+import com.cim.item.ModItems;
+import com.cim.item.tools.InfiniteFluidBarrelItem;
 import com.cim.menu.FuelTankMenu;
+import com.cim.multiblock.system.IFluidTankProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -22,6 +22,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -46,8 +47,8 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
     public static final int CAPACITY = 768_000;
     public static final int MAX_TRANSFER_RATE = 400;
 
-    // Слоты: 0 - fill input, 1 - fill output, 2 - drain input, 3 - drain output, 4 - protector
-    private final ItemStackHandler inventory = new ItemStackHandler(5) {
+    // Слоты: 0 - fill input, 1 - fill output, 2 - drain input, 3 - drain output, 4 - protector (визуальный)
+    public final ItemStackHandler itemHandler = new ItemStackHandler(5) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
@@ -55,77 +56,40 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
                 level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
             }
         }
+
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             if (slot == 0 || slot == 2) {
-                // ФИКС: бесконечный источник не имеет FLUID_HANDLER_ITEM, но должен лезть в слот
                 if (stack.getItem() instanceof InfiniteFluidBarrelItem) return true;
                 return stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).isPresent();
             }
             if (slot == 4) {
-                return true; // протектор – любой предмет
+                Item item = stack.getItem();
+                return item == ModItems.PROTECTOR_STEEL.get()
+                        || item == ModItems.PROTECTOR_LEAD.get()
+                        || item == ModItems.PROTECTOR_TUNGSTEN.get();
             }
             return false;
         }
     };
-
-    // Геттер для использования в меню
+    @Override
+    public LazyOptional<IFluidHandler> getFluidHandlerCapability() {
+        return lazyFluidHandler;
+    }
+    // Геттер для совместимости со старым кодом (дроп при разрушении блока)
     public ItemStackHandler getInventory() {
-        return inventory;
+        return itemHandler;
     }
 
-    private final FluidTank fluidTank = new FluidTank(CAPACITY) {
-        @Override
-        protected void onContentsChanged() {
-            setChanged();
-            if (level != null && !level.isClientSide) {
-                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            }
-        }
-
-        @Override
-        public boolean isFluidValid(FluidStack stack) {
-            if (fluidFilter.equals("none")) return false;
-            ResourceLocation loc = ForgeRegistries.FLUIDS.getKey(stack.getFluid());
-            return loc != null && loc.toString().equals(fluidFilter);
-        }
-    };
+    private final FluidTank fluidTank = createTank();
 
     private int mode = 0; // 0 - both, 1 - input only, 2 - output only, 3 - disabled
     private String fluidFilter = "none";
 
-    private final IFluidHandler externalHandler = new IFluidHandler() {
-        @Override public int getTanks() { return 1; }
-        @Override public @NotNull FluidStack getFluidInTank(int tank) { return fluidTank.getFluid(); }
-        @Override public int getTankCapacity(int tank) { return fluidTank.getCapacity(); }
-        @Override public boolean isFluidValid(int tank, @NotNull FluidStack stack) { return true; }
+    private final IFluidHandler networkFluidHandler = createNetworkHandler();
 
-        @Override
-        public int fill(FluidStack resource, FluidAction action) {
-            if (mode == 2 || mode == 3) return 0;
-            FluidStack toFill = resource.copy();
-            toFill.setAmount(Math.min(toFill.getAmount(), MAX_TRANSFER_RATE));
-            return fluidTank.fill(toFill, action);
-        }
-
-        @Override
-        public @NotNull FluidStack drain(FluidStack resource, FluidAction action) {
-            if (mode == 1 || mode == 3) return FluidStack.EMPTY;
-            int maxDrain = Math.min(resource.getAmount(), MAX_TRANSFER_RATE);
-            FluidStack toDrain = resource.copy();
-            toDrain.setAmount(maxDrain);
-            return fluidTank.drain(toDrain, action);
-        }
-
-        @Override
-        public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
-            if (mode == 1 || mode == 3) return FluidStack.EMPTY;
-            return fluidTank.drain(Math.min(maxDrain, MAX_TRANSFER_RATE), action);
-        }
-    };
-
-    private final LazyOptional<IFluidHandler> lazyFluidHandler = LazyOptional.of(() -> externalHandler);
-    private final LazyOptional<ItemStackHandler> lazyItemHandler = LazyOptional.of(() -> inventory);
+    private final LazyOptional<IFluidHandler> lazyFluidHandler = LazyOptional.of(() -> networkFluidHandler);
+    private final LazyOptional<ItemStackHandler> lazyItemHandler = LazyOptional.of(() -> itemHandler);
 
     private final ContainerData data = new SimpleContainerData(1) {
         @Override public void set(int index, int value) { mode = value; }
@@ -136,6 +100,57 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
         super(ModBlockEntities.FUEL_TANK_BE.get(), pos, state);
     }
 
+    private FluidTank createTank() {
+        return new FluidTank(CAPACITY) {
+            @Override
+            protected void onContentsChanged() {
+                setChanged();
+                if (level != null && !level.isClientSide) {
+                    level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+                }
+            }
+
+            @Override
+            public boolean isFluidValid(FluidStack stack) {
+                if (fluidFilter.equals("none")) return false;
+                ResourceLocation loc = ForgeRegistries.FLUIDS.getKey(stack.getFluid());
+                return loc != null && loc.toString().equals(fluidFilter);
+            }
+        };
+    }
+
+    private IFluidHandler createNetworkHandler() {
+        return new IFluidHandler() {
+            @Override public int getTanks() { return 1; }
+            @Override public @NotNull FluidStack getFluidInTank(int tank) { return fluidTank.getFluid(); }
+            @Override public int getTankCapacity(int tank) { return fluidTank.getCapacity(); }
+            @Override public boolean isFluidValid(int tank, @NotNull FluidStack stack) { return fluidTank.isFluidValid(stack); }
+
+            @Override
+            public int fill(FluidStack resource, FluidAction action) {
+                if (mode == 2 || mode == 3) return 0;
+                FluidStack toFill = resource.copy();
+                toFill.setAmount(Math.min(toFill.getAmount(), MAX_TRANSFER_RATE));
+                return fluidTank.fill(toFill, action);
+            }
+
+            @Override
+            public @NotNull FluidStack drain(FluidStack resource, FluidAction action) {
+                if (mode == 1 || mode == 3) return FluidStack.EMPTY;
+                int maxDrain = Math.min(resource.getAmount(), MAX_TRANSFER_RATE);
+                FluidStack toDrain = resource.copy();
+                toDrain.setAmount(maxDrain);
+                return fluidTank.drain(toDrain, action);
+            }
+
+            @Override
+            public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
+                if (mode == 1 || mode == 3) return FluidStack.EMPTY;
+                return fluidTank.drain(Math.min(maxDrain, MAX_TRANSFER_RATE), action);
+            }
+        };
+    }
+
     public static void tick(Level level, BlockPos pos, BlockState state, FuelTankBlockEntity be) {
         if (level.isClientSide) return;
         be.processBuckets();
@@ -143,7 +158,7 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
 
     private void processBuckets() {
         // 1. Бесконечный источник в слоте 2
-        ItemStack infiniteSource = inventory.getStackInSlot(2);
+        ItemStack infiniteSource = itemHandler.getStackInSlot(2);
         if (!infiniteSource.isEmpty() && infiniteSource.getItem() instanceof InfiniteFluidBarrelItem) {
             if (!fluidFilter.equals("none")) {
                 Fluid filterFluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(fluidFilter));
@@ -154,11 +169,10 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
                     }
                 }
             }
-            // Не уменьшаем стак, он бесконечный
         }
 
         // 2. Обычные вёдра: выливание (drain input -> бак)
-        ItemStack drainIn = inventory.getStackInSlot(2);
+        ItemStack drainIn = itemHandler.getStackInSlot(2);
         if (!drainIn.isEmpty() && !(drainIn.getItem() instanceof InfiniteFluidBarrelItem)) {
             FluidActionResult result = FluidUtil.tryEmptyContainer(drainIn, fluidTank, fluidTank.getSpace(), null, true);
             if (result.isSuccess()) {
@@ -170,7 +184,7 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
 
         // 3. Наполнение вёдер из бака (бак -> fill output)
         if (!fluidTank.isEmpty()) {
-            ItemStack fillIn = inventory.getStackInSlot(0);
+            ItemStack fillIn = itemHandler.getStackInSlot(0);
             if (!fillIn.isEmpty()) {
                 FluidActionResult result = FluidUtil.tryFillContainer(fillIn, fluidTank, fluidTank.getFluidAmount(), null, true);
                 if (result.isSuccess()) {
@@ -184,9 +198,9 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
 
     private boolean insertOrMerge(int slot, ItemStack stack) {
         if (stack.isEmpty()) return true;
-        ItemStack existing = inventory.getStackInSlot(slot);
+        ItemStack existing = itemHandler.getStackInSlot(slot);
         if (existing.isEmpty()) {
-            inventory.setStackInSlot(slot, stack.copy());
+            itemHandler.setStackInSlot(slot, stack.copy());
             return true;
         } else if (ItemStack.isSameItemSameTags(existing, stack) &&
                 existing.getCount() + stack.getCount() <= existing.getMaxStackSize()) {
@@ -221,7 +235,6 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            // Обновляем сеть – чтобы трубы с фильтром переподключились
             FluidNetworkManager manager = FluidNetworkManager.get((ServerLevel) level);
             manager.removeNode(getBlockPos());
             manager.addNode(getBlockPos());
@@ -236,11 +249,6 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
     public int getCapacity() { return CAPACITY; }
     public ContainerData getData() { return data; }
 
-
-    @Override
-    public LazyOptional<IFluidHandler> getFluidHandlerCapability() {
-        return lazyFluidHandler;
-    }
     @Override
     public void onLoad() {
         super.onLoad();
@@ -258,6 +266,13 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
     }
 
     @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        lazyFluidHandler.invalidate();
+        lazyItemHandler.invalidate();
+    }
+
+    @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.FLUID_HANDLER) {
             return lazyFluidHandler.cast();
@@ -271,7 +286,7 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
-        tag.put("Inventory", inventory.serializeNBT());
+        tag.put("Inventory", itemHandler.serializeNBT());
         tag.put("FluidTank", fluidTank.writeToNBT(new CompoundTag()));
         tag.putInt("Mode", mode);
         tag.putString("FluidFilter", fluidFilter);
@@ -280,7 +295,7 @@ public class FuelTankBlockEntity extends BlockEntity implements MenuProvider, IF
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        inventory.deserializeNBT(tag.getCompound("Inventory"));
+        itemHandler.deserializeNBT(tag.getCompound("Inventory"));
         fluidTank.readFromNBT(tag.getCompound("FluidTank"));
         mode = tag.getInt("Mode");
         if (tag.contains("FluidFilter")) {
