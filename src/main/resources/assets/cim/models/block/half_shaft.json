@@ -1,9 +1,0 @@
-{
-  "loader": "forge:obj",
-  "model": "cim:models/block/half_shaft.obj",
-  "flip_v": true,
-  "textures": {
-    "half_shaft_texture": "cim:block/half_shaft",
-    "particle": "cim:block/shaft_heavy_steel"
-  }
-}

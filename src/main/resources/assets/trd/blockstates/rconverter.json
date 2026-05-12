@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/rconverter" },
+    "facing=east":  { "model": "trd:block/rconverter", "y": 90 },
+    "facing=south": { "model": "trd:block/rconverter", "y": 180 },
+    "facing=west":  { "model": "trd:block/rconverter", "y": 270 },
+    "facing=up":    { "model": "trd:block/rconverter", "x": 270 },
+    "facing=down":  { "model": "trd:block/rconverter", "x": 90 }
+  }
+}

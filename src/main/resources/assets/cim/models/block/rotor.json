@@ -1,9 +1,0 @@
-{
-  "loader": "forge:obj",
-  "model": "cim:models/block/rotor.obj",
-  "flip_v": true,
-  "textures": {
-    "rotor": "cim:block/rotor",
-    "particle": "cim:block/rotor"
-  }
-}

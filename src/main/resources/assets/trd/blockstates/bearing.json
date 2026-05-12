@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/bearing" },
+    "facing=south": { "model": "trd:block/bearing", "y": 180 },
+    "facing=west":  { "model": "trd:block/bearing", "y": 270 },
+    "facing=east":  { "model": "trd:block/bearing", "y": 90 },
+    "facing=up":    { "model": "trd:block/bearing", "x": -90 },
+    "facing=down":  { "model": "trd:block/bearing", "x": 90 }
+  }
+}

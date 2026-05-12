@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/stator_vertical.obj",
+  "flip_v": false,
+  "textures": {
+    "stator": "trd:block/stator",
+    "particle": "trd:block/stator"
+  }
+}

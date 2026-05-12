@@ -1,0 +1,5 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/bearing.obj",
+  "flip_v": true
+}

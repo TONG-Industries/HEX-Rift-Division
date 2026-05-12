@@ -4,18 +4,18 @@ license="GPL-3.0"
 issueTrackerURL="https://github.com/TONG-Industries/Crustal-Incursion"
 
 [[mods]]
-modId="cim"
+modId="trd"
 version="0.0.1-alpha"
-displayName="Crustal Incursion Mod"
+displayName="TONG: Rift Division"
 authors="TONG Industries"
 description='''
     A dark, necrotic expansion for Minecraft.
-    Master the forbidden arts and explore the cim.
+    Master the forbidden arts and explore the trd.
     '''
 displayTest="MATCH_VERSION"
 
 # Зависимость от Forge
-[[dependencies.cim]]
+[[dependencies.trd]]
 modId="forge"
 mandatory=true
 versionRange="[47,)"
@@ -23,7 +23,7 @@ ordering="NONE"
 side="BOTH"
 
 # Зависимость от самого Minecraft
-[[dependencies.cim]]
+[[dependencies.trd]]
 modId="minecraft"
 mandatory=true
 versionRange="[1.20.1,1.21)"
@@ -31,14 +31,14 @@ ordering="NONE"
 side="BOTH"
 
 # Зависимость от GeckoLib (обязательно, раз мы его используем в коде)
-[[dependencies.cim]]
+[[dependencies.trd]]
 modId="geckolib"
 mandatory=true
 versionRange="[4.4,)"
 ordering="AFTER"
 side="BOTH"
 
-[[dependencies.cim]]
+[[dependencies.trd]]
 modId="terrablender"
 mandatory=true
 versionRange="[3.0.0,)"

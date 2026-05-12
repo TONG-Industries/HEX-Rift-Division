@@ -1,0 +1,7 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "trd:item/fluid_identifier_base",
+    "layer1": "trd:item/fluid_identifier_drop"
+  }
+}

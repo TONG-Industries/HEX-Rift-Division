@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "facing=north": { "model": "cim:block/heater" },
-    "facing=east":  { "model": "cim:block/heater", "y": 90 },
-    "facing=south": { "model": "cim:block/heater", "y": 180 },
-    "facing=west":  { "model": "cim:block/heater", "y": 270 }
-  }
-}

@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/casting_descent" },
+    "facing=east":  { "model": "trd:block/casting_descent", "y": 90 },
+    "facing=south": { "model": "trd:block/casting_descent", "y": 180 },
+    "facing=west":  { "model": "trd:block/casting_descent", "y": 270 }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/mining_port" },
+    "facing=east":  { "model": "trd:block/mining_port", "y": 90 },
+    "facing=south": { "model": "trd:block/mining_port", "y": 180 },
+    "facing=west":  { "model": "trd:block/mining_port", "y": 270 },
+    "facing=up":    { "model": "trd:block/mining_port", "x": 270 },
+    "facing=down":  { "model": "trd:block/mining_port", "x": 90 }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north,has_shaft=false": { "model": "trd:block/tachometr", "x": 90 },
+    "facing=north,has_shaft=true":  { "model": "trd:block/tachometr", "x": 90 },
+    "facing=south,has_shaft=false": { "model": "trd:block/tachometr", "x": 90, "y": 180 },
+    "facing=south,has_shaft=true":  { "model": "trd:block/tachometr", "x": 90, "y": 180 },
+    "facing=west,has_shaft=false":  { "model": "trd:block/tachometr", "x": 90, "y": 270 },
+    "facing=west,has_shaft=true":   { "model": "trd:block/tachometr", "x": 90, "y": 270 },
+    "facing=east,has_shaft=false":  { "model": "trd:block/tachometr", "x": 90, "y": 90 },
+    "facing=east,has_shaft=true":   { "model": "trd:block/tachometr", "x": 90, "y": 90 },
+    "facing=up,has_shaft=false":    { "model": "trd:block/tachometr" },
+    "facing=up,has_shaft=true":     { "model": "trd:block/tachometr" },
+    "facing=down,has_shaft=false":  { "model": "trd:block/tachometr", "x": 180 },
+    "facing=down,has_shaft=true":   { "model": "trd:block/tachometr", "x": 180 }
+  }
+}

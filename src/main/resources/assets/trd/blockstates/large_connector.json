@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=up":    { "model": "trd:block/large_connector" },
+    "facing=down":  { "model": "trd:block/large_connector", "x": 180 },
+    "facing=north": { "model": "trd:block/large_connector", "x": 90 },
+    "facing=south": { "model": "trd:block/large_connector", "x": 90, "y": 180 },
+    "facing=west":  { "model": "trd:block/large_connector", "x": 90, "y": 270 },
+    "facing=east":  { "model": "trd:block/large_connector", "x": 90, "y": 90 }
+  }
+}

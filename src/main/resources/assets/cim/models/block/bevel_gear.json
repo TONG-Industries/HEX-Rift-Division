@@ -1,9 +1,0 @@
-{
-  "loader": "forge:obj",
-  "model": "cim:models/block/bevel_gear.obj",
-  "flip_v": true,
-  "textures": {
-    "bevel_texture": "cim:block/bevel_gear",
-    "particle": "cim:block/bevel_gear"
-  }
-}

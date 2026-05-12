@@ -1,0 +1,6 @@
+# Made in Blockbench 5.1.4
+newmtl m_ac09f9b5-61be-877b-6826-12d2ddd36e4a
+map_Kd trd:block/tank
+newmtl m_4391d1a7-7372-bd7e-b702-913f07f6803e
+map_Kd trd:block/base
+newmtl none

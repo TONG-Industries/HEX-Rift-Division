@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/heater" },
+    "facing=east":  { "model": "trd:block/heater", "y": 90 },
+    "facing=south": { "model": "trd:block/heater", "y": 180 },
+    "facing=west":  { "model": "trd:block/heater", "y": 270 }
+  }
+}

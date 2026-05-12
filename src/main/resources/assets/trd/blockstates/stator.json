@@ -1,0 +1,18 @@
+{
+  "variants": {
+    "axis=x,facing=down":  { "model": "trd:block/stator" },
+    "axis=x,facing=up":    { "model": "trd:block/stator", "x": 180 },
+    "axis=x,facing=south": { "model": "trd:block/stator", "x": 270 },
+    "axis=x,facing=north": { "model": "trd:block/stator", "x": 90 },
+
+    "axis=z,facing=down":  { "model": "trd:block/stator", "y": 90 },
+    "axis=z,facing=up":    { "model": "trd:block/stator", "x": 180, "y": 90 },
+    "axis=z,facing=east":  { "model": "trd:block/stator", "x": 270, "y": 90 },
+    "axis=z,facing=west":  { "model": "trd:block/stator", "x": 90, "y": 90 },
+
+    "axis=y,facing=west":  { "model": "trd:block/stator_vertical" },
+    "axis=y,facing=east":  { "model": "trd:block/stator_vertical", "y": 180 },
+    "axis=y,facing=north": { "model": "trd:block/stator_vertical", "y": 270 },
+    "axis=y,facing=south": { "model": "trd:block/stator_vertical", "y": 90 }
+  }
+}

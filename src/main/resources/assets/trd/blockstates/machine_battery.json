@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/machine_battery" },
+    "facing=south": { "model": "trd:block/machine_battery", "y": 180 },
+    "facing=west":  { "model": "trd:block/machine_battery", "y": 270 },
+    "facing=east":  { "model": "trd:block/machine_battery", "y": 90 }
+  }
+}

@@ -96,7 +96,7 @@
         ```bash
         gradlew.bat build
         ```
-4.  **Найди готовый `.jar` файл** в папке `build/libs/`. Он будет называться `cim-<версия>.jar`.
+4.  **Найди готовый `.jar` файл** в папке `build/libs/`. Он будет называться `trd-<версия>.jar`.
 
 ---
 
@@ -108,8 +108,8 @@
 *   **Minecraft Version Range:** `[1.20.1,1.21)`
 *   **Forge Version:** 47.2.0 (рекомендуемая), диапазон: `[47,)`
 *   **Mappings:** Official (`official`) для версии 1.20.1
-*   **Mod ID:** `cim`
-*   **Mod Group:** `com.cim`
+*   **Mod ID:** `trd`
+*   **Mod Group:** `com.trd`
 *   **Текущая версия мода:** `0.0.1-alpha
 
 ---

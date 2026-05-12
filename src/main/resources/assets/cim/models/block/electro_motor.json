@@ -1,9 +1,0 @@
-{
-  "loader": "forge:obj",
-  "model": "cim:models/block/electro_motor.obj",
-  "flip_v": true,
-  "textures": {
-    "motor_texture": "cim:block/electro_motor",
-    "particle": "cim:block/electro_motor"
-  }
-}

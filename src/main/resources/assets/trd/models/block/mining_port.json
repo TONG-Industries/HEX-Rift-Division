@@ -1,0 +1,25 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "trd:block/cargo_port",
+    "top": "trd:block/adder_side_alt",
+    "bottom": "trd:block/adder_side_alt",
+    "front": "trd:block/gear_port_green",
+    "back": "trd:block/gear_port_red",
+    "side": "trd:block/cargo_port"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "texture": "#bottom", "cullface": "down" },
+        "up":    { "texture": "#top",    "cullface": "up" },
+        "north": { "texture": "#front",  "cullface": "north" },
+        "south": { "texture": "#back",   "cullface": "south" },
+        "west":  { "texture": "#side",   "cullface": "west" },
+        "east":  { "texture": "#side",   "cullface": "east" }
+      }
+    }
+  ]
+}

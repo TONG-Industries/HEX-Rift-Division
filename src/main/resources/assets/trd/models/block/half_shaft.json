@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/half_shaft.obj",
+  "flip_v": true,
+  "textures": {
+    "half_shaft_texture": "trd:block/half_shaft",
+    "particle": "trd:block/shaft_heavy_steel"
+  }
+}

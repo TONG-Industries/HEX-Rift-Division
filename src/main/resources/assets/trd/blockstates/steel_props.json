@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=up":    { "model": "trd:block/steel_props" },
+    "facing=down":  { "model": "trd:block/steel_props", "x": 180 },
+    "facing=north": { "model": "trd:block/steel_props", "x": 90 },
+    "facing=south": { "model": "trd:block/steel_props", "x": 90, "y": 180 },
+    "facing=west":  { "model": "trd:block/steel_props", "x": 90, "y": 270 },
+    "facing=east":  { "model": "trd:block/steel_props", "x": 90, "y": 90 }
+  }
+}

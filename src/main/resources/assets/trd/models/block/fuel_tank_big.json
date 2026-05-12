@@ -1,0 +1,16 @@
+{
+  "loader": "forge:composite",
+  "textures": {
+    "particle": "trd:block/fuel_tank_big"
+  },
+  "children": {
+    "main": {
+      "loader": "forge:obj",
+      "model": "trd:models/block/fuel_tank_big.obj",
+      "flip_v": true,
+      "textures": {
+        "default": "trd:block/fuel_tank_big"
+      }
+    }
+  }
+}

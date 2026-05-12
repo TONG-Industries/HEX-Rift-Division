@@ -1,0 +1,33 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.trd.compat.irisflw.mixin",
+  "plugin": "com.trd.compat.OculusCompatMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.trd.refmap.json",
+  "mixins": [],
+  "client": [
+    "MixinModelBlockRenderer",
+    "flw.vertex.MixinMeshEmitter",
+    "flw.vertex.MixinMeshHelper",
+    "flw.FlwCompilationAccessor",
+    "flw.MixinFlwPrograms",
+    "flw.MixinPipelineCompiler",
+    "flw.MixinPooledMesh",
+    "flw.MixinProgramStitcher",
+    "flw.PipelineCompilerAccessor",
+    "flw.ShaderCompilerAccessor",
+    "flw.SimpleQuadMeshAccessor",
+    "iris.MixinIrisRenderingPipeline",
+    "iris.MixinPipelineManager",
+    "iris.MixinProgramDirectives",
+    "iris.MixinProgramSamplers",
+    "iris.MixinProgramSource",
+    "iris.MixinShaderPackSourceNames",
+    "iris.MixinShadowRenderer",
+    "iris.ProgramSetMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

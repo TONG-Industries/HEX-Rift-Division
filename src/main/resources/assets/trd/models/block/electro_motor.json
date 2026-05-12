@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/electro_motor.obj",
+  "flip_v": true,
+  "textures": {
+    "motor_texture": "trd:block/electro_motor",
+    "particle": "trd:block/electro_motor"
+  }
+}

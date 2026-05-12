@@ -1,0 +1,25 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "trd:block/rotation_meter_side",
+    "top": "trd:block/rotation_meter_top",
+    "bottom": "trd:block/rotation_meter_top",
+    "front": "trd:block/rotation_meter_side",
+    "back": "trd:block/rotation_meter_side",
+    "side": "trd:block/gear_port_open"
+  },
+  "elements": [
+    {
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 16, 16 ],
+      "faces": {
+        "down":  { "texture": "#bottom", "cullface": "down" },
+        "up":    { "texture": "#top",    "cullface": "up" },
+        "north": { "texture": "#front",  "cullface": "north" },
+        "south": { "texture": "#back",   "cullface": "south" },
+        "west":  { "texture": "#side",   "cullface": "west" },
+        "east":  { "texture": "#side",   "cullface": "east" }
+      }
+    }
+  ]
+}

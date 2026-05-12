@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/bevel_gear.obj",
+  "flip_v": true,
+  "textures": {
+    "bevel_texture": "trd:block/bevel_gear",
+    "particle": "trd:block/bevel_gear"
+  }
+}

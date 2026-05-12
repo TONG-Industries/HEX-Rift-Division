@@ -1,9 +1,0 @@
-{
-  "loader": "forge:obj",
-  "model": "cim:models/block/stator_vertical.obj",
-  "flip_v": false,
-  "textures": {
-    "stator": "cim:block/stator",
-    "particle": "cim:block/stator"
-  }
-}

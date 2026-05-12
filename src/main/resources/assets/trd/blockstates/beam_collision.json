@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "trd:block/beam_collision" }
+  }
+}

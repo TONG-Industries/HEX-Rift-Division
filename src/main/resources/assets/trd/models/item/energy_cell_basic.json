@@ -1,0 +1,134 @@
+{
+  "credit": "Made with Blockbench",
+  "parent": "builtin/entity",
+  "texture_size": [
+    32,
+    32
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        160.9699999999998,
+        -48.3,
+        121.49
+      ],
+      "translation": [
+        -0.25,
+        -1,
+        -0.5
+      ],
+      "scale": [
+        1.5,
+        1.5,
+        1.5
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        162.27,
+        -34.39,
+        154.44
+      ],
+      "translation": [
+        -0.25,
+        -0.25,
+        0.5
+      ],
+      "scale": [
+        1.5,
+        1.5,
+        1.5
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        147.1,
+        -27.84,
+        170.11
+      ],
+      "translation": [
+        -3.75,
+        1.75,
+        1.25
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        141.82999999999993,
+        -20.0300000000002,
+        171.4699999999998
+      ],
+      "translation": [
+        -1.5,
+        0.5,
+        0
+      ]
+    },
+    "ground": {
+      "rotation": [
+        21.42,
+        1.53,
+        8.09
+      ],
+      "scale": [
+        1.5,
+        1.5,
+        1.5
+      ]
+    },
+    "gui": {
+      "rotation": [
+        47.3,
+        -34.99,
+        26.62
+      ],
+      "translation": [
+        -0.5,
+        -2.75,
+        0
+      ],
+      "scale": [
+        1.75,
+        1.75,
+        1.75
+      ]
+    },
+    "head": {
+      "rotation": [
+        0,
+        -69.25,
+        0
+      ],
+      "translation": [
+        -3,
+        6.5,
+        1
+      ],
+      "scale": [
+        4,
+        4,
+        4
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        90.82999999999993,
+        -53.73000000000002,
+        90.73999999999978
+      ],
+      "translation": [
+        -1,
+        -2.75,
+        -1.25
+      ],
+      "scale": [
+        2,
+        2,
+        2
+      ]
+    }
+  },
+  "textures": {
+    "particle": "trd:item/energy_cell_basic"
+  }
+}

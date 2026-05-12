@@ -1,0 +1,198 @@
+package com.trd.client.overlay.gui;
+
+import com.trd.api.fluids.ModFluids;
+import com.trd.item.ModItems;
+import com.trd.main.MainRegistry;
+import com.trd.menu.FluidBarrelMenu;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.minecraftforge.fluids.FluidStack;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class GUIFluidBarrel extends AbstractContainerScreen<FluidBarrelMenu> {
+
+    private static final ResourceLocation TEXTURE =
+            new ResourceLocation(MainRegistry.MOD_ID, "textures/gui/storage/fluid_tank_gui.png");
+
+    private static final int TANK_X = 62;
+    private static final int TANK_Y = 8;
+    private static final int TANK_W = 34;
+    private static final int TANK_H = 52;
+
+    private static final int SHIELD_X = 62;
+    private static final int SHIELD_Y = 8;
+    private static final int SHIELD_W = 34;
+    private static final int SHIELD_H = 52;
+
+    private static final int MODE_X = 41;
+    private static final int MODE_Y = 45;
+    private static final int MODE_SIZE = 15;
+
+    public GUIFluidBarrel(FluidBarrelMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
+        super(pMenu, pPlayerInventory, pTitle);
+        this.imageWidth = 176;
+        this.imageHeight = 148;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        this.titleLabelX = -9999;
+        this.inventoryLabelX = -9999;
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTick);
+        this.renderTooltip(graphics, mouseX, mouseY);
+        this.renderCustomTooltips(graphics, mouseX, mouseY);
+    }
+
+    private void renderCustomTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
+        int relX = mouseX - this.leftPos;
+        int relY = mouseY - this.topPos;
+
+        if (relX >= TANK_X && relX < TANK_X + TANK_W
+                && relY >= TANK_Y && relY < TANK_Y + TANK_H) {
+            List<Component> tooltip = new ArrayList<>();
+            FluidStack fluid = menu.getFluid();
+
+            if (fluid.isEmpty()) {
+                tooltip.add(Component.literal("Пусто").withStyle(ChatFormatting.GRAY));
+            } else {
+                MutableComponent fluidName = fluid.getDisplayName().copy(); // ← тип MutableComponent
+                int tintColor = IClientFluidTypeExtensions.of(fluid.getFluid()).getTintColor() | 0xFF000000;
+                Style coloredStyle = Style.EMPTY.withColor(TextColor.fromRgb(tintColor));
+                fluidName = fluidName.withStyle(coloredStyle); // теперь компилируется
+                tooltip.add(fluidName);
+                tooltip.add(Component.literal(fluid.getAmount() + " / " + menu.getCapacity() + " mB")
+                        .withStyle(ChatFormatting.GRAY));
+            }
+            graphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+        }
+
+        if (relX >= MODE_X && relX < MODE_X + MODE_SIZE
+                && relY >= MODE_Y && relY < MODE_Y + MODE_SIZE) {
+            List<Component> tooltip = new ArrayList<>();
+            String modeName = switch (menu.getMode()) {
+                case 0 -> "§aВход / Выход (Оба)";
+                case 1 -> "§bТолько Вход";
+                case 2 -> "§6Только Выход";
+                case 3 -> "§cОтключено";
+                default -> "Неизвестно";
+            };
+            tooltip.add(Component.literal("Режим:"));
+            tooltip.add(Component.literal(modeName));
+            graphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+        }
+    }
+
+    @Override
+    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+        int x = this.leftPos;
+        int y = this.topPos;
+
+        graphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight);
+
+        int mode = menu.getMode();
+        graphics.blit(TEXTURE, x + MODE_X, y + MODE_Y, 177, mode * 16, MODE_SIZE, MODE_SIZE);
+
+        ItemStack protectorStack = menu.getSlot(4).getItem();
+        if (!protectorStack.isEmpty()) {
+            Item item = protectorStack.getItem();
+            int vOffset = -1;
+            if (item == ModItems.PROTECTOR_STEEL.get()) {
+                vOffset = 104;
+            } else if (item == ModItems.PROTECTOR_LEAD.get()) {
+                vOffset = 52;
+            } else if (item == ModItems.PROTECTOR_TUNGSTEN.get()) {
+                vOffset = 0;
+            }
+            if (vOffset != -1) {
+                graphics.blit(TEXTURE, x + SHIELD_X, y + SHIELD_Y, 193, vOffset, SHIELD_W, SHIELD_H);
+            }
+        }
+
+        renderFluid(graphics, x + TANK_X, y + TANK_Y, TANK_W, TANK_H);
+    }
+
+
+    private void renderFluid(GuiGraphics gui, int x, int y, int width, int height) {
+        FluidStack fluid = menu.getFluid();
+        if (fluid.isEmpty()) return;
+
+        int capacity = menu.getCapacity();
+        int fluidHeight = (int) (height * ((float) fluid.getAmount() / capacity));
+        if (fluidHeight <= 0) return;
+
+        ResourceLocation guiTexture = ModFluids.getGuiTexture(fluid.getFluid());
+
+        // 1. Сбрасываем цвет в белый, чтобы избежать наложения тинта от предыдущих отрисовок
+        gui.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        int currentY = y + height - fluidHeight;
+
+        for (int j = 0; j < fluidHeight; j += 16) {
+            int segmentHeight = Math.min(fluidHeight - j, 16);
+            int drawY = currentY + j;
+
+            for (int i = 0; i < width; i += 16) {
+                int segmentWidth = Math.min(width - i, 16);
+                int drawX = x + i;
+
+                // 2. Используем blit для кастомной текстуры.
+                // Параметры: (texture, x, y, u, v, width, height, textureWidth, textureHeight)
+                // textureWidth/Height ставим 16, так как твой файл 16x16
+                gui.blit(guiTexture, drawX, drawY, 0, 0, segmentWidth, segmentHeight, 16, 16);
+            }
+        }
+
+        // Линия поверхности
+        int surfaceY = y + height - fluidHeight;
+        gui.fill(x, surfaceY, x + width, surfaceY + 1, 0x40FFFFFF);
+
+        // Сбрасываем цвет обратно (хороший тон)
+        gui.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            if (isMouseOver(mouseX, mouseY, MODE_X, MODE_Y, MODE_SIZE, MODE_SIZE)) {
+                playSound();
+                com.trd.network.ModPacketHandler.INSTANCE.sendToServer(
+                        new com.trd.network.packet.fluids.UpdateBarrelModeC2SPacket(menu.blockEntity.getBlockPos())
+                );
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private boolean isMouseOver(double mouseX, double mouseY, int x, int y, int w, int h) {
+        return (mouseX >= this.leftPos + x && mouseX <= this.leftPos + x + w &&
+                mouseY >= this.topPos + y && mouseY <= this.topPos + y + h);
+    }
+
+    private void playSound() {
+        if (this.minecraft != null) {
+            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        }
+    }
+}

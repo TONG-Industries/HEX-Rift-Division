@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/shaft" },
+    "facing=south": { "model": "trd:block/shaft", "x": 180 },
+    "facing=east":  { "model": "trd:block/shaft", "y": 90 },
+    "facing=west":  { "model": "trd:block/shaft", "y": 270 },
+    "facing=up":    { "model": "trd:block/shaft", "x": -90 },
+    "facing=down":  { "model": "trd:block/shaft", "x": 90 }
+  }
+}

@@ -1,5 +1,0 @@
-{
-  "loader": "forge:obj",
-  "model": "cim:models/block/bearing.obj",
-  "flip_v": true
-}

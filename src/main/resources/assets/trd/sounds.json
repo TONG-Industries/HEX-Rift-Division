@@ -1,0 +1,132 @@
+{
+  "airstrike": {
+    "category": "player",
+    "subtitle": "trd.subtitle.airstrike",
+    "sounds": [ "trd:airstrike" ]
+  },
+  "techbleep": {
+    "category": "player",
+    "subtitle": "trd.subtitle.techbleep",
+    "sounds": [ "trd:techbleep" ]
+  },
+  "techboop": {
+    "category": "player",
+    "subtitle": "trd.subtitle.techboop",
+    "sounds": [ "trd:techboop" ]
+  },
+  "bullet_impact": {
+    "category": "block",
+    "subtitle": "trd.subtitle.bullet_impact",
+    "sounds": [
+      "trd:impact/bullet_impact1",
+      "trd:impact/bullet_impact2",
+      "trd:impact/bullet_impact3",
+      "trd:impact/bullet_impact4",
+      "trd:impact/bullet_impact5",
+      "trd:impact/bullet_impact6",
+      "trd:impact/bullet_impact7",
+      "trd:impact/bullet_impact8",
+      "trd:impact/bullet_impact9"
+    ]
+  },
+  "mukeexplosion": {
+    "category": "block",
+    "subtitle": "sounds.trd.mukeexplosion",
+    "sounds": [
+      "trd:mukeexplosion"
+    ]
+  },
+  "pickaxe_hit": {
+    "category": "block",
+    "subtitle": "sounds.trd.pickaxe_hit",
+    "sounds": [
+      "trd:break/pickaxe_hit"
+    ]
+  },
+  "item.bounce_random": {
+    "subtitle": "sounds.trd.subtitle.bounce",
+    "sounds": [
+      "trd:item/bounce1",
+      "trd:item/bounce2",
+      "trd:item/bounce3"
+    ]
+  },
+  "crate_break": {
+    "category": "block",
+    "subtitle": "trd.subtitle.crate_break",
+    "sounds": [
+      "trd:break/break1",
+      "trd:break/break2"
+    ]
+  },
+  "turret_fire": {
+    "category": "block",
+    "subtitle": "sounds.trd.turret_fire",
+    "sounds": [
+      "trd:turret_fire"
+    ]
+  },
+  "turret_lock": {
+    "category": "block",
+    "subtitle": "sounds.trd.turret_lock",
+    "sounds": [
+      "trd:turret_lock"
+    ]
+  },
+  "lever1": {
+    "category": "block",
+    "subtitle": "sounds.trd.lever1",
+    "sounds": [
+      "trd:lever1"
+    ]
+  },
+  "lever2": {
+    "category": "block",
+    "subtitle": "sounds.trd.lever2",
+    "sounds": [
+      "trd:lever2"
+    ]
+  },
+  "button1": {
+    "category": "block",
+    "subtitle": "sounds.trd.button1",
+    "sounds": [
+      "trd:button1"
+    ]
+  },
+  "dry_fire": {
+    "category": "player",
+    "sounds": [
+      "trd:dry_fire"
+    ],
+    "subtitle": "sounds.trd.dry_fire"
+  },
+  "bullet_ground": {
+    "category": "block",
+    "subtitle": "trd.subtitle.bullet_ground",
+    "sounds": [
+      "trd:impact/bullet_ground1",
+      "trd:impact/bullet_ground2",
+      "trd:impact/bullet_ground3",
+      "trd:impact/bullet_ground4",
+      "trd:impact/bullet_ground5",
+      "trd:impact/bullet_ground6"
+    ]
+  },
+
+  "gunpull": {
+    "category": "player",
+    "subtitle": "trd.subtitle.gunpull",
+    "sounds": [ "trd:reload/gunpull" ]
+  },
+  "gunclick": {
+    "category": "player",
+    "subtitle": "trd.subtitle.gunclick",
+    "sounds": [ "trd:reload/gunclick" ]
+  },
+  "heavy_gunclick": {
+    "category": "player",
+    "subtitle": "trd.subtitle.heavy_gunclick",
+    "sounds": [ "trd:reload/heavy_gunclick" ]
+  }
+}

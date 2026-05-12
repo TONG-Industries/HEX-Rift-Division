@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/casting_pot" },
+    "facing=south": { "model": "trd:block/casting_pot", "y": 180 },
+    "facing=west":  { "model": "trd:block/casting_pot", "y": 270 },
+    "facing=east":  { "model": "trd:block/casting_pot", "y": 90 }
+  }
+}

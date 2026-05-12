@@ -1,0 +1,9 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/tachometr.obj",
+  "flip_v": true,
+  "textures": {
+    "tachometr_texture": "trd:block/tachometr",
+    "particle": "trd:block/tachometr"
+  }
+}
