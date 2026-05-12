@@ -189,26 +189,30 @@ public class ShaftBlockEntity extends BlockEntity implements Rotational {
         // 2. РЕМЕННЫЕ СВЯЗИ (Динамическое сканирование)
         if (this.hasPulley()) {
             if (this.connectedPulley != null) {
+                // Цель ремня уже известна — добавляем её и промежуточные шкивы
                 list.add(this.connectedPulley);
                 list.addAll(getPulleysBetween(level, myPos, this.connectedPulley));
-            }
-
-            int radius = 16;
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dy = -radius; dy <= radius; dy++) {
-                    for (int dz = -radius; dz <= radius; dz++) {
-                        if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) <= radius) {
-                            if (dx == 0 && dy == 0 && dz == 0) continue;
-                            BlockPos scanPos = myPos.offset(dx, dy, dz);
-                            if (level.isLoaded(scanPos)) {
-                                net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(scanPos);
-                                if (be instanceof ShaftBlockEntity otherShaft && otherShaft.hasPulley()) {
-                                    BlockPos theirTarget = otherShaft.getConnectedPulley();
-                                    if (theirTarget != null) {
-                                        if (theirTarget.equals(myPos) || isPosBetween(myPos, scanPos, theirTarget)) {
-                                            list.add(scanPos);
-                                            if (!theirTarget.equals(myPos)) {
-                                                list.add(theirTarget);
+                // Пропускаем полный скан: при построении сети BFS дойдёт до нас с другого конца
+            } else {
+                // connectedPulley == null: полный скан для поиска ремней, указывающих НА НАС
+                // Это выполняется только при первом построении сети или когда связь не установлена
+                int radius = 16;
+                for (int dx = -radius; dx <= radius; dx++) {
+                    for (int dy = -radius; dy <= radius; dy++) {
+                        for (int dz = -radius; dz <= radius; dz++) {
+                            if (Math.abs(dx) + Math.abs(dy) + Math.abs(dz) <= radius) {
+                                if (dx == 0 && dy == 0 && dz == 0) continue;
+                                BlockPos scanPos = myPos.offset(dx, dy, dz);
+                                if (level.isLoaded(scanPos)) {
+                                    net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(scanPos);
+                                    if (be instanceof ShaftBlockEntity otherShaft && otherShaft.hasPulley()) {
+                                        BlockPos theirTarget = otherShaft.getConnectedPulley();
+                                        if (theirTarget != null) {
+                                            if (theirTarget.equals(myPos) || isPosBetween(myPos, scanPos, theirTarget)) {
+                                                list.add(scanPos);
+                                                if (!theirTarget.equals(myPos)) {
+                                                    list.add(theirTarget);
+                                                }
                                             }
                                         }
                                     }
@@ -698,7 +702,8 @@ public class ShaftBlockEntity extends BlockEntity implements Rotational {
             var net = com.cim.api.rotation.KineticNetworkManager.get((net.minecraft.server.level.ServerLevel) level)
                     .getNetworkFor(worldPosition);
             if (net != null) {
-                this.speed = net.getSpeed();
+                // Применяем networkScale, чтобы восстановить правильную масштабированную скорость (Bug #1 fix)
+                this.speed = (long) (net.getSpeed() * this.networkScale);
                 this.lastSyncedSpeed = this.speed;
                 net.requestRecalculation();
             }

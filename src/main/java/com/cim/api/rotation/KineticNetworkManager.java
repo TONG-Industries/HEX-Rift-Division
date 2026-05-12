@@ -24,6 +24,9 @@ public class KineticNetworkManager extends SavedData {
 
     // Твоя мапа остается! Мы просто будем её сохранять в файл и восстанавливать из него.
     private final Map<BlockPos, KineticNetwork> blockToNetwork = new HashMap<>();
+    // Множество уникальных сетей — синхронизируется при каждом изменении состава
+    // Избавляет от O(N) аллокации HashSet на каждый тик в tickAllNetworks()
+    private final Set<KineticNetwork> networks = new HashSet<>();
     private final ServerLevel level;
 
     public KineticNetworkManager(ServerLevel level) {
@@ -43,13 +46,10 @@ public class KineticNetworkManager extends SavedData {
     @Override
     public CompoundTag save(CompoundTag nbt) {
         ListTag networksList = new ListTag();
-
-        // Получаем все УНИКАЛЬНЫЕ сети из твоей мапы
-        Set<KineticNetwork> uniqueNetworks = new HashSet<>(blockToNetwork.values());
-        for (KineticNetwork net : uniqueNetworks) {
-            networksList.add(net.serializeNBT()); // Вызовем метод сети для превращения в NBT
+        // Итерируем готовое множество — без аллокации нового HashSet
+        for (KineticNetwork net : networks) {
+            networksList.add(net.serializeNBT());
         }
-
         nbt.put("Networks", networksList);
         return nbt;
     }
@@ -61,12 +61,13 @@ public class KineticNetworkManager extends SavedData {
 
         for (int i = 0; i < networksList.size(); i++) {
             CompoundTag netTag = networksList.getCompound(i);
-            KineticNetwork net = KineticNetwork.deserializeNBT(netTag); // Восстанавливаем сеть из NBT
+            KineticNetwork net = KineticNetwork.deserializeNBT(netTag);
 
-            // Восстанавливаем твою мапу blockToNetwork
+            // Восстанавливаем маппинг блоков и регистрируем сеть в uniqueNetworks
             for (BlockPos pos : net.getMembers()) {
                 manager.blockToNetwork.put(pos, net);
             }
+            manager.networks.add(net); // ← Регистрируем в множестве уникальных сетей
         }
         return manager;
     }
@@ -74,7 +75,7 @@ public class KineticNetworkManager extends SavedData {
     // --- ТВОИ МЕТОДЫ (С добавлением this.setDirty()) ---
 
     public void updateNetworkAfterPlace(BlockPos pos) {
-        LOGGER.info("[Kinetic] Block placed at {}", pos.toShortString());
+        LOGGER.debug("[Kinetic] Block placed at {}", pos.toShortString());
 
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof Rotational node)) {
@@ -105,24 +106,25 @@ public class KineticNetworkManager extends SavedData {
         }
 
         if (neighborNetworks.size() > 1) {
-            long firstActiveSpeed = 0;
+            long firstBaseSpeed = 0;
             boolean conflict = false;
 
             for (KineticNetwork net : neighborNetworks) {
-                // БЕРЕМ ЦЕЛЕВУЮ СКОРОСТЬ (так как текущая может быть 0 до первого тика)
-                long netSpeed = net.getTargetSpeed();
+                // Вычисляем "базовую" скорость сети (до применения networkScale)
+                // Берём целевую скорость как наиболее актуальную
+                long netRawSpeed = net.getTargetSpeed();
+                if (netRawSpeed == 0) netRawSpeed = net.getSpeed();
 
-                // Если генераторов нет, смотрим на текущую скорость по инерции
-                if (netSpeed == 0) {
-                    netSpeed = net.getSpeed();
-                }
-
-                if (netSpeed != 0) {
-                    if (firstActiveSpeed == 0) {
-                        firstActiveSpeed = netSpeed;
-                    } else if (firstActiveSpeed != netSpeed) {
-                        conflict = true;
-                        break;
+                if (netRawSpeed != 0) {
+                    if (firstBaseSpeed == 0) {
+                        firstBaseSpeed = netRawSpeed;
+                    } else {
+                        // Конфликт только если знаки (направления) противоположны.
+                        // Разные абсолютные значения допустимы — это нормальная передача через шестерни/шкивы.
+                        if (Math.signum(firstBaseSpeed) != Math.signum(netRawSpeed)) {
+                            conflict = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -199,24 +201,26 @@ public class KineticNetworkManager extends SavedData {
         KineticNetwork oldNet = blockToNetwork.remove(pos);
         if (oldNet == null) return;
 
-        LOGGER.info("[Kinetic] Block removed at {}. Breaking network {}", pos.toShortString(), oldNet.getId().toString().substring(0, 8));
+        LOGGER.debug("[Kinetic] Block removed at {}. Breaking network {}", pos.toShortString(), oldNet.getId().toString().substring(0, 8));
 
         Set<BlockPos> membersToRebuild = new HashSet<>(oldNet.getMembers());
         membersToRebuild.remove(pos);
+
+        // Удаляем растворённую сеть из множества — новые подсети добавятся через registerBlockToNetwork
+        networks.remove(oldNet);
 
         for (BlockPos memberPos : membersToRebuild) {
             blockToNetwork.remove(memberPos);
         }
 
-        LOGGER.info("[Kinetic] Network {} dissolved. Rebuilding {} blocks...", oldNet.getId().toString().substring(0, 8), membersToRebuild.size());
+        LOGGER.debug("[Kinetic] Network {} dissolved. Rebuilding {} blocks...", oldNet.getId().toString().substring(0, 8), membersToRebuild.size());
 
         for (BlockPos startPos : membersToRebuild) {
             if (!blockToNetwork.containsKey(startPos)) {
-                createNewNetworkFrom(startPos, pos); // ИЗМЕНЕНИЕ: передаем pos как игнорируемый блок
+                createNewNetworkFrom(startPos, pos);
             }
         }
 
-        // 4. ИЗМЕНЕНИЕ: Сообщаем о сохранении
         this.setDirty();
     }
 
@@ -351,6 +355,9 @@ public class KineticNetworkManager extends SavedData {
         networks.remove(mainNet);
 
         for (KineticNetwork otherNet : networks) {
+            // Убираем поглощаемые сети из трекинга уникальных сетей
+            this.networks.remove(otherNet);
+
             for (BlockPos memberPos : otherNet.getMembers()) {
                 blockToNetwork.put(memberPos, mainNet);
                 mainNet.addMember(memberPos);
@@ -373,6 +380,8 @@ public class KineticNetworkManager extends SavedData {
     private void registerBlockToNetwork(BlockPos pos, KineticNetwork net) {
         blockToNetwork.put(pos, net);
         net.addMember(pos);
+        // Синхронизируем множество уникальных сетей
+        networks.add(net);
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof Rotational rot && rot.isSource()) {
             net.addGenerator(pos);
@@ -380,17 +389,13 @@ public class KineticNetworkManager extends SavedData {
     }
 
     public void tickAllNetworks() {
-        Set<KineticNetwork> uniqueNetworks = new HashSet<>(blockToNetwork.values());
+        // Итерируем готовое множество уникальных сетей — без аллокации нового HashSet каждый тик!
         boolean anyChanged = false;
-
-        for (KineticNetwork net : uniqueNetworks) {
-            // Пусть метод tick возвращает true, если скорость изменилась
+        for (KineticNetwork net : networks) {
             if (net.tick(this.level)) {
                 anyChanged = true;
             }
         }
-
-        // Если хоть одна сеть в мире изменила скорость — помечаем для сохранения
         if (anyChanged) {
             this.setDirty();
         }

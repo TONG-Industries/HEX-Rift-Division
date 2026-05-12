@@ -195,12 +195,12 @@ public class BeamCollisionBlockEntity extends BlockEntity {
             for (int i = 0; i <= steps; i++) {
                 Vec3 point = data.startPos.add(direction.scale(i * step));
                 AABB pointBox = new AABB(point.x - radius, point.y - radius, point.z - radius,
-                        point.x + radius, point.y + radius, point.z + radius);
+                                         point.x + radius, point.y + radius, point.z + radius);
 
                 if (pointBox.intersects(myBox)) {
                     AABB localBox = new AABB(
-                            pointBox.minX - myPos.getX(), pointBox.minY - myPos.getY(), pointBox.minZ - myPos.getZ(),
-                            pointBox.maxX - myPos.getX(), pointBox.maxY - myPos.getY(), pointBox.maxZ - myPos.getZ()
+                        pointBox.minX - myPos.getX(), pointBox.minY - myPos.getY(), pointBox.minZ - myPos.getZ(),
+                        pointBox.maxX - myPos.getX(), pointBox.maxY - myPos.getY(), pointBox.maxZ - myPos.getZ()
                     );
                     localBox = localBox.intersect(new AABB(0, 0, 0, 1, 1, 1));
                     finalShape = net.minecraft.world.phys.shapes.Shapes.or(finalShape, net.minecraft.world.phys.shapes.Shapes.create(localBox));
@@ -261,7 +261,7 @@ public class BeamCollisionBlockEntity extends BlockEntity {
 
                 // Очищаем блоки вдоль линии (оригинальный путь)
                 removeBeamDataFromPos(level, posOnLine, data.startPos, data.endPos);
-
+                
                 // Проверяем соседние блоки на случай смещенных служебных блоков
                 for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.values()) {
                     removeBeamDataFromPos(level, posOnLine.relative(dir), data.startPos, data.endPos);
@@ -280,8 +280,8 @@ public class BeamCollisionBlockEntity extends BlockEntity {
     @Override
     public net.minecraftforge.client.model.data.ModelData getModelData() {
         return net.minecraftforge.client.model.data.ModelData.builder()
-                .with(BEAMS_LIST, new java.util.ArrayList<>(beams)) // Отдаем копию
-                .with(MY_POS, this.getBlockPos())
-                .build();
+            .with(BEAMS_LIST, new java.util.ArrayList<>(beams)) // Отдаем копию
+            .with(MY_POS, this.getBlockPos())
+            .build();
     }
 }

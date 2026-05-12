@@ -127,6 +127,8 @@ public class EnergyNetworkManager extends SavedData {
     }
 
     public void tick() {
+        // Итерируем по копии — tick() может удалять/добавлять узлы через verifyConnectivity(),
+        // поэтому копия необходима для защиты от ConcurrentModificationException
         new HashSet<>(networks).forEach(network -> network.tick(level));
     }
 

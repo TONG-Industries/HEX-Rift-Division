@@ -48,6 +48,14 @@ public class MotorElectroBlockEntity extends BlockEntity implements Rotational, 
     private long currentSpeed = 0;
     private long lastSyncedSpeed = 0;
 
+    /**
+     * Флаг фронта редстоун-сигнала — аналогично SwitchBlockEntity.isTriggered.
+     * Хранится в BlockEntity (а не в Block-синглтоне!), поэтому:
+     *  - персистентен между перезагрузками
+     *  - независим для каждого мотора в мире
+     */
+    public boolean isTriggered = false;
+
     // Capability — предоставляем только со стороны задней грани
     private final LazyOptional<IEnergyReceiver> receiverCap = LazyOptional.of(() -> this);
     private final LazyOptional<IEnergyConnector> connectorCap = LazyOptional.of(() -> this);
@@ -408,6 +416,7 @@ public class MotorElectroBlockEntity extends BlockEntity implements Rotational, 
         tag.putBoolean("HasEnergy", hasEnergy);
         tag.putLong("CurrentSpeed", currentSpeed);
         tag.putLong("LastSyncedSpeed", lastSyncedSpeed);
+        tag.putBoolean("IsTriggered", isTriggered);
     }
 
     @Override
@@ -419,6 +428,7 @@ public class MotorElectroBlockEntity extends BlockEntity implements Rotational, 
         hasEnergy = tag.getBoolean("HasEnergy");
         currentSpeed = tag.getLong("CurrentSpeed");
         lastSyncedSpeed = tag.getLong("LastSyncedSpeed");
+        isTriggered = tag.getBoolean("IsTriggered");
     }
 
     @Override

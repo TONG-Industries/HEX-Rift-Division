@@ -38,14 +38,17 @@ public class KineticNetwork {
         this.networkId = id;
     }
 
-    public UUID getId() { return networkId; }
+    public UUID getId() {
+        return networkId;
+    }
 
     /**
      * Главный мозг сети. Вызывается при любом изменении состава блоков.
      */
 
     public boolean tick(ServerLevel level) {
-        if (members.isEmpty()) return false;
+        if (members.isEmpty())
+            return false;
 
         if (this.needsRecalculation) {
             this.recalculate(level);
@@ -55,11 +58,13 @@ public class KineticNetwork {
         long oldSpeed = this.currentSpeed;
         long deltaSpeed = 0;
 
-        // DIAGNOSTIC: логируем состояние КАЖДЫЙ тик для сетей без генераторов
+        // DIAGNOSTIC: логируем состояние при торможении только в debug-режиме
         if (totalGeneratedTorque == 0 && this.currentSpeed != 0) {
-            LOGGER.info("[Kinetic-DIAG] Network {} BRAKING: speed={}, torque={}, friction={}, inertia={}, generators={}",
+            LOGGER.debug(
+                    "[Kinetic-DIAG] Network {} BRAKING: speed={}, torque={}, friction={}, inertia={}, generators={}",
                     networkId.toString().substring(0, 8),
-                    this.currentSpeed, this.totalGeneratedTorque, this.totalFriction, this.totalInertia, generators.size());
+                    this.currentSpeed, this.totalGeneratedTorque, this.totalFriction, this.totalInertia,
+                    generators.size());
         }
 
         // 1. РАЗГОН (если генераторы работают)
@@ -70,7 +75,8 @@ public class KineticNetwork {
             if (effectiveTorque > 0) {
                 // Умножаем на 10 для запаса точности при RPM-масштабе
                 deltaSpeed = (effectiveTorque * 10) / totalInertia;
-                if (deltaSpeed == 0) deltaSpeed = 1; // Минимальный шаг
+                if (deltaSpeed == 0)
+                    deltaSpeed = 1; // Минимальный шаг
 
                 // Направляем ускорение в нужную сторону
                 deltaSpeed = targetNetworkSpeed > 0 ? deltaSpeed : -deltaSpeed;
@@ -87,7 +93,7 @@ public class KineticNetwork {
                 long overloadBrake = overload / totalInertia;
                 long percentBrake = Math.abs(this.currentSpeed) / 10;
                 deltaSpeed = Math.max(Math.max(overloadBrake, percentBrake), 1);
-                
+
                 if (this.currentSpeed > 0) {
                     deltaSpeed = -Math.min(deltaSpeed, this.currentSpeed);
                 } else {
@@ -121,9 +127,9 @@ public class KineticNetwork {
         if (deltaSpeed != 0) {
             long newSpeed = this.currentSpeed + deltaSpeed;
 
-            // DIAGNOSTIC
+            // DIAGNOSTIC (debug only)
             if (totalGeneratedTorque == 0) {
-                LOGGER.info("[Kinetic-DIAG] Network {} APPLYING: delta={}, oldSpeed={}, newSpeed={}",
+                LOGGER.debug("[Kinetic-DIAG] Network {} APPLYING: delta={}, oldSpeed={}, newSpeed={}",
                         networkId.toString().substring(0, 8), deltaSpeed, this.currentSpeed, newSpeed);
             }
 
@@ -175,12 +181,28 @@ public class KineticNetwork {
         this.targetNetworkSpeed = 0;
 
         // 1. Собираем физику со всех участников
+        // Инерция и момент приводятся к первичному валу (ratio = networkScale блока):
+        // - Инерция: I_ref = I * ratio² (маховик на вторичном валу тяжелее «кажется» с
+        // запасом)
+        // - Потреблённый момент: T_ref = T / ratio (момент на вторичном делится на
+        // передаточное число)
         for (BlockPos pos : members) {
             // ВАЖНО: Проверяем загрузку чанка! [cite: 42]
             if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof Rotational node) {
-                this.totalInertia += node.getInertiaContribution();
-                this.totalFriction += node.getFrictionContribution();
-                this.totalConsumedTorque += (long) (node.getConsumedTorque() * node.getFrictionMultiplier());
+                float scale = node.getNetworkScale();
+                float absScale = Math.abs(scale);
+
+                // Инерция приведённая: I * ratio²
+                this.totalInertia += (long) (node.getInertiaContribution() * absScale * absScale);
+
+                // Трение приведённое: Fr * ratio²
+                this.totalFriction += (long) (node.getFrictionContribution() * absScale * absScale);
+
+                // Потреблённый момент приведённый: T / ratio (если ratio != 0)
+                if (absScale > 0.001f) {
+                    this.totalConsumedTorque += (long) (node.getConsumedTorque() * node.getFrictionMultiplier()
+                            / absScale);
+                }
 
                 node.setSpeed(this.currentSpeed);
             }
@@ -195,9 +217,12 @@ public class KineticNetwork {
                     long speed = gen.getGeneratedSpeed();
                     // ... (Тут твоя текущая магия синхронизации осей через Direction)
                     net.minecraft.world.level.block.state.BlockState state = level.getBlockState(genPos);
-                    if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING)) {
-                        net.minecraft.core.Direction facing = state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING);
-                        if (facing == net.minecraft.core.Direction.SOUTH || facing == net.minecraft.core.Direction.EAST || facing == net.minecraft.core.Direction.UP) {
+                    if (state.hasProperty(
+                            net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING)) {
+                        net.minecraft.core.Direction facing = state
+                                .getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING);
+                        if (facing == net.minecraft.core.Direction.SOUTH || facing == net.minecraft.core.Direction.EAST
+                                || facing == net.minecraft.core.Direction.UP) {
                             speed = -speed;
                         }
                     }
@@ -207,44 +232,50 @@ public class KineticNetwork {
         }
 
         // Защита от нулевой инерции
-        if (this.totalInertia <= 0) this.totalInertia = 1;
+        if (this.totalInertia <= 0)
+            this.totalInertia = 1;
     }
 
-
-
     public boolean checkConflict(ServerLevel level) {
-        if (generators.size() <= 1) return false;
+        if (generators.size() <= 1)
+            return false;
 
         BlockPos rootPos = generators.iterator().next();
         BlockEntity rootBE = level.getBlockEntity(rootPos);
-        if (!(rootBE instanceof Rotational rootNode)) return false;
+        if (!(rootBE instanceof Rotational rootNode))
+            return false;
 
         long rootBaseSpeed = rootNode.getGeneratedSpeed();
         net.minecraft.world.level.block.state.BlockState rootState = level.getBlockState(rootPos);
         if (rootState.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING)) {
-            net.minecraft.core.Direction facing = rootState.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING);
-            if (facing == net.minecraft.core.Direction.SOUTH || facing == net.minecraft.core.Direction.EAST || facing == net.minecraft.core.Direction.UP) {
+            net.minecraft.core.Direction facing = rootState
+                    .getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING);
+            if (facing == net.minecraft.core.Direction.SOUTH || facing == net.minecraft.core.Direction.EAST
+                    || facing == net.minecraft.core.Direction.UP) {
                 rootBaseSpeed = -rootBaseSpeed;
             }
         }
-        
+
         float expectedRootSpeed = rootBaseSpeed;
         float globalVector = expectedRootSpeed * rootNode.getNetworkScale();
 
         for (BlockPos genPos : generators) {
-            if (genPos.equals(rootPos)) continue;
+            if (genPos.equals(rootPos))
+                continue;
 
             BlockEntity be = level.getBlockEntity(genPos);
             if (be instanceof Rotational gen) {
                 long genBaseSpeed = gen.getGeneratedSpeed();
                 net.minecraft.world.level.block.state.BlockState state = level.getBlockState(genPos);
                 if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING)) {
-                    net.minecraft.core.Direction facing = state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING);
-                    if (facing == net.minecraft.core.Direction.SOUTH || facing == net.minecraft.core.Direction.EAST || facing == net.minecraft.core.Direction.UP) {
+                    net.minecraft.core.Direction facing = state
+                            .getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING);
+                    if (facing == net.minecraft.core.Direction.SOUTH || facing == net.minecraft.core.Direction.EAST
+                            || facing == net.minecraft.core.Direction.UP) {
                         genBaseSpeed = -genBaseSpeed;
                     }
                 }
-                
+
                 float expectedSpeed = genBaseSpeed;
                 float localVector = expectedSpeed * gen.getNetworkScale();
 
@@ -261,7 +292,8 @@ public class KineticNetwork {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof Rotational node) {
                 node.setSpeed(this.currentSpeed);
-                // Тут мы будем вызывать обновление визуалов Flywheel через пакеты [cite: 11, 12]
+                // Тут мы будем вызывать обновление визуалов Flywheel через пакеты [cite: 11,
+                // 12]
             }
         }
     }
@@ -331,8 +363,13 @@ public class KineticNetwork {
     }
 
     // Добавь эти методы в KineticNetwork.java
-    public long getSpeed() { return currentSpeed; }
-    public Set<BlockPos> getGenerators() { return generators; }
+    public long getSpeed() {
+        return currentSpeed;
+    }
+
+    public Set<BlockPos> getGenerators() {
+        return generators;
+    }
 
     public long getTargetSpeed() {
         return targetNetworkSpeed;
@@ -342,8 +379,16 @@ public class KineticNetwork {
         this.currentSpeed = speed;
     }
 
-    public long getTotalTorque() { return totalGeneratedTorque; }
-    public long getTotalInertia() { return totalInertia; }
-    public long getTotalFriction() { return totalFriction; }
+    public long getTotalTorque() {
+        return totalGeneratedTorque;
+    }
+
+    public long getTotalInertia() {
+        return totalInertia;
+    }
+
+    public long getTotalFriction() {
+        return totalFriction;
+    }
 
 }

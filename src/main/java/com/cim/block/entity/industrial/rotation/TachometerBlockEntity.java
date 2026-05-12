@@ -95,8 +95,16 @@ public class TachometerBlockEntity extends BlockEntity implements Rotational {
 
         KineticNetwork net = KineticNetworkManager.get((ServerLevel) level).getNetworkFor(pos);
         if (net != null) {
-            long newSpeed = net.getSpeed();
-            long newTorque = net.getTotalTorque();
+            // Показываем масштабированную скорость этого блока (Bug #5 fix: не raw скорость сети)
+            long newSpeed = be.speed; // скорость уже обновляется через setSpeed()
+
+            // Момент на этом валу = totalGeneratedTorque / |networkScale|
+            // Редуктор (scale < 1) увеличивает момент: T_shaft = T_primary / scale
+            float absScale = Math.abs(be.networkScale);
+            long newTorque = (absScale > 0.001f)
+                    ? (long) (net.getTotalTorque() / absScale)
+                    : net.getTotalTorque();
+
             long newInertia = net.getTotalInertia();
             long newFriction = net.getTotalFriction();
 
@@ -307,7 +315,8 @@ public class TachometerBlockEntity extends BlockEntity implements Rotational {
         if (level != null && !level.isClientSide) {
             KineticNetwork net = KineticNetworkManager.get((ServerLevel) level).getNetworkFor(worldPosition);
             if (net != null) {
-                this.speed = net.getSpeed();
+                // Применяем networkScale, чтобы восстановить правильную масштабированную скорость (Bug #1 fix)
+                this.speed = (long) (net.getSpeed() * this.networkScale);
                 this.lastSyncedSpeed = this.speed;
                 net.requestRecalculation();
             }

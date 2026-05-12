@@ -35,9 +35,6 @@ import org.jetbrains.annotations.Nullable;
 public class MotorElectroBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
 
-    /** Запоминаем, был ли сигнал редстоуна уже HIGH, чтобы не переключать на каждый тик */
-    private boolean wasPowered = false;
-
     public MotorElectroBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
@@ -81,15 +78,18 @@ public class MotorElectroBlock extends BaseEntityBlock {
         super.neighborChanged(state, level, pos, fromBlock, fromPos, isMoving);
         if (level.isClientSide) return;
 
-        boolean isPowered = level.hasNeighborSignal(pos);
+        if (!(level.getBlockEntity(pos) instanceof MotorElectroBlockEntity motor)) return;
 
-        // Переключаем только по фронту сигнала (LOW→HIGH)
-        if (isPowered && !wasPowered) {
-            if (level.getBlockEntity(pos) instanceof MotorElectroBlockEntity motor) {
-                motor.toggleDirection();
-            }
+        boolean hasRedstoneSignal = level.hasNeighborSignal(pos);
+
+        if (hasRedstoneSignal && !motor.isTriggered) {
+            // Фронт (LOW → HIGH): переключаем направление
+            motor.isTriggered = true;
+            motor.toggleDirection();
+        } else if (!hasRedstoneSignal && motor.isTriggered) {
+            // Спад (HIGH → LOW): сбрасываем флаг, направление НЕ меняем
+            motor.isTriggered = false;
         }
-        wasPowered = isPowered;
     }
 
     // ===================== TICKER =====================

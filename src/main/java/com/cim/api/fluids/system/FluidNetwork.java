@@ -198,20 +198,26 @@ public class FluidNetwork {
 
     private void rebuildNetwork() {
         if (nodes.isEmpty()) return;
+
+        // Строим pos→node карту для O(1) поиска соседей (вместо O(N) перебора всех узлов)
+        Map<BlockPos, FluidNode> posMap = new HashMap<>(nodes.size() * 2);
+        for (FluidNode n : nodes) posMap.put(n.getPos(), n);
+
         Set<FluidNode> allReachableNodes = new HashSet<>();
         Queue<FluidNode> queue = new LinkedList<>();
         FluidNode startNode = nodes.iterator().next();
-        queue.add(startNode); allReachableNodes.add(startNode);
+        queue.add(startNode);
+        allReachableNodes.add(startNode);
+
         while (!queue.isEmpty()) {
             FluidNode current = queue.poll();
             BlockPos pos = current.getPos();
             for (Direction dir : Direction.values()) {
                 BlockPos neighborPos = pos.relative(dir);
-                for (FluidNode potentialNeighbor : nodes) {
-                    if (potentialNeighbor.getPos().equals(neighborPos) && !allReachableNodes.contains(potentialNeighbor)) {
-                        allReachableNodes.add(potentialNeighbor);
-                        queue.add(potentialNeighbor);
-                    }
+                FluidNode potentialNeighbor = posMap.get(neighborPos); // O(1) вместо O(N) цикла
+                if (potentialNeighbor != null && !allReachableNodes.contains(potentialNeighbor)) {
+                    allReachableNodes.add(potentialNeighbor);
+                    queue.add(potentialNeighbor);
                 }
             }
         }

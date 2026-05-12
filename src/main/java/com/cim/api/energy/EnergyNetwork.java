@@ -106,11 +106,9 @@ public class EnergyNetwork {
         List<IEnergyProvider> pureGenerators = new ArrayList<>(uniqueGenerators);
 
         if (level.getGameTime() % 60 == 0) {
-            LOGGER.info("=== СТАТУС СЕТИ [{}] ===", id.toString().substring(0, 5));
-            LOGGER.info("1. Всего узлов (nodes): {}", nodes.size());
-            LOGGER.info("2. Найдено чистых Генераторов: {}", pureGenerators.size());
-            LOGGER.info("3. Найдено Машин (потребителей): {}", uniqueMachines.size());
-            LOGGER.info("4. Найдено Батарей: {}", uniqueBatteries.size());
+            LOGGER.debug("[Energy] Network [{}] nodes={}, generators={}, machines={}, batteries={}",
+                    id.toString().substring(0, 5),
+                    nodes.size(), pureGenerators.size(), uniqueMachines.size(), uniqueBatteries.size());
         }
 
         // Группируем машины по приоритетам
