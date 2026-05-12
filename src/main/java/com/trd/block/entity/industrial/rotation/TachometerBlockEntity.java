@@ -166,11 +166,10 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
 
     @Override
     public long getInertiaContribution() {
-        long baseInertia = 10;
         if (hasShaft && shaftMaterial != null && shaftDiameter != null) {
-            baseInertia += (long) (shaftMaterial.baseInertia() * shaftDiameter.inertiaMod);
+            return (long) (shaftMaterial.baseInertia() * shaftDiameter.inertiaMod);
         }
-        return baseInertia;
+        return 2; // Как у статора, если пустой
     }
 
     @Override

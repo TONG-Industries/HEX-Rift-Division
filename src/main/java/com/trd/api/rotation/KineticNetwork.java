@@ -207,16 +207,16 @@ public class KineticNetwork {
                 float scale = node.getNetworkScale();
                 float absScale = Math.abs(scale);
 
-                // Инерция приведённая: I * ratio²
-                this.totalInertia += (long) (node.getInertiaContribution() * absScale * absScale);
+                // Инерция: Просто сумма всех компонентов (для простоты геймплея)
+                this.totalInertia += node.getInertiaContribution();
 
-                // Трение приведённое: Fr * ratio²
-                this.totalFriction += (long) (node.getFrictionContribution() * absScale * absScale);
+                // Трение приведённое: Fr * |ratio| (линейное)
+                this.totalFriction += (long) (node.getFrictionContribution() * absScale);
 
-                // Потреблённый момент приведённый: T / ratio (если ratio != 0)
+                // Потреблённый момент приведённый: T * |ratio| (механическое преимущество)
                 if (absScale > 0.001f) {
                     this.totalConsumedTorque += (long) (node.getConsumedTorque() * node.getFrictionMultiplier()
-                            / absScale);
+                            * absScale);
                 }
 
                 node.setSpeed(this.currentSpeed);

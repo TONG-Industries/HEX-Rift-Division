@@ -179,9 +179,6 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
         Direction.Axis axis = facing.getAxis();
         int gearSize = state.getValue(ShaftBlock.GEAR_SIZE);
 
-        list.add(myPos.relative(facing));
-        list.add(myPos.relative(facing.getOpposite()));
-
         // 2. РЕМЕННЫЕ СВЯЗИ (Динамическое сканирование)
         if (this.hasPulley()) {
             if (this.connectedPulley != null) {
@@ -704,7 +701,34 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
 
     @Override
     public long getFrictionContribution() {
-        return hasRotor() ? 6 : 1;
+        if (hasRotor()) return 6;
+
+        // Если есть детали, проверяем, задействованы ли они в передаче
+        if (hasGear() || hasPulley() || hasBevelStart() || hasBevelEnd()) {
+            if (level != null) {
+                for (BlockPos neighborPos : getPotentialConnections(level, worldPosition)) {
+                    if (level.getBlockEntity(neighborPos) instanceof Rotational neighbor) {
+                        // Если соединение механическое и НЕ осевое (т.е. через зубья/ремень)
+                        if (this.canConnectMechanically(worldPosition, neighborPos, neighbor) &&
+                            neighbor.canConnectMechanically(neighborPos, worldPosition, this)) {
+                            
+                            if (!isAxialConnection(worldPosition, neighborPos)) {
+                                return 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    private boolean isAxialConnection(BlockPos myPos, BlockPos neighborPos) {
+        BlockState state = getBlockState();
+        if (!state.hasProperty(ShaftBlock.FACING)) return false;
+        Direction facing = state.getValue(ShaftBlock.FACING);
+        return myPos.relative(facing).equals(neighborPos) || 
+               myPos.relative(facing.getOpposite()).equals(neighborPos);
     }
 
     @Override
