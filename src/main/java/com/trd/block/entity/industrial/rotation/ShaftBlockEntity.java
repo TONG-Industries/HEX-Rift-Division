@@ -678,7 +678,7 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
     @Override
     public long getMaxSpeed() {
         if (getBlockState().getBlock() instanceof ShaftBlock shaft) {
-            return (long) (shaft.getMaterial().getBaseMaxSpeed() * shaft.getDiameter().getSpeedMultiplier());
+            return (long) (shaft.getMaterial().baseSpeed() * shaft.getDiameter().getSpeedMultiplier());
         }
         return 256;
     }
@@ -686,17 +686,17 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
     @Override
     public long getMaxTorque() {
         if (getBlockState().getBlock() instanceof ShaftBlock shaft) {
-            return (long) (shaft.getMaterial().getBaseMaxTorque() * shaft.getDiameter().getTorqueMultiplier());
+            return (long) (shaft.getMaterial().baseTorque() * shaft.getDiameter().getTorqueMultiplier());
         }
         return 1024;
     }
 
     @Override
-    public long getInertiaContribution() {
+    public double getInertiaContribution() {
         if (getBlockState().getBlock() instanceof ShaftBlock shaft) {
-            return (long) (shaft.getMaterial().baseInertia() * shaft.getDiameter().inertiaMod);
+            return (double) (shaft.getMaterial().baseInertia() * shaft.getDiameter().inertiaMod);
         }
-        return 5;
+        return 5.0;
     }
 
     @Override

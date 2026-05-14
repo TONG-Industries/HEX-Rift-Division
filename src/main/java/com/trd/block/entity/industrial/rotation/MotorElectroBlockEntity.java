@@ -256,7 +256,7 @@ public class MotorElectroBlockEntity extends KineticNodeBlockEntity implements I
     public boolean isSource() { return true; }
 
     @Override
-    public long getInertiaContribution() { return 50; }
+    public double getInertiaContribution() { return 50.0; }
 
     @Override
     public long getMaxTorqueTolerance() { return getMaxTorque(); }

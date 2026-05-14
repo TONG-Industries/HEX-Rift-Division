@@ -8,12 +8,16 @@ import com.trd.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -31,6 +35,8 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class ShaftBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
@@ -59,6 +65,19 @@ public class ShaftBlock extends BaseEntityBlock {
     // Геттеры для сущности (BlockEntity)
     public ShaftMaterial getMaterial() { return material; }
     public ShaftDiameter getDiameter() { return diameter; }
+
+    @Override
+    public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(Component.translatable("tooltip.trd.shaft_material").append(": ").append(Component.translatable("metal.trd." + material.name())).withStyle(ChatFormatting.GRAY));
+
+        long maxSpeed = (long) (material.baseSpeed() * diameter.getSpeedMultiplier());
+        long maxTorque = (long) (material.baseTorque() * diameter.getTorqueMultiplier());
+        double inertia = material.baseInertia() * diameter.inertiaMod;
+
+        tooltip.add(Component.translatable("tooltip.trd.max_speed").append(": ").append(Component.literal(String.valueOf(maxSpeed))).append(" RPM").withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.translatable("tooltip.trd.max_torque").append(": ").append(Component.literal(String.valueOf(maxTorque))).append(" Nm").withStyle(ChatFormatting.AQUA));
+        tooltip.add(Component.translatable("tooltip.trd.inertia").append(": ").append(Component.literal(String.format("%.2f", inertia))).withStyle(ChatFormatting.DARK_PURPLE));
+    }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
@@ -253,7 +272,56 @@ public class ShaftBlock extends BaseEntityBlock {
             }
         }
 
+        // --- ПРОВЕРКА НА ПРОГИБ ---
+        if (!level.isClientSide) {
+            if (!canBeSupported(level, pos, placementFacing)) {
+                if (context.getPlayer() != null) {
+                    context.getPlayer().displayClientMessage(
+                            Component.translatable("message.trd.too_far_from_support", diameter.maxSupportDistance)
+                                    .withStyle(ChatFormatting.RED), true);
+                }
+                return null;
+            }
+        }
+
         return this.defaultBlockState().setValue(FACING, placementFacing);
+    }
+
+    private boolean canBeSupported(Level level, BlockPos pos, Direction facing) {
+        int maxDist = diameter.maxSupportDistance;
+
+        // Ищем опору в обе стороны по оси
+        if (hasSupportInRange(level, pos, facing, maxDist)) return true;
+        return hasSupportInRange(level, pos, facing.getOpposite(), maxDist);
+    }
+
+    private boolean hasSupportInRange(Level level, BlockPos startPos, Direction dir, int maxDist) {
+        BlockPos.MutableBlockPos current = startPos.mutable();
+        for (int i = 1; i <= maxDist; i++) {
+            current.move(dir);
+            BlockState state = level.getBlockState(current);
+
+            if (isSupport(level, current, dir)) return true;
+
+            // Если это такой же вал (того же диаметра) — идем дальше
+            if (state.getBlock() instanceof ShaftBlock otherShaft && otherShaft.getDiameter() == this.diameter) {
+                if (state.getValue(FACING).getAxis() == dir.getAxis()) {
+                    continue;
+                }
+            }
+
+            return false; // Любой другой блок прерывает линию
+        }
+        return false;
+    }
+
+    private boolean isSupport(Level level, BlockPos pos, Direction axisDir) {
+        BlockState state = level.getBlockState(pos);
+        if (state.getBlock() instanceof BearingBlock) return true;
+        if (state.getBlock() instanceof MotorElectroBlock) {
+            return state.getValue(MotorElectroBlock.FACING) == axisDir.getOpposite();
+        }
+        return false;
     }
 
     @Nullable

@@ -27,6 +27,7 @@ public class KineticNetworkManager extends SavedData {
     // Избавляет от O(N) аллокации HashSet на каждый тик в tickAllNetworks()
     private final Set<KineticNetwork> networks = new HashSet<>();
     private final Set<BlockPos> pendingBreakages = new HashSet<>();
+    private final Set<BlockPos> pendingStructuralFailures = new HashSet<>();
     private final ServerLevel level;
 
     public KineticNetworkManager(ServerLevel level) {
@@ -392,6 +393,19 @@ public class KineticNetworkManager extends SavedData {
         pendingBreakages.add(pos);
     }
 
+    public void scheduleStructuralFailure(BlockPos pos) {
+        pendingStructuralFailures.add(pos);
+    }
+
+    private void processPendingFailures() {
+        if (pendingStructuralFailures.isEmpty()) return;
+        Set<BlockPos> toProcess = new HashSet<>(pendingStructuralFailures);
+        pendingStructuralFailures.clear();
+        for (BlockPos pos : toProcess) {
+            level.destroyBlock(pos, true);
+        }
+    }
+
     private void processPendingBreakages() {
         if (pendingBreakages.isEmpty()) return;
 
@@ -421,6 +435,7 @@ public class KineticNetworkManager extends SavedData {
     }
 
     public void tickAllNetworks() {
+        processPendingFailures();
         processPendingBreakages();
         // Итерируем готовое множество уникальных сетей — без аллокации нового HashSet каждый тик!
         boolean anyChanged = false;

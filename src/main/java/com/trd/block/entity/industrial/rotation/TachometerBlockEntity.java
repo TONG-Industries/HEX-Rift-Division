@@ -29,7 +29,7 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
     private long networkSpeed = 0;
     private long networkTorque = 0;
     private long networkConsumedTorque = 0;
-    private long networkInertia = 0;
+    private double networkInertia = 0;
     private double networkFrictionMultiplier = 1.0;
     private double networkLoad = 0;
 
@@ -46,7 +46,7 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
     public long getNetworkSpeed() { return networkSpeed; }
     public long getNetworkTorque() { return networkTorque; }
     public long getNetworkConsumedTorque() { return networkConsumedTorque; }
-    public long getNetworkInertia() { return networkInertia; }
+    public double getNetworkInertia() { return networkInertia; }
     public double getNetworkFrictionMultiplier() { return networkFrictionMultiplier; }
     public double getNetworkLoad() { return networkLoad; }
 
@@ -101,7 +101,7 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
             long newConsumedTorque = (absScale > 0.001f)
                     ? (long) (net.getTotalConsumedTorque() / absScale)
                     : net.getTotalConsumedTorque();
-            long newInertia = net.getTotalInertia();
+            double newInertia = net.getTotalInertia();
             double newFrictionMult = net.getFrictionMultiplier();
             double newLoad = net.getLoadFactor();
             
@@ -171,11 +171,11 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
     public boolean isSource() { return false; }
 
     @Override
-    public long getInertiaContribution() {
+    public double getInertiaContribution() {
         if (hasShaft && shaftMaterial != null && shaftDiameter != null) {
-            return (long) (shaftMaterial.baseInertia() * shaftDiameter.inertiaMod);
+            return (double) (shaftMaterial.baseInertia() * shaftDiameter.inertiaMod);
         }
-        return 2; // Как у статора, если пустой
+        return 2.0; // Как у статора, если пустой
     }
 
     @Override
@@ -184,7 +184,7 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
     @Override
     public long getMaxSpeed() {
         if (hasShaft() && getShaftMaterial() != null && getShaftDiameter() != null) {
-            return (long) (getShaftMaterial().getBaseMaxSpeed() * getShaftDiameter().getSpeedMultiplier());
+            return (long) (getShaftMaterial().baseSpeed() * getShaftDiameter().getSpeedMultiplier());
         }
         return 1024;
     }
@@ -192,7 +192,7 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
     @Override
     public long getMaxTorque() {
         if (hasShaft() && getShaftMaterial() != null && getShaftDiameter() != null) {
-            return (long) (getShaftMaterial().getBaseMaxTorque() * getShaftDiameter().getTorqueMultiplier());
+            return (long) (getShaftMaterial().baseTorque() * getShaftDiameter().getTorqueMultiplier());
         }
         return 10000;
     }
@@ -206,7 +206,7 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
         tag.putLong("NetSpeed", this.networkSpeed);
         tag.putLong("NetTorque", this.networkTorque);
         tag.putLong("NetConsumedTorque", this.networkConsumedTorque);
-        tag.putLong("NetInertia", this.networkInertia);
+        tag.putDouble("NetInertia", this.networkInertia);
         tag.putDouble("NetFrictionMult", this.networkFrictionMultiplier);
         tag.putDouble("NetLoad", this.networkLoad);
         if (this.hasShaft && this.shaftMaterial != null && this.shaftDiameter != null) {
@@ -222,7 +222,7 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
         this.networkSpeed = tag.getLong("NetSpeed");
         this.networkTorque = tag.getLong("NetTorque");
         this.networkConsumedTorque = tag.getLong("NetConsumedTorque");
-        this.networkInertia = tag.getLong("NetInertia");
+        this.networkInertia = tag.getDouble("NetInertia");
         this.networkFrictionMultiplier = tag.getDouble("NetFrictionMult");
         this.networkLoad = tag.getDouble("NetLoad");
         if (this.hasShaft) {

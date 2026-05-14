@@ -21,7 +21,7 @@ public class KineticNetwork {
     private long currentSpeed = 0;
     private long totalGeneratedTorque = 0;
     private long totalConsumedTorque = 0;
-    private long totalInertia = 1;
+    private double totalInertia = 1.0;
     private double bearingFrictionMultiplier = 1.0;
     private long targetNetworkSpeed = 0;
     private boolean needsRecalculation = true;
@@ -64,7 +64,7 @@ public class KineticNetwork {
                 effectiveTorque = 1;
             }
 
-            long deltaSpeed = effectiveTorque * 10 / totalInertia;
+            long deltaSpeed = (long) (effectiveTorque * 10 / totalInertia);
             if (deltaSpeed == 0 && effectiveTorque != 0) deltaSpeed = (long) Math.signum(effectiveTorque);
 
             if (this.currentSpeed < targetNetworkSpeed) {
@@ -75,7 +75,7 @@ public class KineticNetwork {
         } else {
             // ТОРМОЖЕНИЕ (Инерция)
             long frictionTorque = (long) (2 + totalInertia * 0.01);
-            long deltaSpeed = frictionTorque * 5 / totalInertia;
+            long deltaSpeed = (long) (frictionTorque * 5 / totalInertia);
             if (deltaSpeed == 0) deltaSpeed = 1;
 
             if (this.currentSpeed > 0) {
@@ -94,7 +94,7 @@ public class KineticNetwork {
 
     public void recalculate(ServerLevel level) {
         this.totalGeneratedTorque = 0;
-        this.totalInertia = 0;
+        this.totalInertia = 0.0;
         this.bearingFrictionMultiplier = 1.0;
         this.totalConsumedTorque = 0;
         this.targetNetworkSpeed = 0;
@@ -112,6 +112,7 @@ public class KineticNetwork {
                     this.totalConsumedTorque += (long) (node.getConsumedTorque() * node.getFrictionMultiplier() * absScale);
                 }
                 node.setSpeed(this.currentSpeed);
+                checkNodeFailure(level, pos, node);
             }
         }
 
@@ -159,7 +160,22 @@ public class KineticNetwork {
             }
         }
 
-        if (this.totalInertia <= 0) this.totalInertia = 1;
+        if (this.totalInertia <= 0) this.totalInertia = 0.1;
+
+        // 4. STRUCTURAL INTEGRITY CHECK (Torque limit)
+        for (BlockPos pos : members) {
+            if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof Rotational node) {
+                if (totalGeneratedTorque > node.getMaxTorque()) {
+                    KineticNetworkManager.get(level).scheduleStructuralFailure(pos);
+                }
+            }
+        }
+    }
+
+    private void checkNodeFailure(ServerLevel level, BlockPos pos, Rotational node) {
+        if (Math.abs(node.getSpeed()) > node.getMaxSpeed()) {
+            KineticNetworkManager.get(level).scheduleStructuralFailure(pos);
+        }
     }
 
     private void updateMembers(ServerLevel level) {
@@ -167,6 +183,11 @@ public class KineticNetwork {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof Rotational node) {
                 node.setSpeed(this.currentSpeed);
+                checkNodeFailure(level, pos, node);
+                
+                if (totalGeneratedTorque > node.getMaxTorque()) {
+                    KineticNetworkManager.get(level).scheduleStructuralFailure(pos);
+                }
             }
         }
     }
@@ -216,7 +237,7 @@ public class KineticNetwork {
     public long getTargetSpeed() { return targetNetworkSpeed; }
     public void setCurrentSpeed(long speed) { this.currentSpeed = speed; }
     public long getTotalTorque() { return totalGeneratedTorque; }
-    public long getTotalInertia() { return totalInertia; }
+    public double getTotalInertia() { return totalInertia; }
     public double getFrictionMultiplier() { return bearingFrictionMultiplier; }
     public boolean isOverloaded() { return isOverloaded; }
     public long getTotalConsumedTorque() { return totalConsumedTorque; }

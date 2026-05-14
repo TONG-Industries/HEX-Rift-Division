@@ -51,7 +51,7 @@ public class TachometerOverlay {
             String header = "▶ Network Analyzer";
             String speedText = "Speed: " + Math.abs(tachometer.getNetworkSpeed()) + " RPM";
             String torqueText = "Torque: " + tachometer.getNetworkConsumedTorque() + " / " + tachometer.getNetworkTorque() + " Nm";
-            String inertiaText = "Inertia: " + tachometer.getNetworkInertia();
+            String inertiaText = String.format("Inertia: %.2f", tachometer.getNetworkInertia());
             String frictionText = String.format("Friction: x%.2f", tachometer.getNetworkFrictionMultiplier());
             
             // Расчет стресса (нагрузки)

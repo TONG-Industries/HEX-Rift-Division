@@ -105,10 +105,10 @@ public class BearingBlockEntity extends KineticNodeBlockEntity {
     public boolean isSource() { return false; }
 
     @Override
-    public long getInertiaContribution() {
-        long baseInertia = 10;
+    public double getInertiaContribution() {
+        double baseInertia = 10.0;
         if (hasShaft && shaftMaterial != null && shaftDiameter != null) {
-            baseInertia += (long) (shaftMaterial.baseInertia() * shaftDiameter.inertiaMod);
+            baseInertia += (double) (shaftMaterial.baseInertia() * shaftDiameter.inertiaMod);
         }
         return baseInertia;
     }
@@ -124,7 +124,7 @@ public class BearingBlockEntity extends KineticNodeBlockEntity {
     @Override
     public long getMaxSpeed() {
         if (hasShaft() && getShaftMaterial() != null && getShaftDiameter() != null) {
-            return (long) (getShaftMaterial().getBaseMaxSpeed() * getShaftDiameter().getSpeedMultiplier());
+            return (long) (getShaftMaterial().baseSpeed() * getShaftDiameter().getSpeedMultiplier());
         }
         return 1024;
     }
@@ -132,7 +132,7 @@ public class BearingBlockEntity extends KineticNodeBlockEntity {
     @Override
     public long getMaxTorque() {
         if (hasShaft() && getShaftMaterial() != null && getShaftDiameter() != null) {
-            return (long) (getShaftMaterial().getBaseMaxTorque() * getShaftDiameter().getTorqueMultiplier());
+            return (long) (getShaftMaterial().baseTorque() * getShaftDiameter().getTorqueMultiplier());
         }
         return 10000;
     }

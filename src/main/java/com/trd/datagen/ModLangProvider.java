@@ -108,6 +108,15 @@ public class ModLangProvider extends LanguageProvider {
             addFluidTranslations("water", "Вода", "Вода", "Water");
             addFluidTranslations("lava", "Лава", "Лава", "Lava");
 
+            // Shaft Tooltips
+            add("tooltip.trd.shaft_material", "Material");
+            add("tooltip.trd.max_speed", "Max Speed");
+            add("tooltip.trd.max_torque", "Max Torque");
+            add("tooltip.trd.inertia", "Inertia");
+
+            // Messages
+            add("message.trd.too_far_from_support", "Unsupported span! Max distance from support for this diameter: %s blocks.");
+
             // Metals
                 add("metal.trd.gold", "Gold");
                 add("metal.trd.iron", "Iron");
@@ -478,6 +487,14 @@ public class ModLangProvider extends LanguageProvider {
             add("message.trd.selected_fluid", "Выбрано");
             add("tooltip.trd.no_fluid", "Жидкость не выбрана");
 
+            // Shaft Tooltips
+            add("tooltip.trd.shaft_material", "Материал");
+            add("tooltip.trd.max_speed", "Макс. скорость");
+            add("tooltip.trd.max_torque", "Макс. момент");
+            add("tooltip.trd.inertia", "Инерция");
+
+            // Сообщения
+            add("message.trd.too_far_from_support", "Слишком длинный пролет! Макс. расстояние от опоры для этого диаметра: %s бл.");
 
             addFluidTranslations("hydrogen_peroxide", "Пероксид водорода", null, null);
             addFluidTranslations("sulfuric_acid", "Серная кислота", null, null);
