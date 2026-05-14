@@ -259,9 +259,6 @@ public class MotorElectroBlockEntity extends KineticNodeBlockEntity implements I
     public long getInertiaContribution() { return 50; }
 
     @Override
-    public long getFrictionContribution() { return 5; }
-
-    @Override
     public long getMaxTorqueTolerance() { return getMaxTorque(); }
 
     @Override

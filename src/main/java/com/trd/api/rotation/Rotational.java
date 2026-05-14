@@ -38,7 +38,7 @@ public interface Rotational {
 
     // --- ДАННЫЕ ДЛЯ ФИЗИКИ (ЭТАП 1: Шаг 3) ---
     long getInertiaContribution(); // Масса блока (сопротивление разгону) [cite: 34]
-    long getFrictionContribution(); // Потери крутящего момента на трение [cite: 35]
+    default float getBearingFrictionCoefficient() { return 0.0f; } // Коэффициент трения (для подшипников)
     long getMaxTorqueTolerance();
 
     default long getConsumedTorque() { return 0; }

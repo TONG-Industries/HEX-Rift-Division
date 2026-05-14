@@ -153,9 +153,6 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
     public long getInertiaContribution() { return 2; }
 
     @Override
-    public long getFrictionContribution() { return 0; }
-
-    @Override
     public long getMaxTorqueTolerance() { return Long.MAX_VALUE; }
 
     @Override
