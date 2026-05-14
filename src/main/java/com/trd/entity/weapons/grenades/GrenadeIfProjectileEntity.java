@@ -1,14 +1,17 @@
 package com.trd.entity.weapons.grenades;
 
-
-import com.trd.entity.ModEntities;
+import com.trd.item.ModItems;
 import com.trd.sound.ModSounds;
+import com.trd.util.explosions.ExplosionFire;
+import com.trd.util.explosions.ExplosionFireRaycast;
+import com.trd.util.explosions.ExplosionHE;
+import com.trd.util.explosions.ExplosionStandard;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.sounds.SoundEvent;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,58 +23,49 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 import java.util.Random;
-
 
 public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
 
     private static final EntityDataAccessor<Boolean> TIMER_ACTIVATED = SynchedEntityData.defineId(GrenadeIfProjectileEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DETONATION_TIME = SynchedEntityData.defineId(GrenadeIfProjectileEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<String> GRENADE_IF_TYPE_ID = SynchedEntityData.defineId(GrenadeIfProjectileEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> DATA_STUCK = SynchedEntityData.defineId(GrenadeIfProjectileEntity.class, EntityDataSerializers.BOOLEAN);
+
     private static final int FUSE_SECONDS = 4;
-
     private static final float MIN_BOUNCE_SPEED = 0.15f;
-
-    private GrenadeIfType grenadeType;
-
     private static final Random RANDOM = new Random();
 
+    private GrenadeIfType grenadeType;
+    private boolean exploded = false;
+
+    // Конструктор для регистрации
     public GrenadeIfProjectileEntity(EntityType<? extends ThrowableItemProjectile> entityType, Level level) {
         super(entityType, level);
     }
 
-    public GrenadeIfProjectileEntity(Level level, LivingEntity thrower, GrenadeIfType type) {
-        super(ModEntities.GRENADE_IF_PROJECTILE.get(), thrower, level);
+    // Конструктор для броска из Item
+    @SuppressWarnings("unchecked")
+    public GrenadeIfProjectileEntity(EntityType<?> entityType, Level level,
+                                     LivingEntity thrower, GrenadeIfType type) {
+        super((EntityType<? extends ThrowableItemProjectile>) entityType, thrower, level);
         this.grenadeType = type;
-
-        // ДОБАВИТЬ ЭТУ СТРОКУ (отправляем данные на клиент)
         this.entityData.set(GRENADE_IF_TYPE_ID, type.name());
     }
-
-
-    // ДОБАВИТЬ ЭТУ СТРОКУ (используем String для хранения имени enum)
-    private static final EntityDataAccessor<String> GRENADE_IF_TYPE_ID = SynchedEntityData.defineId(GrenadeIfProjectileEntity.class, EntityDataSerializers.STRING);
-
-
 
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(TIMER_ACTIVATED, false);
         this.entityData.define(DETONATION_TIME, 0);
-
-        // ДОБАВИТЬ ЭТУ СТРОКУ (значение по умолчанию)
         this.entityData.define(GRENADE_IF_TYPE_ID, GrenadeIfType.GRENADE_IF.name());
+        this.entityData.define(DATA_STUCK, false);
     }
-
 
     @Override
     protected Item getDefaultItem() {
         if (grenadeType == null) {
             try {
-                // ИЗМЕНИТЬ ЗДЕСЬ: используем GRENADE_IF_TYPE_ID вместо импортированного GRENADE_TYPE_ID
                 grenadeType = GrenadeIfType.valueOf(this.entityData.get(GRENADE_IF_TYPE_ID));
             } catch (Exception e) {
                 grenadeType = GrenadeIfType.GRENADE_IF;
@@ -80,15 +74,18 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         return grenadeType != null ? grenadeType.getItem() : Items.SNOWBALL;
     }
 
-
     @Override
     public void tick() {
         super.tick();
-        if (!this.level().isClientSide) {
-            if (this.entityData.get(TIMER_ACTIVATED)) {
-                if (this.tickCount >= this.entityData.get(DETONATION_TIME)) {
-                    explode(this.blockPosition());
-                }
+        if (level().isClientSide) return;
+
+        if (this.entityData.get(DATA_STUCK)) {
+            this.setDeltaMovement(Vec3.ZERO);
+        }
+
+        if (this.entityData.get(TIMER_ACTIVATED)) {
+            if (this.tickCount >= this.entityData.get(DETONATION_TIME)) {
+                explode(this.blockPosition());
             }
         }
     }
@@ -96,14 +93,27 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
     @Override
     protected void onHit(HitResult result) {
         super.onHit(result);
-        if (!this.level().isClientSide) {
-            if (!this.entityData.get(TIMER_ACTIVATED)) {
-                this.entityData.set(TIMER_ACTIVATED, true);
-                this.entityData.set(DETONATION_TIME, this.tickCount + (FUSE_SECONDS * 20));
+        if (level().isClientSide || exploded) return;
+
+        if (!this.entityData.get(TIMER_ACTIVATED)) {
+            this.entityData.set(TIMER_ACTIVATED, true);
+            this.entityData.set(DETONATION_TIME, this.tickCount + (FUSE_SECONDS * 20));
+        }
+
+        if (result.getType() == HitResult.Type.BLOCK) {
+            BlockHitResult blockHit = (BlockHitResult) result;
+            if (grenadeType == null) {
+                grenadeType = GrenadeIfType.valueOf(this.entityData.get(GRENADE_IF_TYPE_ID));
             }
 
-            if (result.getType() == HitResult.Type.BLOCK) {
-                handleBounce((BlockHitResult) result);
+            if (grenadeType == GrenadeIfType.GRENADE_IF_SLIME) {
+                this.entityData.set(DATA_STUCK, true);
+                this.setDeltaMovement(Vec3.ZERO);
+                this.setNoGravity(true);
+                Vec3 pos = result.getLocation();
+                this.setPos(pos.x, pos.y, pos.z);
+            } else {
+                handleBounce(blockHit);
             }
         }
     }
@@ -129,40 +139,18 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
     }
 
     private void explode(BlockPos pos) {
-        if (!this.level().isClientSide && !this.isRemoved()) {
-            this.level().explode(
-                    this, null, null,
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                    grenadeType.getExplosionPower(),
-                    grenadeType.causesFire(),
-                    Level.ExplosionInteraction.BLOCK
-            );
-
-
-
-
-            float damageRadius = grenadeType.getExplosionPower() * 2.0f;
-            List<LivingEntity> entities = this.level().getEntitiesOfClass(
-                    LivingEntity.class,
-                    this.getBoundingBox().inflate(damageRadius)
-            );
-
-            for (LivingEntity entity : entities) {
-                double distSqr = entity.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-                if (distSqr < damageRadius * damageRadius) {
-                    double dist = Math.sqrt(distSqr);
-                    float damage = grenadeType.getCustomDamage() * (float) (1.0 - (dist / damageRadius));
-                    if (damage > 0) {
-                        entity.invulnerableTime = 0;
-                        entity.hurt(this.damageSources().explosion(this, null), damage);
-                    }
-                }
-            }
-            this.discard();
+        if (level().isClientSide || this.isRemoved() || exploded) return;
+        exploded = true;
+        Vec3 center = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        Level level = level();
+        switch (grenadeType) {
+            case GRENADE_IF -> ExplosionStandard.explode(level, center, this.getOwner(), 5.0f, 45.0f);
+            case GRENADE_IF_HE -> ExplosionHE.explode(level, center, this.getOwner(), 8.0f, 80.0f);
+            case GRENADE_IF_FIRE -> ExplosionFireRaycast.explode((ServerLevel) level, center, this.getOwner(), 3.0f);
+            case GRENADE_IF_SLIME -> ExplosionStandard.explode(level, center, this.getOwner(), 6.0f, 60.0f);
         }
+        this.discard();
     }
-
-
 
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
@@ -172,6 +160,7 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         if (grenadeType != null) {
             tag.putString("GrenadeType", grenadeType.name());
         }
+        tag.putBoolean("Exploded", exploded);
     }
 
     @Override
@@ -179,15 +168,11 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         super.readAdditionalSaveData(tag);
         this.entityData.set(TIMER_ACTIVATED, tag.getBoolean("TimerActivated"));
         this.entityData.set(DETONATION_TIME, tag.getInt("DetonationTime"));
-
         if (tag.contains("GrenadeType")) {
-            // Читаем имя типа
             String typeName = tag.getString("GrenadeType");
-            // Сохраняем в локальную переменную
             this.grenadeType = GrenadeIfType.valueOf(typeName);
-            // ДОБАВИТЬ: Обновляем EntityData, чтобы клиент тоже узнал об этом
             this.entityData.set(GRENADE_IF_TYPE_ID, typeName);
         }
+        this.exploded = tag.getBoolean("Exploded");
     }
-
 }

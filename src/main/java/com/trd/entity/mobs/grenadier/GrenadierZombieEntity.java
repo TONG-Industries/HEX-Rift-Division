@@ -288,35 +288,51 @@ public class GrenadierZombieEntity extends Zombie {
     private ThrowableItemProjectile createGrenadeProjectile(Level level, ItemStack stack, GrenadierType type) {
         return switch (type) {
             case STANDARD -> {
+                GrenadeType grenadeType;
+                EntityType<?> entityType;
                 if (stack.is(ModItems.GRENADE.get())) {
-                    yield new GrenadeProjectileEntity(ModEntities.GRENADE_PROJECTILE.get(), level, this, GrenadeType.STANDARD);
+                    grenadeType = GrenadeType.STANDARD;
+                    entityType = ModEntities.GRENADE_PROJECTILE.get();
                 } else if (stack.is(ModItems.GRENADEHE.get())) {
-                    yield new GrenadeProjectileEntity(ModEntities.GRENADEHE_PROJECTILE.get(), level, this, GrenadeType.HE);
+                    grenadeType = GrenadeType.HE;
+                    entityType = ModEntities.GRENADEHE_PROJECTILE.get();
                 } else if (stack.is(ModItems.GRENADEFIRE.get())) {
-                    yield new GrenadeProjectileEntity(ModEntities.GRENADEFIRE_PROJECTILE.get(), level, this, GrenadeType.FIRE);
+                    grenadeType = GrenadeType.FIRE;
+                    entityType = ModEntities.GRENADEFIRE_PROJECTILE.get();
                 } else if (stack.is(ModItems.GRENADESLIME.get())) {
-                    yield new GrenadeProjectileEntity(ModEntities.GRENADESLIME_PROJECTILE.get(), level, this, GrenadeType.SLIME);
+                    grenadeType = GrenadeType.SLIME;
+                    entityType = ModEntities.GRENADESLIME_PROJECTILE.get();
                 } else if (stack.is(ModItems.GRENADESMART.get())) {
-                    yield new GrenadeProjectileEntity(ModEntities.GRENADESMART_PROJECTILE.get(), level, this, GrenadeType.SMART);
+                    grenadeType = GrenadeType.SMART;
+                    entityType = ModEntities.GRENADESMART_PROJECTILE.get();
+                } else {
+                    grenadeType = GrenadeType.STANDARD;
+                    entityType = ModEntities.GRENADE_PROJECTILE.get();
                 }
-                yield new GrenadeProjectileEntity(ModEntities.GRENADE_PROJECTILE.get(), level, this, GrenadeType.STANDARD);
+                yield new GrenadeProjectileEntity(entityType, level, this, grenadeType);
             }
             case IMPACT -> {
                 GrenadeIfType ifType;
+                EntityType<?> entityType;
                 if (stack.is(ModItems.GRENADE_IF.get())) {
                     ifType = GrenadeIfType.GRENADE_IF;
+                    entityType = ModEntities.GRENADE_IF_PROJECTILE.get();
                 } else if (stack.is(ModItems.GRENADE_IF_HE.get())) {
                     ifType = GrenadeIfType.GRENADE_IF_HE;
+                    entityType = ModEntities.GRENADE_IF_HE_PROJECTILE.get();
                 } else if (stack.is(ModItems.GRENADE_IF_FIRE.get())) {
                     ifType = GrenadeIfType.GRENADE_IF_FIRE;
+                    entityType = ModEntities.GRENADE_IF_FIRE_PROJECTILE.get();
                 } else if (stack.is(ModItems.GRENADE_IF_SLIME.get())) {
                     ifType = GrenadeIfType.GRENADE_IF_SLIME;
+                    entityType = ModEntities.GRENADE_IF_SLIME_PROJECTILE.get();
                 } else {
                     ifType = GrenadeIfType.GRENADE_IF;
+                    entityType = ModEntities.GRENADE_IF_PROJECTILE.get();
                 }
-                yield new GrenadeIfProjectileEntity(level, this, ifType);
+                yield new GrenadeIfProjectileEntity(entityType, level, this, ifType);
             }
-            case HYDROGEN -> new GrenadeNucProjectileEntity(level, this);
+            case HYDROGEN -> new GrenadeNucProjectileEntity(ModEntities.GRENADE_NUC_PROJECTILE.get(), level, this);
         };
     }
 

@@ -1,6 +1,5 @@
 package com.trd.item.weapons.grenades;
 
-
 import com.trd.entity.weapons.grenades.GrenadeProjectileEntity;
 import com.trd.entity.weapons.grenades.GrenadeType;
 import net.minecraft.ChatFormatting;
@@ -22,7 +21,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class GrenadeItem extends Item {
-    
+
     private final GrenadeType grenadeType;
     private final RegistryObject<EntityType<GrenadeProjectileEntity>> entityType;
 
@@ -31,53 +30,42 @@ public class GrenadeItem extends Item {
         this.grenadeType = grenadeType;
         this.entityType = entityType;
     }
+
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
-
-        // Общая первая строка для всех гранат
-        tooltip.add(Component.translatable("tooltip.trd.grenade.common.line1")
-                .withStyle(ChatFormatting.YELLOW));
-
-        // Вторая строка — специфична для типа гранаты
-        String key;
-        switch (grenadeType) {
-            case SMART -> key = "tooltip.trd.grenade.smart.line2";
-            case FIRE  -> key = "tooltip.trd.grenade.fire.line2";
-            case SLIME -> key = "tooltip.trd.grenade.slime.line2";
-            case STANDARD -> key = "tooltip.trd.grenade.standard.line2";
-            case HE    -> key = "tooltip.trd.grenade.he.line2";
-            default    -> key = "tooltip.trd.grenade.default.line2";
-        }
-
-        tooltip.add(Component.translatable(key)
-                .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("tooltip.trd.grenade.common.line1").withStyle(ChatFormatting.YELLOW));
+        String key = switch (grenadeType) {
+            case SMART -> "tooltip.trd.grenade.smart.line2";
+            case FIRE -> "tooltip.trd.grenade.fire.line2";
+            case SLIME -> "tooltip.trd.grenade.slime.line2";
+            case STANDARD -> "tooltip.trd.grenade.standard.line2";
+            case HE -> "tooltip.trd.grenade.he.line2";
+            default -> "tooltip.trd.grenade.default.line2";
+        };
+        tooltip.add(Component.translatable(key).withStyle(ChatFormatting.GRAY));
     }
-
-
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack itemstack = player.getItemInHand(hand);
-        
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
-            SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL, 
-            0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
-        
+                SoundEvents.SNOWBALL_THROW, SoundSource.NEUTRAL,
+                0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
+
         if (!level.isClientSide) {
             GrenadeProjectileEntity grenade = new GrenadeProjectileEntity(
-                entityType.get(), level, player, grenadeType
+                    entityType.get(), level, player, grenadeType
             );
             grenade.setItem(itemstack);
             grenade.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.5F, 1.0F);
             level.addFreshEntity(grenade);
         }
-        
+
         player.awardStat(Stats.ITEM_USED.get(this));
         if (!player.getAbilities().instabuild) {
             itemstack.shrink(1);
         }
-        
         return InteractionResultHolder.sidedSuccess(itemstack, level.isClientSide());
     }
 }

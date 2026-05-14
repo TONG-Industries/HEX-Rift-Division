@@ -1,13 +1,11 @@
 package com.trd.entity.weapons.grenades;
 
-
 import com.trd.block.basic.ModBlocks;
 import com.trd.block.basic.weapons.explosives.IDetonatable;
-import com.trd.entity.ModEntities;
 import com.trd.item.ModItems;
-
 import com.trd.sound.ModSounds;
-import com.trd.util.ShockwaveGenerator;
+
+import com.trd.util.explosions.ExplosionHydrogen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -25,6 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -39,25 +38,25 @@ public class GrenadeNucProjectileEntity extends ThrowableItemProjectile {
     private static final EntityDataAccessor<Boolean> TIMER_ACTIVATED = SynchedEntityData.defineId(GrenadeNucProjectileEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DETONATION_TIME = SynchedEntityData.defineId(GrenadeNucProjectileEntity.class, EntityDataSerializers.INT);
 
-    // Параметры ядерной гранаты
     private static final int FUSE_SECONDS = 7;
-    private static final float EXPLOSION_POWER = 10.0f;
-    private static final float RADIATION_RADIUS = 25.0f;
     private static final float MIN_BOUNCE_SPEED = 0.1f;
     private static final float BOUNCE_MULTIPLIER = 0.4f;
-
-    // Новые параметры для урона
     private static final float DAMAGE_RADIUS = 25.0f;
     private static final float DAMAGE_AMOUNT = 200.0f;
     private static final float MAX_DAMAGE_DISTANCE = 25.0f;
     private static final Random RANDOM = new Random();
 
+    private boolean exploded = false;
+
+    // Конструктор для регистрации в ModEntities
     public GrenadeNucProjectileEntity(EntityType<? extends ThrowableItemProjectile> entityType, Level level) {
         super(entityType, level);
     }
 
-    public GrenadeNucProjectileEntity(Level level, LivingEntity thrower) {
-        super(ModEntities.GRENADE_NUC_PROJECTILE.get(), thrower, level);
+    // Конструктор для броска из Item
+    @SuppressWarnings("unchecked")
+    public GrenadeNucProjectileEntity(EntityType<?> entityType, Level level, LivingEntity thrower) {
+        super((EntityType<? extends ThrowableItemProjectile>) entityType, thrower, level);
     }
 
     @Override
@@ -75,12 +74,12 @@ public class GrenadeNucProjectileEntity extends ThrowableItemProjectile {
     @Override
     public void tick() {
         super.tick();
-        if (!this.level().isClientSide) {
-            if (this.entityData.get(TIMER_ACTIVATED)) {
-                int detonationTime = this.entityData.get(DETONATION_TIME);
-                if (this.tickCount >= detonationTime) {
-                    explode(this.blockPosition());
-                }
+        if (level().isClientSide) return;
+
+        if (this.entityData.get(TIMER_ACTIVATED)) {
+            int detonationTime = this.entityData.get(DETONATION_TIME);
+            if (this.tickCount >= detonationTime) {
+                explode(this.blockPosition());
             }
         }
     }
@@ -88,15 +87,15 @@ public class GrenadeNucProjectileEntity extends ThrowableItemProjectile {
     @Override
     protected void onHit(HitResult result) {
         super.onHit(result);
-        if (!this.level().isClientSide) {
-            if (!this.entityData.get(TIMER_ACTIVATED)) {
-                this.entityData.set(TIMER_ACTIVATED, true);
-                this.entityData.set(DETONATION_TIME, this.tickCount + (FUSE_SECONDS * 20));
-            }
+        if (level().isClientSide || exploded) return;
 
-            if (result.getType() == HitResult.Type.BLOCK) {
-                handleBounce((BlockHitResult) result);
-            }
+        if (!this.entityData.get(TIMER_ACTIVATED)) {
+            this.entityData.set(TIMER_ACTIVATED, true);
+            this.entityData.set(DETONATION_TIME, this.tickCount + (FUSE_SECONDS * 20));
+        }
+
+        if (result.getType() == HitResult.Type.BLOCK) {
+            handleBounce((BlockHitResult) result);
         }
     }
 
@@ -120,42 +119,31 @@ public class GrenadeNucProjectileEntity extends ThrowableItemProjectile {
     }
 
     private void explode(BlockPos pos) {
-        if (!this.level().isClientSide && !this.isRemoved()) {
-            ServerLevel serverLevel = (ServerLevel) this.level();
-            double x = pos.getX() + 0.5;
-            double y = pos.getY() + 0.5;
-            double z = pos.getZ() + 0.5;
+        if (level().isClientSide || this.isRemoved() || exploded) return;
+        exploded = true;
+        ServerLevel serverLevel = (ServerLevel) this.level();
+        double x = pos.getX() + 0.5;
+        double y = pos.getY() + 0.5;
+        double z = pos.getZ() + 0.5;
 
-            this.discard();
-            serverLevel.explode(this, x, y, z, 9.0F, true, Level.ExplosionInteraction.NONE);
-            triggerNearbyDetonations(serverLevel, pos, null);
-            dealExplosionDamage(serverLevel, x, y, z);
+        this.discard();
 
+        // Водородный рейкаст-взрыв
+        ExplosionHydrogen.explode(serverLevel, new Vec3(x, y, z), this.getOwner());
 
+        // Дополнительный стандартный взрыв для эффекта
+        serverLevel.explode(this, x, y, z, 9.0F, true, Level.ExplosionInteraction.NONE);
+        triggerNearbyDetonations(serverLevel, pos, null);
+        dealExplosionDamage(serverLevel, x, y, z);
 
-            playRandomDetonationSound(level(), pos);
+        playRandomDetonationSound(level(), pos);
 
-            if (serverLevel.getServer() != null) {
-                serverLevel.getServer().tell(new net.minecraft.server.TickTask(30, () -> {
-                    serverLevel.explode(null, x, y, z, 9.0F, Level.ExplosionInteraction.NONE);
-                    ShockwaveGenerator.generateCrater(
-                            serverLevel,
-                            pos,
-                            25,
-                            10,
-                            ModBlocks.WASTE_LOG.get(),
-                            Blocks.AIR,
-                            Blocks.AIR
-                    );
-                }));
-            }
-        }
     }
 
     private void dealExplosionDamage(ServerLevel serverLevel, double x, double y, double z) {
         List<LivingEntity> entitiesNearby = serverLevel.getEntitiesOfClass(
                 LivingEntity.class,
-                new net.minecraft.world.phys.AABB(x - DAMAGE_RADIUS, y - DAMAGE_RADIUS, z - DAMAGE_RADIUS,
+                new AABB(x - DAMAGE_RADIUS, y - DAMAGE_RADIUS, z - DAMAGE_RADIUS,
                         x + DAMAGE_RADIUS, y + DAMAGE_RADIUS, z + DAMAGE_RADIUS)
         );
 
@@ -173,7 +161,7 @@ public class GrenadeNucProjectileEntity extends ThrowableItemProjectile {
                     float damageDistance = (float) distanceToEntity - MAX_DAMAGE_DISTANCE;
                     damage = DAMAGE_AMOUNT * (1.0f - (damageDistance / remainingDistance)) * 0.5f;
                 }
-                entity.hurt(entity.damageSources().explosion(null), damage);
+                entity.hurt(entity.damageSources().explosion(null, null), damage);
             }
         }
     }
@@ -196,6 +184,7 @@ public class GrenadeNucProjectileEntity extends ThrowableItemProjectile {
         super.addAdditionalSaveData(tag);
         tag.putBoolean("TimerActivated", this.entityData.get(TIMER_ACTIVATED));
         tag.putInt("DetonationTime", this.entityData.get(DETONATION_TIME));
+        tag.putBoolean("Exploded", exploded);
     }
 
     @Override
@@ -203,9 +192,8 @@ public class GrenadeNucProjectileEntity extends ThrowableItemProjectile {
         super.readAdditionalSaveData(tag);
         this.entityData.set(TIMER_ACTIVATED, tag.getBoolean("TimerActivated"));
         this.entityData.set(DETONATION_TIME, tag.getInt("DetonationTime"));
+        this.exploded = tag.getBoolean("Exploded");
     }
-
-
 
     private void triggerNearbyDetonations(ServerLevel serverLevel, BlockPos pos, Player player) {
         int DETONATION_RADIUS = 8;

@@ -1,5 +1,4 @@
-package com.trd.item.weapons.grenades; // Замените на ваш пакет
-
+package com.trd.item.weapons.grenades;
 
 import com.trd.entity.weapons.grenades.GrenadeIfProjectileEntity;
 import com.trd.entity.weapons.grenades.GrenadeIfType;
@@ -21,43 +20,29 @@ import net.minecraftforge.registries.RegistryObject;
 import javax.annotation.Nullable;
 import java.util.List;
 
-import static com.trd.item.ModItems.*;
-
-
 public class GrenadeIfItem extends Item {
 
     private final GrenadeIfType grenadeType;
+    private final RegistryObject<EntityType<GrenadeIfProjectileEntity>> entityType;
 
-    public GrenadeIfItem(Properties properties, GrenadeIfType grenadeIf, RegistryObject<EntityType<GrenadeIfProjectileEntity>> grenadeType) {
+    public GrenadeIfItem(Properties properties, GrenadeIfType grenadeIf, RegistryObject<EntityType<GrenadeIfProjectileEntity>> entityType) {
         super(properties);
         this.grenadeType = grenadeIf;
-
+        this.entityType = entityType;
     }
+
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
-
-        // 1-я строка — общая для всех IF‑гранат
-        tooltip.add(Component.translatable("tooltip.trd.grenade_if.common.line1")
-                .withStyle(ChatFormatting.YELLOW));
-
-        // 2-я строка — зависит от типа
-        String key;
-        switch (grenadeType) {
-            case GRENADE_IF_HE ->
-                    key = "tooltip.trd.grenade_if.he.line2";
-            case GRENADE_IF_SLIME ->
-                    key = "tooltip.trd.grenade_if.slime.line2";
-            case GRENADE_IF_FIRE ->
-                    key = "tooltip.trd.grenade_if.fire.line2";
-            case GRENADE_IF ->
-                    key = "tooltip.trd.grenade_if.standard.line2";
-            default ->
-                    key = "tooltip.trd.grenade_if.default.line2";
-        }
-
-        tooltip.add(Component.translatable(key)
-                .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("tooltip.trd.grenade_if.common.line1").withStyle(ChatFormatting.YELLOW));
+        String key = switch (grenadeType) {
+            case GRENADE_IF_HE -> "tooltip.trd.grenade_if.he.line2";
+            case GRENADE_IF_SLIME -> "tooltip.trd.grenade_if.slime.line2";
+            case GRENADE_IF_FIRE -> "tooltip.trd.grenade_if.fire.line2";
+            case GRENADE_IF -> "tooltip.trd.grenade_if.standard.line2";
+            default -> "tooltip.trd.grenade_if.default.line2";
+        };
+        tooltip.add(Component.translatable(key).withStyle(ChatFormatting.GRAY));
     }
 
     @Override
@@ -68,8 +53,9 @@ public class GrenadeIfItem extends Item {
                 0.5F, 0.4F / (level.getRandom().nextFloat() * 0.4F + 0.8F));
 
         if (!level.isClientSide) {
-            // ModEntities.GRENADE_IF_PROJECTILE.get() - Замените на ваш зарегистрированный EntityType
-            GrenadeIfProjectileEntity grenade = new GrenadeIfProjectileEntity(level, player, grenadeType);
+            GrenadeIfProjectileEntity grenade = new GrenadeIfProjectileEntity(
+                    entityType.get(), level, player, grenadeType
+            );
             grenade.setItem(itemstack);
             grenade.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.5F, 1.0F);
             level.addFreshEntity(grenade);
@@ -79,8 +65,6 @@ public class GrenadeIfItem extends Item {
         if (!player.getAbilities().instabuild) {
             itemstack.shrink(1);
         }
-
         return InteractionResultHolder.sidedSuccess(itemstack, level.isClientSide());
     }
-
 }
