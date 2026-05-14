@@ -21,6 +21,8 @@ public class BearingBlockEntity extends KineticNodeBlockEntity {
     private boolean hasShaft = false;
     private ShaftMaterial shaftMaterial = null;
     private ShaftDiameter shaftDiameter = null;
+    private boolean lubricated = false;
+
 
     public BearingBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.BEARING_BE.get(), pos, state);
@@ -42,6 +44,13 @@ public class BearingBlockEntity extends KineticNodeBlockEntity {
         this.hasShaft = false;
         this.shaftMaterial = null;
         this.shaftDiameter = null;
+        setChanged();
+        syncToClient();
+    }
+
+    public boolean isLubricated() { return lubricated; }
+    public void setLubricated(boolean lubricated) {
+        this.lubricated = lubricated;
         setChanged();
         syncToClient();
     }
@@ -105,7 +114,9 @@ public class BearingBlockEntity extends KineticNodeBlockEntity {
     }
 
     @Override
-    public long getFrictionContribution() { return 1; }
+    public float getBearingFrictionCoefficient() {
+        return lubricated ? 0.0f : 0.2f;
+    }
 
     @Override
     public long getMaxTorqueTolerance() { return 10000; }
@@ -132,6 +143,7 @@ public class BearingBlockEntity extends KineticNodeBlockEntity {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag); // speed, lastSyncedSpeed, networkScale
         tag.putBoolean("HasShaft", this.hasShaft);
+        tag.putBoolean("Lubricated", this.lubricated);
         if (this.hasShaft && this.shaftMaterial != null && this.shaftDiameter != null) {
             tag.putString("ShaftMaterial", this.shaftMaterial.name());
             tag.putString("ShaftDiameter", this.shaftDiameter.name());
@@ -142,6 +154,7 @@ public class BearingBlockEntity extends KineticNodeBlockEntity {
     public void load(CompoundTag tag) {
         super.load(tag); // speed, lastSyncedSpeed, networkScale
         this.hasShaft = tag.getBoolean("HasShaft");
+        this.lubricated = tag.getBoolean("Lubricated");
         if (this.hasShaft) {
             String matName = tag.getString("ShaftMaterial").toLowerCase();
             String diaName = tag.getString("ShaftDiameter");

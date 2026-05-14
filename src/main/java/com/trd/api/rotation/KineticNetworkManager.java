@@ -26,6 +26,7 @@ public class KineticNetworkManager extends SavedData {
     // Множество уникальных сетей — синхронизируется при каждом изменении состава
     // Избавляет от O(N) аллокации HashSet на каждый тик в tickAllNetworks()
     private final Set<KineticNetwork> networks = new HashSet<>();
+    private final Set<BlockPos> pendingBreakages = new HashSet<>();
     private final ServerLevel level;
 
     public KineticNetworkManager(ServerLevel level) {
@@ -146,7 +147,7 @@ public class KineticNetworkManager extends SavedData {
             boolean valid = recalculateNetworkSigns(existingNet);
 
             // ПРОВЕРКА КОНФЛИКТА
-            if (!valid || existingNet.checkConflict(level)) {
+            if (!valid) {
                 LOGGER.info("[Kinetic] Direct motor placement conflict at {}!", pos.toShortString());
 
                 // 1. Откатываем добавление мотора в эту сеть
@@ -369,7 +370,7 @@ public class KineticNetworkManager extends SavedData {
 
         registerBlockToNetwork(connectorPos, mainNet);
         boolean valid = recalculateNetworkSigns(mainNet);
-        if (!valid || mainNet.checkConflict(level)) {
+        if (!valid) {
             return false;
         }
         mainNet.recalculate(level);
@@ -387,7 +388,40 @@ public class KineticNetworkManager extends SavedData {
         }
     }
 
+    public void scheduleBreakage(BlockPos pos) {
+        pendingBreakages.add(pos);
+    }
+
+    private void processPendingBreakages() {
+        if (pendingBreakages.isEmpty()) return;
+
+        Set<BlockPos> toProcess = new java.util.HashSet<>(pendingBreakages);
+        pendingBreakages.clear();
+
+        for (BlockPos pos : toProcess) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof Rotational node) {
+                boolean broken = false;
+                for (Direction dir : node.getPropagationDirections()) {
+                    BlockPos neighborPos = pos.relative(dir);
+                    BlockEntity neighborBE = level.getBlockEntity(neighborPos);
+                    // Если сосед — вал, ломаем его
+                    if (neighborBE instanceof com.trd.block.entity.industrial.rotation.ShaftBlockEntity) {
+                        level.destroyBlock(neighborPos, true);
+                        broken = true;
+                        break;
+                    }
+                }
+                // Если вал не найден (например, моторы стоят вплотную), ломаем сам источник
+                if (!broken) {
+                    level.destroyBlock(pos, true);
+                }
+            }
+        }
+    }
+
     public void tickAllNetworks() {
+        processPendingBreakages();
         // Итерируем готовое множество уникальных сетей — без аллокации нового HashSet каждый тик!
         boolean anyChanged = false;
         for (KineticNetwork net : networks) {
