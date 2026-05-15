@@ -128,16 +128,14 @@ public class GrenadeNucProjectileEntity extends ThrowableItemProjectile {
 
         this.discard();
 
-        // Водородный рейкаст-взрыв
+        // Водородный рейкаст-взрыв (теперь включает центральный и лучи)
         ExplosionHydrogen.explode(serverLevel, new Vec3(x, y, z), this.getOwner());
 
-        // Дополнительный стандартный взрыв для эффекта
-        serverLevel.explode(this, x, y, z, 9.0F, true, Level.ExplosionInteraction.NONE);
+        // Убираем лишний стандартный взрыв – он уже внутри
+        // triggerNearbyDetonations и dealExplosionDamage оставляем (они кастомные)
         triggerNearbyDetonations(serverLevel, pos, null);
         dealExplosionDamage(serverLevel, x, y, z);
-
         playRandomDetonationSound(level(), pos);
-
     }
 
     private void dealExplosionDamage(ServerLevel serverLevel, double x, double y, double z) {

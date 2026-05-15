@@ -1,6 +1,7 @@
 package com.trd.entity.weapons.grenades;
 
 import com.trd.util.explosions.ExplosionFireHeavy;
+import com.trd.util.explosions.ExplosionFireRaycast;
 import com.trd.util.explosions.ExplosionHE;
 import com.trd.util.explosions.ExplosionStandard;
 import net.minecraft.core.BlockPos;
@@ -187,9 +188,9 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         Level level = level();
         switch (grenadeType) {
             case GRENADE_IF -> ExplosionStandard.explode(level, center, this.getOwner(), 5.0f, 45.0f);
-            case GRENADE_IF_HE -> ExplosionHE.explode(level, center, this.getOwner(), 10.0f, 80.0f);
-            case GRENADE_IF_FIRE -> ExplosionFireHeavy.explode((ServerLevel) level, center, this.getOwner(), 3.0f);
-            case GRENADE_IF_SLIME -> ExplosionStandard.explode(level, center, this.getOwner(), 7.0f, 60.0f);
+            case GRENADE_IF_HE -> ExplosionHE.explode(level, center, this.getOwner(), 8.0f, 80.0f);
+            case GRENADE_IF_FIRE -> ExplosionFireRaycast.explode((ServerLevel) level, center, this.getOwner(), 3.0f);
+            case GRENADE_IF_SLIME -> ExplosionStandard.explode(level, center, this.getOwner(), 6.0f, 60.0f);
         }
         this.discard();
     }
