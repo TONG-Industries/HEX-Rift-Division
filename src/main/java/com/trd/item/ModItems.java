@@ -275,34 +275,34 @@ public class ModItems {
 
     //ГРАНАТЫ
     public static final RegistryObject<Item> GRENADE = ITEMS.register("grenade",
-            () -> new GrenadeItem(new Item.Properties(), GrenadeType.STANDARD, ModEntities.GRENADE_PROJECTILE));
+            () -> new GrenadeItem(new Item.Properties().stacksTo(16), GrenadeType.STANDARD, ModEntities.GRENADE_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADEHE = ITEMS.register("grenadehe",
-            () -> new GrenadeItem(new Item.Properties(), GrenadeType.HE, ModEntities.GRENADEHE_PROJECTILE));
+            () -> new GrenadeItem(new Item.Properties().stacksTo(16), GrenadeType.HE, ModEntities.GRENADEHE_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADEFIRE = ITEMS.register("grenadefire",
-            () -> new GrenadeItem(new Item.Properties(), GrenadeType.FIRE, ModEntities.GRENADEFIRE_PROJECTILE));
+            () -> new GrenadeItem(new Item.Properties().stacksTo(16), GrenadeType.FIRE, ModEntities.GRENADEFIRE_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADESLIME = ITEMS.register("grenadeslime",
-            () -> new GrenadeItem(new Item.Properties(), GrenadeType.SLIME, ModEntities.GRENADESLIME_PROJECTILE));
+            () -> new GrenadeItem(new Item.Properties().stacksTo(16), GrenadeType.SLIME, ModEntities.GRENADESLIME_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADESMART = ITEMS.register("grenadesmart",
-            () -> new GrenadeItem(new Item.Properties(), GrenadeType.SMART, ModEntities.GRENADESMART_PROJECTILE));
+            () -> new GrenadeItem(new Item.Properties().stacksTo(16), GrenadeType.SMART, ModEntities.GRENADESMART_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADE_IF = ITEMS.register("grenade_if",
-            () -> new GrenadeIfItem(new Item.Properties(), GrenadeIfType.GRENADE_IF, ModEntities.GRENADE_IF_PROJECTILE));
+            () -> new GrenadeIfItem(new Item.Properties().stacksTo(16), GrenadeIfType.GRENADE_IF, ModEntities.GRENADE_IF_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADE_IF_HE = ITEMS.register("grenade_if_he",
-            () -> new GrenadeIfItem(new Item.Properties(), GrenadeIfType.GRENADE_IF_HE, ModEntities.GRENADE_IF_HE_PROJECTILE));
+            () -> new GrenadeIfItem(new Item.Properties().stacksTo(16), GrenadeIfType.GRENADE_IF_HE, ModEntities.GRENADE_IF_HE_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADE_IF_SLIME = ITEMS.register("grenade_if_slime",
-            () -> new GrenadeIfItem(new Item.Properties(), GrenadeIfType.GRENADE_IF_SLIME, ModEntities.GRENADE_IF_SLIME_PROJECTILE));
+            () -> new GrenadeIfItem(new Item.Properties().stacksTo(16), GrenadeIfType.GRENADE_IF_SLIME, ModEntities.GRENADE_IF_SLIME_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADE_IF_FIRE = ITEMS.register("grenade_if_fire",
-            () -> new GrenadeIfItem(new Item.Properties(), GrenadeIfType.GRENADE_IF_FIRE, ModEntities.GRENADE_IF_FIRE_PROJECTILE));
+            () -> new GrenadeIfItem(new Item.Properties().stacksTo(16), GrenadeIfType.GRENADE_IF_FIRE, ModEntities.GRENADE_IF_FIRE_PROJECTILE));
 
     public static final RegistryObject<Item> GRENADE_NUC = ITEMS.register("grenade_nuc",
-            () -> new GrenadeNucItem(new Item.Properties(), ModEntities.GRENADE_NUC_PROJECTILE));
+            () -> new GrenadeNucItem(new Item.Properties().stacksTo(16), ModEntities.GRENADE_NUC_PROJECTILE));
 
     public static final RegistryObject<Item> MORY_LAH = ITEMS.register("mory_lah",
             () -> new MoryLahItem(new Item.Properties()));

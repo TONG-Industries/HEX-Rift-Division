@@ -20,14 +20,14 @@ import java.util.Set;
 
 public class ExplosionHydrogen {
 
-    private static final int RAYS = 800;
+    private static final int RAYS = 8000;
     private static final float MAX_RANGE = 100.0f;
     private static final float MAX_PENETRATION = 100.0f;
     private static final float BRANCH_CHANCE = 0.40f;
     private static final float BRANCH_ANGLE = (float) Math.toRadians(45);
     private static final float BRANCH_RANGE_MULTIPLIER = 0.50f;
     private static final float BRANCH_PENETRATION_MULTIPLIER = 0.50f;
-    private static final float CENTER_EXPLOSION_RADIUS = 12.0f;
+    private static final float CENTER_EXPLOSION_RADIUS = 20.0f;
     private static final Random RANDOM = new Random();
 
     public static void explode(ServerLevel level, Vec3 center, Entity source) {
