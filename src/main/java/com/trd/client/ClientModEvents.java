@@ -445,6 +445,13 @@ public class ClientModEvents {
                 ResourceRegistry.getMainUnit("tin"),
                 ResourceRegistry.getSmallUnit("tin"),
                 ResourceRegistry.getBlock("tin"),
+                ResourceRegistry.getMainUnit("titanium"),
+                ResourceRegistry.getSmallUnit("titanium"),
+                ResourceRegistry.getBlock("titanium"),
+                ResourceRegistry.getBlock("industrial_copper"),
+                ResourceRegistry.getMainUnit("industrial_copper"),
+                ResourceRegistry.getSmallUnit("industrial_copper"),
+                ResourceRegistry.getBlock("titanium"),
                 ResourceRegistry.getMainUnit("zinc"),
                 ResourceRegistry.getSmallUnit("zinc"),
                 ResourceRegistry.getBlock("zinc")
@@ -525,6 +532,20 @@ public class ClientModEvents {
                 ResourceRegistry.getMainUnit("zinc"),
                 ResourceRegistry.getSmallUnit("zinc"),
                 ResourceRegistry.getBlock("zinc").asItem()
+        );
+
+        // Титан
+        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getMainUnit("titanium"),
+                ResourceRegistry.getSmallUnit("titanium"),
+                ResourceRegistry.getBlock("titanium").asItem()
+        );
+
+        // Промышленная медь
+        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getMainUnit("industrial_copper"),
+                ResourceRegistry.getSmallUnit("industrial_copper"),
+                ResourceRegistry.getBlock("industrial_copper").asItem()
         );
 
         // Спец обработчик для шлака

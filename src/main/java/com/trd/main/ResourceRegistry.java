@@ -34,11 +34,6 @@ public class ResourceRegistry {
 
         // ============ МЕТАЛЛЫ ============
 
-        registerFull("steel", ResourceType.METAL,
-                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
-                        .strength(8.0f, 10.0f)
-                        .requiresCorrectToolForDrops());
-
         registerFull("aluminum", ResourceType.METAL,
                 BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                         .strength(3.0f, 5.0f)
@@ -58,6 +53,22 @@ public class ResourceRegistry {
                 BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                         .strength(1.0f, 2.0f)
                         .requiresCorrectToolForDrops());
+
+        registerFull("steel", ResourceType.METAL,
+                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                        .strength(8.0f, 10.0f)
+                        .requiresCorrectToolForDrops());
+
+        registerFull("titanium", ResourceType.METAL,
+                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                        .strength(12.0f, 15.0f)
+                        .requiresCorrectToolForDrops());
+
+        registerFull("industrial_copper", ResourceType.METAL,
+                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                        .strength(4.0f, 6.0f)
+                        .requiresCorrectToolForDrops());
+
 
 //        // ============ ПОЛИМЕРЫ ============
 //

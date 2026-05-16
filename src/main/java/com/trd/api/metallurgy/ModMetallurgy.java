@@ -121,6 +121,17 @@ public class ModMetallurgy {
                 ResourceRegistry.getSmallUnit("tin"),
                 ResourceRegistry.getBlock("tin"));
 
+        // === ПРОМЫШЛЕННАЯ МЕДЬ ===
+        Metal industrial_copper = registerMetalWithItems("industrial_copper", 0xc15a36, 1084, 0.8f,
+                ResourceRegistry.getMainUnit("industrial_copper"),
+                ResourceRegistry.getSmallUnit("industrial_copper"),
+                ResourceRegistry.getBlock("industrial_copper"));
+
+        // === ТИТАН ===
+        Metal titanium = registerMetalWithItems("titanium", 0xc5b8a2, 1570, 0.8f,
+                ResourceRegistry.getMainUnit("titanium"),
+                ResourceRegistry.getSmallUnit("titanium"),
+                ResourceRegistry.getBlock("titanium"));
 
         // === РЕГИСТРАЦИЯ ФОРМ ЛИТЬЯ ===
         MoldRecipeRegistry.register(ModItems.MOLD_INGOT.get(), MetalUnits2.UNITS_PER_INGOT, metal ->
