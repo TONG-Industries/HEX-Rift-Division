@@ -188,7 +188,6 @@ public class MainRegistry {
 
             event.accept(ModBlocks.MORY_BLOCK);
             event.accept(ModBlocks.ANTON_CHIGUR);
-            event.accept(ModBlocks.MINERAL_BLOCK1.get());
             event.accept(ModBlocks.MINERAL_BLOCK2.get());
             event.accept(ModBlocks.MINERAL_TILE.get());
             event.accept(ModBlocks.DOLOMITE_TILE.get());

@@ -107,6 +107,26 @@ public class ResourceDatagenHelper {
                 if (resource.smallUnit != null) provider.add(resource.smallUnit.get(), "Титановый " + getRussianUnitName(type.smallUnit, false));
                 if (resource.block != null) provider.add(resource.block.get(), "Титановый блок");
             }
+            case "lead" -> {
+                provider.add(resource.mainUnit.get(), "Свинцовый " + getRussianUnitName(type.mainUnit, false));
+                if (resource.smallUnit != null) provider.add(resource.smallUnit.get(), "Свинцовый " + getRussianUnitName(type.smallUnit, false));
+                if (resource.block != null) provider.add(resource.block.get(), "Свинцовый блок");
+            }
+            case "beryllium" -> {
+                provider.add(resource.mainUnit.get(), "Бериллиевый " + getRussianUnitName(type.mainUnit, false));
+                if (resource.smallUnit != null) provider.add(resource.smallUnit.get(), "Бериллиевый " + getRussianUnitName(type.smallUnit, false));
+                if (resource.block != null) provider.add(resource.block.get(), "Бериллиевый блок");
+            }
+            case "tungsten" -> {
+                provider.add(resource.mainUnit.get(), "Вольфрамовый " + getRussianUnitName(type.mainUnit, false));
+                if (resource.smallUnit != null) provider.add(resource.smallUnit.get(), "Вольфрамовый " + getRussianUnitName(type.smallUnit, false));
+                if (resource.block != null) provider.add(resource.block.get(), "Вольфрамовый блок");
+            }
+            case "neodymium" -> {
+                provider.add(resource.mainUnit.get(), "Неодимовый " + getRussianUnitName(type.mainUnit, false));
+                if (resource.smallUnit != null) provider.add(resource.smallUnit.get(), "Неодимовый " + getRussianUnitName(type.smallUnit, false));
+                if (resource.block != null) provider.add(resource.block.get(), "Неодимовый блок");
+            }
             default -> {
                 String adj = capitalize(name);
                 provider.add(resource.mainUnit.get(), adj + " " + getRussianUnitName(type.mainUnit, false));

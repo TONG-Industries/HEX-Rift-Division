@@ -451,6 +451,15 @@ public class ClientModEvents {
                 ResourceRegistry.getBlock("industrial_copper"),
                 ResourceRegistry.getMainUnit("industrial_copper"),
                 ResourceRegistry.getSmallUnit("industrial_copper"),
+                ResourceRegistry.getMainUnit("lead"),
+                ResourceRegistry.getSmallUnit("lead"),
+                ResourceRegistry.getBlock("lead"),
+                ResourceRegistry.getMainUnit("tungsten"),
+                ResourceRegistry.getSmallUnit("tungsten"),
+                ResourceRegistry.getBlock("tungsten"),
+                ResourceRegistry.getMainUnit("beryllium"),
+                ResourceRegistry.getSmallUnit("beryllium"),
+                ResourceRegistry.getBlock("beryllium"),
                 ResourceRegistry.getBlock("titanium"),
                 ResourceRegistry.getMainUnit("zinc"),
                 ResourceRegistry.getSmallUnit("zinc"),
@@ -458,8 +467,10 @@ public class ClientModEvents {
         );
 
         // === СИНИЕ СВЕЧЕНИЕ ===
-        ItemHeatColorRegistry.registerMixed(ItemHeatColorRegistry.HeatGradient.BLUE_TO_WHITE
-
+        ItemHeatColorRegistry.registerMixed(ItemHeatColorRegistry.HeatGradient.BLUE_TO_WHITE,
+                ResourceRegistry.getMainUnit("neodymium"),
+                ResourceRegistry.getSmallUnit("neodymium"),
+                ResourceRegistry.getBlock("neodymium")
         );
 
 
@@ -546,6 +557,34 @@ public class ClientModEvents {
                 ResourceRegistry.getMainUnit("industrial_copper"),
                 ResourceRegistry.getSmallUnit("industrial_copper"),
                 ResourceRegistry.getBlock("industrial_copper").asItem()
+        );
+
+        // СВИНец
+        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getMainUnit("lead"),
+                ResourceRegistry.getSmallUnit("lead"),
+                ResourceRegistry.getBlock("lead").asItem()
+        );
+
+        // Бериллий
+        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getMainUnit("beryllium"),
+                ResourceRegistry.getSmallUnit("beryllium"),
+                ResourceRegistry.getBlock("beryllium").asItem()
+        );
+
+        // Вольфрам
+        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getMainUnit("tungsten"),
+                ResourceRegistry.getSmallUnit("tungsten"),
+                ResourceRegistry.getBlock("tungsten").asItem()
+        );
+
+        // Неодим
+        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getMainUnit("neodymium"),
+                ResourceRegistry.getSmallUnit("neodymium"),
+                ResourceRegistry.getBlock("neodymium").asItem()
         );
 
         // Спец обработчик для шлака

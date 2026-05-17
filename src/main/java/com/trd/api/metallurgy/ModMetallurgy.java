@@ -110,28 +110,52 @@ public class ModMetallurgy {
                 ResourceRegistry.getBlock("bronze"));
 
         // === ЦИНК ===
-        Metal zinc = registerMetalWithItems("zinc", 0x968e8f, 419, 0.6f,
+        Metal zinc = registerMetalWithItems("zinc", 0x94789a, 419, 0.6f,
                 ResourceRegistry.getMainUnit("zinc"),
                 ResourceRegistry.getSmallUnit("zinc"),
                 ResourceRegistry.getBlock("zinc"));
 
         // === ОЛОВО ===
-        Metal tin = registerMetalWithItems("tin", 0x47675b, 232, 0.2f,
+        Metal tin = registerMetalWithItems("tin", 0x196549, 232, 0.2f,
                 ResourceRegistry.getMainUnit("tin"),
                 ResourceRegistry.getSmallUnit("tin"),
                 ResourceRegistry.getBlock("tin"));
 
         // === ПРОМЫШЛЕННАЯ МЕДЬ ===
-        Metal industrial_copper = registerMetalWithItems("industrial_copper", 0xc15a36, 1084, 0.8f,
+        Metal industrial_copper = registerMetalWithItems("industrial_copper", 0xc17136, 1084, 0.8f,
                 ResourceRegistry.getMainUnit("industrial_copper"),
                 ResourceRegistry.getSmallUnit("industrial_copper"),
                 ResourceRegistry.getBlock("industrial_copper"));
 
         // === ТИТАН ===
-        Metal titanium = registerMetalWithItems("titanium", 0xc5b8a2, 1570, 0.8f,
+        Metal titanium = registerMetalWithItems("titanium", 0x767676, 1570, 1.5f,
                 ResourceRegistry.getMainUnit("titanium"),
                 ResourceRegistry.getSmallUnit("titanium"),
                 ResourceRegistry.getBlock("titanium"));
+
+        // === СВИНец ===
+        Metal lead = registerMetalWithItems("lead", 0x686d79, 327, 0.3f,
+                ResourceRegistry.getMainUnit("lead"),
+                ResourceRegistry.getSmallUnit("lead"),
+                ResourceRegistry.getBlock("lead"));
+
+        // === БЕРИЛЛИЙ ===
+        Metal beryllium = registerMetalWithItems("beryllium", 0x47675b, 1287, 1.1f,
+                ResourceRegistry.getMainUnit("beryllium"),
+                ResourceRegistry.getSmallUnit("beryllium"),
+                ResourceRegistry.getBlock("beryllium"));
+
+        // === ВОЛЬФРАМ ===
+        Metal tungsten = registerMetalWithItems("tungsten", 0x90404, 3422, 3f,
+                ResourceRegistry.getMainUnit("tungsten"),
+                ResourceRegistry.getSmallUnit("tungsten"),
+                ResourceRegistry.getBlock("tungsten"));
+
+        // === НЕОДИМ ===
+        Metal neodymium = registerMetalWithItems("neodymium", 0x696bb3, 1016, 1f,
+                ResourceRegistry.getMainUnit("neodymium"),
+                ResourceRegistry.getSmallUnit("neodymium"),
+                ResourceRegistry.getBlock("neodymium"));
 
         // === РЕГИСТРАЦИЯ ФОРМ ЛИТЬЯ ===
         MoldRecipeRegistry.register(ModItems.MOLD_INGOT.get(), MetalUnits2.UNITS_PER_INGOT, metal ->
