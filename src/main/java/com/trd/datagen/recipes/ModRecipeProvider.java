@@ -29,13 +29,13 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
         ResourceRecipeHelper.generateRecipes(writer);
 
         // --- КРАФТЫ ИЗ КАЛА ---
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.FIRE_SMES.get())
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.FIRE_SMES.get(), 4)
                 .requires(Items.CLAY_BALL, 3)
                 .requires(ModItems.BAUXITE_POWDER.get())
                 .unlockedBy("has_bauxite_powder", has(ModItems.BAUXITE_POWDER.get()))
                 .save(writer);
 
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.DOLOMITE_SMES.get())
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.DOLOMITE_SMES.get(), 4)
                 .requires(ModItems.DOLOMITE_POWDER.get(), 3)
                 .requires(Items.CLAY_BALL)
                 .unlockedBy("has_dolomite_powder", has(ModItems.DOLOMITE_POWDER.get()))

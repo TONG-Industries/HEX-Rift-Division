@@ -122,6 +122,37 @@ public class ModBlocks {
 
 
     // Конгломераты
+    public static final RegistryObject<Block> ASBESOTS_ORE = registerBlock("asbestos_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> CINNABAR_ORE = registerBlock("cinnabar_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> CINNABAR_ORE_DEEPSLATE = registerBlock("cinnabar_ore_deepslate",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.DEEPSLATE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> COLTAN_ORE = registerBlock("coltan_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> LIGNITE_ORE = registerBlock("lignite_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> FLUORITE_ORE = registerBlock("fluorite_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> RAREGROUND_ORE = registerBlock("rareground_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> RAREGROUND_ORE_DEEPSLATE = registerBlock("rareground_ore_deepslate",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.DEEPSLATE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> SEQUESTRUM_ORE = registerBlock("sequestrum_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+
+
+
+
     public static final RegistryObject<Block> CONGLOMERATE = BLOCKS.register("conglomerate",
             () -> new ConglomerateBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.STONE)
