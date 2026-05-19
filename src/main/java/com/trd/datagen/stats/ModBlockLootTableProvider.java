@@ -28,9 +28,6 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     @Override
     protected void generate() {
 
-        registerOreWithMultipleDrops(ModBlocks.BAUXITE, ModItems.BAUXITE_CHUNK);
-        registerOreWithMultipleDrops(ModBlocks.DOLOMITE, ModItems.DOLOMITE_CHUNK);
-        registerOreWithMultipleDrops(ModBlocks.LIMESTONE, ModItems.LIMESTONE_CHUNK);
         registerOreWithMultipleDrops(ModBlocks.LIGNITE_ORE, ModItems.LIGNITE);
         registerOreWithMultipleDrops(ModBlocks.CINNABAR_ORE, ModItems.CINNABAR);
         registerOreWithMultipleDrops(ModBlocks.CINNABAR_ORE_DEEPSLATE, ModItems.CINNABAR);

@@ -57,7 +57,7 @@ public class trdJeiPlugin implements IModPlugin {
     public record SmeltingWrapper(ItemStack input, Metal metal, int outputUnits, int temp, float heatConsumption, int timeTicks) {}
     public record CastingWrapper(MoldRecipe mold, Metal metal, ItemStack output, int requiredUnits) {}
     public record AlloyingWrapper(AlloyRecipe recipe) {}
-    public record MillstoneWrapper(Item input, Item output, int outputCount, int grindsRequired) {}
+    public record MillstoneWrapper(Item input, List<ItemStack> outputs, int grindsRequired) {}
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
@@ -138,8 +138,7 @@ public class trdJeiPlugin implements IModPlugin {
         for (Map.Entry<Item, MillstoneBlockEntity.GrindRecipe> entry : MillstoneBlockEntity.RECIPES.entrySet()) {
             millstoneRecipes.add(new MillstoneWrapper(
                     entry.getKey(),
-                    entry.getValue().output(),
-                    entry.getValue().outputCount(),
+                    entry.getValue().outputs(),
                     entry.getValue().grindsRequired()
             ));
         }
@@ -198,22 +197,24 @@ public class trdJeiPlugin implements IModPlugin {
             for (int[] pos : leftSlots) {
                 builder.addSlot(RecipeIngredientRole.INPUT, pos[0], pos[1]);
             }
-            // Левый верхний слот — реальный вход
             builder.addSlot(RecipeIngredientRole.INPUT, 5, 5)
                     .addItemStack(new ItemStack(recipe.input()));
 
-            // Правая группа 3×3: выход в ЛЕВОМ ВЕРХНЕМ слоте (83,5)
+            // Правая группа 3×3: выходы заполняем последовательно начиная с (83,5)
             int[][] rightSlots = {
                     {83, 5}, {101, 5}, {119, 5},
                     {83, 23}, {101, 23}, {119, 23},
                     {83, 41}, {101, 41}, {119, 41}
             };
-            for (int[] pos : rightSlots) {
-                builder.addSlot(RecipeIngredientRole.OUTPUT, pos[0], pos[1]);
+            List<ItemStack> outputs = recipe.outputs();
+            for (int i = 0; i < outputs.size() && i < rightSlots.length; i++) {
+                builder.addSlot(RecipeIngredientRole.OUTPUT, rightSlots[i][0], rightSlots[i][1])
+                        .addItemStack(outputs.get(i));
             }
-            // Левый верхний слот — реальный выход
-            builder.addSlot(RecipeIngredientRole.OUTPUT, 83, 5)
-                    .addItemStack(new ItemStack(recipe.output(), recipe.outputCount()));
+            // Оставшиеся слоты пустые (для визуальной консистентности)
+            for (int i = outputs.size(); i < rightSlots.length; i++) {
+                builder.addSlot(RecipeIngredientRole.OUTPUT, rightSlots[i][0], rightSlots[i][1]);
+            }
         }
 
         @Override
