@@ -89,11 +89,11 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> TITANIUM_PLATE = ITEMS.register("titanium_plate",
             () -> new Item(new Item.Properties()));
-
     public static final RegistryObject<Item> LIGNITE = ITEMS.register("lignite",
             () -> new Item(new Item.Properties()));
-
     public static final RegistryObject<Item> CINNABAR = ITEMS.register("cinnabar",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> SULFUR = ITEMS.register("sulfur",
             () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> DEPTH_WORM_BRUTAL_SPAWN_EGG = ITEMS.register("depth_worm_brutal_spawn_egg",

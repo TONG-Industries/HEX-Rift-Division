@@ -131,7 +131,16 @@ public class MillstoneBlock extends BaseEntityBlock {
 
         return InteractionResult.PASS;
     }
-
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof MillstoneBlockEntity millstone) {
+                millstone.dropContents();
+            }
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
+    }
     // Поддержка воронок (извлечение результата сверху или снизу)
     @Override
     public boolean hasAnalogOutputSignal(BlockState state) {

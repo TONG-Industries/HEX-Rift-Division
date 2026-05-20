@@ -73,6 +73,10 @@ public class MillstoneBlockEntity extends BlockEntity {
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(5) {
         @Override
+        public int getSlotLimit(int slot) {
+            return slot == 0 ? 1 : 64;
+        }
+        @Override
         protected void onContentsChanged(int slot) {
             setChanged();
             if (level != null && !level.isClientSide) {

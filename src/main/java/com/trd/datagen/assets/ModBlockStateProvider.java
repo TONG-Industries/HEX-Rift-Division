@@ -89,6 +89,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
         cubeAllWithItem(ModBlocks.LIGNITE_ORE);
         cubeAllWithItem(ModBlocks.SEQUESTRUM_ORE);
         cubeAllWithItem(ModBlocks.CINNABAR_ORE_DEEPSLATE);
+        cubeAllWithItem(ModBlocks.SULFUR_ORE);
+        cubeAllWithItem(ModBlocks.SULFUR_ORE_DEEPSLATE);
+        cubeAllWithItem(ModBlocks.SULFUR_CLUSTER);
+        cubeAllWithItem(ModBlocks.SULFUR_TILE);
+        cubeAllWithItem(ModBlocks.SULFUR_BRICKS);
         cubeAllWithItem(ModBlocks.MINERAL_BLOCK2);
         cubeAllWithItem(ModBlocks.MINERAL_TILE);
         cubeAllWithItem(ModBlocks.MINERAL1);

@@ -192,6 +192,8 @@ public class MainRegistry {
             event.accept(ModBlocks.MINERAL_TILE.get());
             event.accept(ModBlocks.DOLOMITE_TILE.get());
             event.accept(ModBlocks.TILE_LIGHT.get());
+            event.accept(ModBlocks.SULFUR_TILE.get());
+            event.accept(ModBlocks.SULFUR_BRICKS.get());
             event.accept(ModBlocks.CONCRETE_NET.get());
             event.accept(ModBlocks.DECO_STEEL.get());
             event.accept(ModBlocks.DECO_STEEL_DARK.get());
@@ -306,12 +308,6 @@ public class MainRegistry {
             event.accept(ModItems.MOLD_BLOCK.get());
             event.accept(ModItems.MOLD_PICKAXE.get());
 
-            event.accept(ModItems.CAST_PICKAXE_IRON_BASE.get());
-            event.accept(ModItems.CAST_PICKAXE_STEEL_BASE.get());
-            event.accept(ModItems.WOODEN_HANDLE.get());
-
-            event.accept(ModItems.ROPE.get());
-
         }
 
         if (event.getTab() == ModCreativeTabs.trd_WEAPONS_TAB.get()) {
@@ -357,10 +353,16 @@ public class MainRegistry {
             event.accept(ModItems.INDUSTRIAL_COPPER_PLATE.get());
             event.accept(ModItems.GOLD_PLATE.get());
 
+            event.accept(ModItems.CAST_PICKAXE_IRON_BASE.get());
+            event.accept(ModItems.CAST_PICKAXE_STEEL_BASE.get());
+
             for (Metal metal : MetallurgyRegistry.getAllMetals()) {
                 ItemStack slagStack = SlagItem.createSlag(metal, MetalUnits2.UNITS_PER_INGOT);
                 event.accept(slagStack);
             }
+            event.accept(ModItems.ROPE.get());
+            event.accept(ModItems.WOODEN_HANDLE.get());
+
             event.accept(ModItems.FIRE_SMES.get());
             event.accept(ModItems.DOLOMITE_SMES.get());
             event.accept(ModItems.FIREBRICK.get());
@@ -373,6 +375,7 @@ public class MainRegistry {
             event.accept(ModItems.BAUXITE_CHUNK);
             event.accept(ModItems.CINNABAR);
             event.accept(ModItems.LIGNITE);
+            event.accept(ModItems.SULFUR);
 
             event.accept(ModItems.DOLOMITE_POWDER);
             event.accept(ModItems.LIMESTONE_POWDER);
@@ -392,12 +395,15 @@ public class MainRegistry {
             event.accept(ModBlocks.RAREGROUND_ORE.get());
             event.accept(ModBlocks.RAREGROUND_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.SEQUESTRUM_ORE.get());
+            event.accept(ModBlocks.SULFUR_ORE.get());
+            event.accept(ModBlocks.SULFUR_ORE_DEEPSLATE.get());
 
             event.accept(ModBlocks.CONGLOMERATE.get());
             event.accept(ModBlocks.DEPLETED_CONGLOMERATE.get());
 
             event.accept(ModBlocks.DOLOMITE.get());
             event.accept(ModBlocks.LIMESTONE.get());
+            event.accept(ModBlocks.SULFUR_CLUSTER.get());
             event.accept(ModBlocks.BAUXITE.get());
             event.accept(ModBlocks.MINERAL1.get());
             event.accept(ModBlocks.MINERAL3.get());

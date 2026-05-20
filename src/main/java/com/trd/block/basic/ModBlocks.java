@@ -149,7 +149,21 @@ public class ModBlocks {
     public static final RegistryObject<Block> SEQUESTRUM_ORE = registerBlock("sequestrum_ore",
             () -> new Block(BlockBehaviour.Properties.of()
                     .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
-
+    public static final RegistryObject<Block> SULFUR_ORE = registerBlock("sulfur_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> SULFUR_ORE_DEEPSLATE = registerBlock("sulfur_ore_deepslate",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.DEEPSLATE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> SULFUR_CLUSTER = registerBlock("sulfur_cluster",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> SULFUR_TILE = registerBlock("sulfur_tile",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+    public static final RegistryObject<Block> SULFUR_BRICKS = registerBlock("sulfur_bricks",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
 
 
