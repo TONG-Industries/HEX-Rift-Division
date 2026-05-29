@@ -33,6 +33,12 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         registerOreWithMultipleDrops(ModBlocks.CINNABAR_ORE_DEEPSLATE, ModItems.CINNABAR);
         registerOreWithMultipleDrops(ModBlocks.SULFUR_ORE, ModItems.SULFUR);
         registerOreWithMultipleDrops(ModBlocks.SULFUR_ORE_DEEPSLATE, ModItems.SULFUR);
+        registerOreWithMultipleDrops(ModBlocks.SEQUESTRUM_ORE, ModItems.SEQUESTRUM);
+        registerOreWithMultipleDrops(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE, ModItems.SEQUESTRUM);
+        registerOreWithMultipleDrops(ModBlocks.FLUORITE_ORE, ModItems.FLUORITE);
+        registerOreWithMultipleDrops(ModBlocks.FLUORITE_ORE_DEEPSLATE, ModItems.FLUORITE);
+
+
         // --- ДЕФОЛТ ДЛЯ ВСЕХ ОСТАЛЬНЫХ БЛОКОВ ---
         for (RegistryObject<Block> entry : ModBlocks.BLOCKS.getEntries()) {
             Block block = entry.get();

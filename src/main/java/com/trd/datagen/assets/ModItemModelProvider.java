@@ -57,6 +57,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.ROPE);
         simpleItem(ModItems.IRON_PLATE);
         simpleItem(ModItems.SULFUR);
+        simpleItem(ModItems.SEQUESTRUM);
+        simpleItem(ModItems.FLUORITE);
         simpleItem(ModItems.STEEL_PLATE);
         simpleItem(ModItems.INDUSTRIAL_COPPER_PLATE);
         simpleItem(ModItems.ALUMINUM_PLATE);

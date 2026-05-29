@@ -375,6 +375,8 @@ public class MainRegistry {
             event.accept(ModItems.BAUXITE_CHUNK);
             event.accept(ModItems.CINNABAR);
             event.accept(ModItems.LIGNITE);
+            event.accept(ModItems.FLUORITE);
+            event.accept(ModItems.SEQUESTRUM);
             event.accept(ModItems.SULFUR);
 
             event.accept(ModItems.DOLOMITE_POWDER);
@@ -388,13 +390,15 @@ public class MainRegistry {
         if (event.getTab() == ModCreativeTabs.trd_NATURE_TAB.get()) {
 
             event.accept(ModBlocks.ASBESOTS_ORE.get());
+            event.accept(ModBlocks.LIGNITE_ORE.get());
             event.accept(ModBlocks.CINNABAR_ORE.get());
             event.accept(ModBlocks.CINNABAR_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.FLUORITE_ORE.get());
-            event.accept(ModBlocks.LIGNITE_ORE.get());
+            event.accept(ModBlocks.FLUORITE_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.RAREGROUND_ORE.get());
             event.accept(ModBlocks.RAREGROUND_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.SEQUESTRUM_ORE.get());
+            event.accept(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.SULFUR_ORE.get());
             event.accept(ModBlocks.SULFUR_ORE_DEEPSLATE.get());
 

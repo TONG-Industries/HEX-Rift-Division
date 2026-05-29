@@ -95,6 +95,10 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> SULFUR = ITEMS.register("sulfur",
             () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> SEQUESTRUM = ITEMS.register("sequestrum",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> FLUORITE = ITEMS.register("fluorite",
+            () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> DEPTH_WORM_BRUTAL_SPAWN_EGG = ITEMS.register("depth_worm_brutal_spawn_egg",
             () -> new DepthWormBrutalSpawnEggItem(new Item.Properties()));
