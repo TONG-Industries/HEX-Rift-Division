@@ -69,13 +69,23 @@ public class SmallSmelterBlockEntity extends BlockEntity implements MenuProvider
             }
         }
 
-        @Override
-        public boolean isItemValid(int slot, ItemStack stack) {
-            if (slot == SLOT_FUEL) return isFuel(stack);
-            if (slot == SLOT_ASH) return false; // только извлечение
-            if (slot == SLOT_SMELT) return MetallurgyRegistry.getSmeltRecipe(stack.getItem()) != null || stack.getItem() instanceof SlagItem;
-            return false;
-        }
+        private final ItemStackHandler inventory = new ItemStackHandler(INVENTORY_SIZE) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                setChanged();
+                if (level != null && !level.isClientSide) {
+                    level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+                }
+            }
+
+            @Override
+            public boolean isItemValid(int slot, ItemStack stack) {
+                if (slot == SLOT_FUEL) return isFuel(stack);
+                if (slot == SLOT_ASH) return stack.is(ModItems.FUEL_ASH.get()); // РАНЬШЕ: return false;
+                if (slot == SLOT_SMELT) return MetallurgyRegistry.getSmeltRecipe(stack.getItem()) != null || stack.getItem() instanceof SlagItem;
+                return false;
+            }
+        };
     };
 
     private float temperature = 0f;

@@ -1,5 +1,6 @@
 package com.trd.block.entity.industrial;
 
+import com.trd.block.basic.ModBlocks;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.item.ModItems;
 import net.minecraft.core.BlockPos;
@@ -11,7 +12,9 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
@@ -22,29 +25,57 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MillstoneBlockEntity extends BlockEntity {
 
-    public static final int GRIND_COOLDOWN = 20; // 1 секунда = 20 тиков
-    public static final float ROTATION_SPEED = 360.0f / GRIND_COOLDOWN; // Градусов за тик
+    public static final int GRIND_COOLDOWN = 20;
+    public static final float ROTATION_SPEED = 360.0f / GRIND_COOLDOWN;
 
     public static final Map<Item, GrindRecipe> RECIPES = new HashMap<>();
 
     static {
+        // --- Предметы ---
         RECIPES.put(ModItems.LIMESTONE_CHUNK.get(), new GrindRecipe(
-                ModItems.LIMESTONE_POWDER.get(), 4, 1
+                List.of(new ItemStack(ModItems.LIMESTONE_POWDER.get(), 1)), 2
         ));
         RECIPES.put(ModItems.BAUXITE_CHUNK.get(), new GrindRecipe(
-                ModItems.BAUXITE_POWDER.get(), 6, 1
+                List.of(new ItemStack(ModItems.BAUXITE_POWDER.get(), 1)), 2
         ));
         RECIPES.put(ModItems.DOLOMITE_CHUNK.get(), new GrindRecipe(
-                ModItems.DOLOMITE_POWDER.get(), 5, 1
+                List.of(new ItemStack(ModItems.DOLOMITE_POWDER.get(), 1)), 2
+        ));
+
+        // --- Блоки (новые рецепты) ---
+        // ВАЖНО: замени имена LIMESTONE/BAUXITE/DOLOMITE на реальные из твоего ModBlocks если они отличаются
+        RECIPES.put(ModBlocks.LIMESTONE.get().asItem(), new GrindRecipe(
+                List.of(
+                        new ItemStack(ModItems.LIMESTONE_CHUNK.get(), 1),
+                        new ItemStack(Blocks.GRAVEL, 1)
+                ), 4
+        ));
+        RECIPES.put(ModBlocks.BAUXITE.get().asItem(), new GrindRecipe(
+                List.of(
+                        new ItemStack(ModItems.BAUXITE_CHUNK.get(), 1),
+                        new ItemStack(Blocks.GRAVEL, 1)
+                ), 5
+        ));
+        RECIPES.put(ModBlocks.DOLOMITE.get().asItem(), new GrindRecipe(
+                List.of(
+                        new ItemStack(ModItems.DOLOMITE_CHUNK.get(), 1),
+                        new ItemStack(Blocks.GRAVEL, 1)
+                ), 6
         ));
     }
 
-    private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
+    private final ItemStackHandler itemHandler = new ItemStackHandler(5) {
+        @Override
+        public int getSlotLimit(int slot) {
+            return slot == 0 ? 1 : 64;
+        }
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
@@ -52,31 +83,56 @@ public class MillstoneBlockEntity extends BlockEntity {
                 level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
             }
         }
+
+        @Override
+        public boolean isItemValid(int slot, @Nonnull ItemStack stack) {
+            return slot == 0;
+        }
+
+        @Nonnull
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot == 0) return ItemStack.EMPTY;
+            return super.extractItem(slot, amount, simulate);
+        }
     };
 
     private int currentGrinds = 0;
     private int requiredGrinds = 0;
     private boolean isProcessing = false;
 
-    // Кулдаун и вращение
     private int cooldownTicks = 0;
     private float rotationAngle = 0.0f;
-    private boolean isGrinding = false; // Активно ли вращение прямо сейчас
+    private boolean isGrinding = false;
 
     public MillstoneBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MILLSTONE.get(), pos, state);
     }
 
-    // === Геттеры ===
     public ItemStack getInputStack() { return itemHandler.getStackInSlot(0); }
-    public ItemStack getResultStack() { return itemHandler.getStackInSlot(1); }
+
+    public List<ItemStack> getResultStacks() {
+        List<ItemStack> list = new ArrayList<>();
+        for (int i = 1; i < itemHandler.getSlots(); i++) {
+            ItemStack stack = itemHandler.getStackInSlot(i);
+            if (!stack.isEmpty()) list.add(stack);
+        }
+        return list;
+    }
+
+    public boolean isOutputEmpty() {
+        for (int i = 1; i < itemHandler.getSlots(); i++) {
+            if (!itemHandler.getStackInSlot(i).isEmpty()) return false;
+        }
+        return true;
+    }
+
     public boolean isProcessing() { return isProcessing; }
     public int getCurrentGrinds() { return currentGrinds; }
     public int getRequiredGrinds() { return requiredGrinds; }
     public int getRemainingGrinds() { return Math.max(0, requiredGrinds - currentGrinds); }
     public boolean canGrind() { return isProcessing && getRemainingGrinds() > 0 && cooldownTicks <= 0; }
 
-    // === Для рендера ===
     public float getRotationAngle() { return rotationAngle; }
     public boolean isGrinding() { return isGrinding; }
     public int getCooldownProgress() {
@@ -84,18 +140,19 @@ public class MillstoneBlockEntity extends BlockEntity {
     }
 
     public int getComparatorSignal() {
-        if (!itemHandler.getStackInSlot(1).isEmpty()) return 15;
+        for (int i = 1; i < itemHandler.getSlots(); i++) {
+            if (!itemHandler.getStackInSlot(i).isEmpty()) return 15;
+        }
         if (isProcessing && requiredGrinds > 0) {
             return 1 + (int)((14.0f * currentGrinds) / requiredGrinds);
         }
         return 0;
     }
 
-    // === Логика ===
     public ItemStack insertItem(ItemStack stack) {
         GrindRecipe recipe = RECIPES.get(stack.getItem());
         if (recipe == null) return stack;
-        if (!itemHandler.getStackInSlot(0).isEmpty() || !itemHandler.getStackInSlot(1).isEmpty()) {
+        if (!itemHandler.getStackInSlot(0).isEmpty() || !isOutputEmpty()) {
             return stack;
         }
 
@@ -117,10 +174,8 @@ public class MillstoneBlockEntity extends BlockEntity {
     public boolean doGrind() {
         if (!canGrind()) return false;
 
-        // Запускаем кулдаун и вращение
         cooldownTicks = GRIND_COOLDOWN;
         isGrinding = true;
-
         currentGrinds++;
 
         if (currentGrinds >= requiredGrinds) {
@@ -138,7 +193,10 @@ public class MillstoneBlockEntity extends BlockEntity {
 
         if (recipe != null) {
             itemHandler.setStackInSlot(0, ItemStack.EMPTY);
-            itemHandler.setStackInSlot(1, new ItemStack(recipe.output, 1));
+            List<ItemStack> outputs = recipe.outputs();
+            for (int i = 0; i < outputs.size() && i < itemHandler.getSlots() - 1; i++) {
+                itemHandler.setStackInSlot(i + 1, outputs.get(i).copy());
+            }
         }
 
         isProcessing = false;
@@ -149,42 +207,66 @@ public class MillstoneBlockEntity extends BlockEntity {
     }
 
     public ItemStack extractResult() {
-        ItemStack result = itemHandler.getStackInSlot(1);
-        if (!result.isEmpty()) {
-            itemHandler.setStackInSlot(1, ItemStack.EMPTY);
-            setChanged();
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-            return result;
+        for (int i = 1; i < itemHandler.getSlots(); i++) {
+            ItemStack result = itemHandler.getStackInSlot(i);
+            if (!result.isEmpty()) {
+                itemHandler.setStackInSlot(i, ItemStack.EMPTY);
+                setChanged();
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+                return result;
+            }
         }
         return ItemStack.EMPTY;
     }
 
-    // === Тик ===
+    public List<ItemStack> extractAllResults() {
+        List<ItemStack> results = new ArrayList<>();
+        for (int i = 1; i < itemHandler.getSlots(); i++) {
+            ItemStack stack = itemHandler.getStackInSlot(i);
+            if (!stack.isEmpty()) {
+                results.add(stack);
+                itemHandler.setStackInSlot(i, ItemStack.EMPTY);
+            }
+        }
+        if (!results.isEmpty()) {
+            setChanged();
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+        return results;
+    }
+
     public static void tick(Level level, BlockPos pos, BlockState state, MillstoneBlockEntity be) {
+        if (!level.isClientSide) {
+            if (!be.isProcessing && !be.itemHandler.getStackInSlot(0).isEmpty() && be.isOutputEmpty()) {
+                ItemStack input = be.itemHandler.getStackInSlot(0);
+                GrindRecipe recipe = RECIPES.get(input.getItem());
+                if (recipe != null) {
+                    be.currentGrinds = 0;
+                    be.requiredGrinds = recipe.grindsRequired;
+                    be.isProcessing = true;
+                    be.cooldownTicks = 0;
+                    be.rotationAngle = 0;
+                    be.setChanged();
+                    level.sendBlockUpdated(pos, state, state, 3);
+                }
+            }
+        }
+
         if (be.cooldownTicks > 0) {
             be.cooldownTicks--;
-
-            // Вращаем пока есть кулдаун
             if (be.isGrinding) {
                 be.rotationAngle += ROTATION_SPEED;
                 if (be.rotationAngle >= 360.0f) {
                     be.rotationAngle -= 360.0f;
                 }
             }
-
-            // Конец вращения
             if (be.cooldownTicks <= 0) {
                 be.isGrinding = false;
-                be.rotationAngle = 0; // Сброс в начальное положение или оставить как есть?
-                // be.rotationAngle = 0; // Раскомментируй если хочешь сброс
             }
-
             be.setChanged();
-            // Не шлём обновление блока каждый тик для плавности - рендер сам интерполирует
         }
     }
 
-    // === Сериализация ===
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
@@ -222,7 +304,6 @@ public class MillstoneBlockEntity extends BlockEntity {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
-    // === Капабилити ===
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
@@ -241,9 +322,10 @@ public class MillstoneBlockEntity extends BlockEntity {
     }
 
     public void dropContents() {
-        Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), itemHandler.getStackInSlot(0));
-        Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), itemHandler.getStackInSlot(1));
+        for (int i = 0; i < itemHandler.getSlots(); i++) {
+            Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), itemHandler.getStackInSlot(i));
+        }
     }
 
-    public record GrindRecipe(Item output, int grindsRequired, int outputCount) {}
+    public record GrindRecipe(List<ItemStack> outputs, int grindsRequired) {}
 }

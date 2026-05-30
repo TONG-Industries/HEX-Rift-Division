@@ -433,6 +433,14 @@ public class ClientModEvents {
                 Items.GOLDEN_BOOTS,
                 ModItems.CAST_PICKAXE_STEEL_BASE.get(),
                 ModItems.CAST_PICKAXE_IRON_BASE.get(),
+                ModItems.STEEL_PLATE.get(),
+                ModItems.TUNGSTEN_PLATE.get(),
+                ModItems.ALUMINUM_PLATE.get(),
+                ModItems.TITANIUM_PLATE.get(),
+                ModItems.INDUSTRIAL_COPPER_PLATE.get(),
+                ModItems.GOLD_PLATE.get(),
+                ModItems.LEAD_PLATE.get(),
+                ModItems.IRON_PLATE.get(),
                 ResourceRegistry.getMainUnit("steel"),
                 ResourceRegistry.getSmallUnit("steel"),
                 ResourceRegistry.getBlock("steel"),
@@ -451,6 +459,15 @@ public class ClientModEvents {
                 ResourceRegistry.getBlock("industrial_copper"),
                 ResourceRegistry.getMainUnit("industrial_copper"),
                 ResourceRegistry.getSmallUnit("industrial_copper"),
+                ResourceRegistry.getMainUnit("lead"),
+                ResourceRegistry.getSmallUnit("lead"),
+                ResourceRegistry.getBlock("lead"),
+                ResourceRegistry.getMainUnit("tungsten"),
+                ResourceRegistry.getSmallUnit("tungsten"),
+                ResourceRegistry.getBlock("tungsten"),
+                ResourceRegistry.getMainUnit("beryllium"),
+                ResourceRegistry.getSmallUnit("beryllium"),
+                ResourceRegistry.getBlock("beryllium"),
                 ResourceRegistry.getBlock("titanium"),
                 ResourceRegistry.getMainUnit("zinc"),
                 ResourceRegistry.getSmallUnit("zinc"),
@@ -458,13 +475,14 @@ public class ClientModEvents {
         );
 
         // === СИНИЕ СВЕЧЕНИЕ ===
-        ItemHeatColorRegistry.registerMixed(ItemHeatColorRegistry.HeatGradient.BLUE_TO_WHITE
-
+        ItemHeatColorRegistry.registerMixed(ItemHeatColorRegistry.HeatGradient.BLUE_TO_WHITE,
+                ResourceRegistry.getMainUnit("neodymium"),
+                ResourceRegistry.getSmallUnit("neodymium"),
+                ResourceRegistry.getBlock("neodymium")
         );
 
 
         // === РЕГИСТРАЦИЯ ОБРАБОТЧИКОВ ЦВЕТА ===
-        // Железо и сталь
         event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
                 Items.IRON_INGOT, Items.IRON_NUGGET,
                 net.minecraft.world.level.block.Blocks.IRON_BLOCK.asItem(),
@@ -476,76 +494,58 @@ public class ClientModEvents {
                 ResourceRegistry.getSmallUnit("steel"),
                 ModItems.CAST_PICKAXE_STEEL_BASE.get(),
                 ModItems.CAST_PICKAXE_IRON_BASE.get(),
-                ResourceRegistry.getBlock("steel").asItem()
-        );
-
-        // Золото
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getBlock("steel").asItem(),
                 Items.GOLD_INGOT, Items.GOLD_NUGGET,
                 net.minecraft.world.level.block.Blocks.GOLD_BLOCK.asItem(),
                 Items.RAW_GOLD, Items.RAW_GOLD_BLOCK,
                 Items.GOLD_ORE, Items.DEEPSLATE_GOLD_ORE,
                 Items.GOLDEN_PICKAXE, Items.GOLDEN_AXE, Items.GOLDEN_SHOVEL, Items.GOLDEN_HOE, Items.GOLDEN_SWORD,
-                Items.GOLDEN_HELMET, Items.GOLDEN_CHESTPLATE, Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS
-        );
-
-        // Медь
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                Items.GOLDEN_HELMET, Items.GOLDEN_CHESTPLATE, Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS,
                 Items.COPPER_INGOT,
                 net.minecraft.world.level.block.Blocks.COPPER_BLOCK.asItem(),
                 Items.RAW_COPPER, Items.RAW_COPPER_BLOCK,
                 Items.COPPER_ORE, Items.DEEPSLATE_COPPER_ORE,
-                Items.LIGHTNING_ROD
-        );
-
-        // Незерит
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                Items.LIGHTNING_ROD,
                 Items.NETHERITE_INGOT,
                 net.minecraft.world.level.block.Blocks.NETHERITE_BLOCK.asItem(),
                 Items.NETHERITE_PICKAXE, Items.NETHERITE_AXE, Items.NETHERITE_SHOVEL, Items.NETHERITE_HOE, Items.NETHERITE_SWORD,
-                Items.NETHERITE_HELMET, Items.NETHERITE_CHESTPLATE, Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS
-        );
-
-        // Алюминий
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
                 ResourceRegistry.getMainUnit("aluminum"),
                 ResourceRegistry.getSmallUnit("aluminum"),
-                ResourceRegistry.getBlock("aluminum").asItem()
-        );
-
-        // Бронза
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
                 ResourceRegistry.getMainUnit("bronze"),
                 ResourceRegistry.getSmallUnit("bronze"),
-                ResourceRegistry.getBlock("bronze").asItem()
-        );
-
-        // Олово
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getBlock("bronze").asItem(),
                 ResourceRegistry.getMainUnit("tin"),
                 ResourceRegistry.getSmallUnit("tin"),
-                ResourceRegistry.getBlock("tin").asItem()
-        );
-
-        // Цинк
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getBlock("tin").asItem(),
                 ResourceRegistry.getMainUnit("zinc"),
                 ResourceRegistry.getSmallUnit("zinc"),
-                ResourceRegistry.getBlock("zinc").asItem()
-        );
-
-        // Титан
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getBlock("zinc").asItem(),
                 ResourceRegistry.getMainUnit("titanium"),
                 ResourceRegistry.getSmallUnit("titanium"),
-                ResourceRegistry.getBlock("titanium").asItem()
-        );
-
-        // Промышленная медь
-        event.register((stack, tintIndex) -> ItemHeatColorRegistry.getHeatColor(stack, tintIndex),
+                ResourceRegistry.getBlock("titanium").asItem(),
                 ResourceRegistry.getMainUnit("industrial_copper"),
                 ResourceRegistry.getSmallUnit("industrial_copper"),
-                ResourceRegistry.getBlock("industrial_copper").asItem()
+                ResourceRegistry.getBlock("industrial_copper").asItem(),
+                ResourceRegistry.getMainUnit("lead"),
+                ResourceRegistry.getSmallUnit("lead"),
+                ResourceRegistry.getBlock("lead").asItem(),
+                ResourceRegistry.getMainUnit("beryllium"),
+                ResourceRegistry.getSmallUnit("beryllium"),
+                ResourceRegistry.getBlock("beryllium").asItem(),
+                ResourceRegistry.getMainUnit("tungsten"),
+                ResourceRegistry.getSmallUnit("tungsten"),
+                ResourceRegistry.getBlock("tungsten").asItem(),
+                ResourceRegistry.getMainUnit("neodymium"),
+                ResourceRegistry.getSmallUnit("neodymium"),
+                ModItems.STEEL_PLATE.get(),
+                ModItems.TUNGSTEN_PLATE.get(),
+                ModItems.ALUMINUM_PLATE.get(),
+                ModItems.TITANIUM_PLATE.get(),
+                ModItems.INDUSTRIAL_COPPER_PLATE.get(),
+                ModItems.GOLD_PLATE.get(),
+                ModItems.LEAD_PLATE.get(),
+                ModItems.IRON_PLATE.get(),
+                ResourceRegistry.getBlock("neodymium").asItem()
         );
 
         // Спец обработчик для шлака

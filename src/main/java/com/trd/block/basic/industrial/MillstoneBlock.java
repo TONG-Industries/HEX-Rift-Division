@@ -1,11 +1,9 @@
 package com.trd.block.basic.industrial;
 
 import com.trd.block.entity.ModBlockEntities;
-
 import com.trd.block.entity.industrial.MillstoneBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -28,6 +26,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class MillstoneBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -93,11 +93,15 @@ public class MillstoneBlock extends BaseEntityBlock {
 
         ItemStack heldItem = player.getItemInHand(hand);
 
-        // Забрать результат
+        // Забрать результат (все выходные слоты сразу)
         if (heldItem.isEmpty()) {
-            ItemStack result = millstone.extractResult();
-            if (!result.isEmpty()) {
-                player.addItem(result);
+            List<ItemStack> results = millstone.extractAllResults();
+            if (!results.isEmpty()) {
+                for (ItemStack result : results) {
+                    if (!result.isEmpty()) {
+                        player.addItem(result);
+                    }
+                }
                 return InteractionResult.CONSUME;
             }
         }
@@ -127,7 +131,16 @@ public class MillstoneBlock extends BaseEntityBlock {
 
         return InteractionResult.PASS;
     }
-
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof MillstoneBlockEntity millstone) {
+                millstone.dropContents();
+            }
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
+    }
     // Поддержка воронок (извлечение результата сверху или снизу)
     @Override
     public boolean hasAnalogOutputSignal(BlockState state) {

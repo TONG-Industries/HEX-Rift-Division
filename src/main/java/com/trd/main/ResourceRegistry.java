@@ -54,14 +54,19 @@ public class ResourceRegistry {
                         .strength(1.0f, 2.0f)
                         .requiresCorrectToolForDrops());
 
-        registerFull("steel", ResourceType.METAL,
-                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
-                        .strength(8.0f, 10.0f)
-                        .requiresCorrectToolForDrops());
-
         registerFull("titanium", ResourceType.METAL,
                 BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                         .strength(12.0f, 15.0f)
+                        .requiresCorrectToolForDrops());
+
+        registerFull("beryllium", ResourceType.METAL,
+                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                        .strength(4.0f, 7.0f)
+                        .requiresCorrectToolForDrops());
+
+        registerFull("lead", ResourceType.METAL,
+                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                        .strength(4.0f, 5.0f)
                         .requiresCorrectToolForDrops());
 
         registerFull("industrial_copper", ResourceType.METAL,
@@ -69,6 +74,21 @@ public class ResourceRegistry {
                         .strength(4.0f, 6.0f)
                         .requiresCorrectToolForDrops());
 
+        registerFull("steel", ResourceType.METAL,
+                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                        .strength(8.0f, 10.0f)
+                        .requiresCorrectToolForDrops());
+
+
+        registerFull("tungsten", ResourceType.METAL,
+                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                        .strength(15.0f, 20.0f)
+                        .requiresCorrectToolForDrops());
+
+        registerFull("neodymium", ResourceType.METAL,
+                BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                        .strength(4.0f, 6.0f)
+                        .requiresCorrectToolForDrops());
 
 //        // ============ ПОЛИМЕРЫ ============
 //

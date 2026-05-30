@@ -57,7 +57,7 @@ public class trdJeiPlugin implements IModPlugin {
     public record SmeltingWrapper(ItemStack input, Metal metal, int outputUnits, int temp, float heatConsumption, int timeTicks) {}
     public record CastingWrapper(MoldRecipe mold, Metal metal, ItemStack output, int requiredUnits) {}
     public record AlloyingWrapper(AlloyRecipe recipe) {}
-    public record MillstoneWrapper(Item input, Item output, int outputCount, int grindsRequired) {}
+    public record MillstoneWrapper(Item input, List<ItemStack> outputs, int grindsRequired) {}
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
@@ -136,10 +136,13 @@ public class trdJeiPlugin implements IModPlugin {
         // === ЖЕРНОВА ===
         List<MillstoneWrapper> millstoneRecipes = new ArrayList<>();
         for (Map.Entry<Item, MillstoneBlockEntity.GrindRecipe> entry : MillstoneBlockEntity.RECIPES.entrySet()) {
+            // Копируем стаки, чтобы JEI не мог их испортить при индексации
+            List<ItemStack> outputs = entry.getValue().outputs().stream()
+                    .map(ItemStack::copy)
+                    .toList();
             millstoneRecipes.add(new MillstoneWrapper(
                     entry.getKey(),
-                    entry.getValue().output(),
-                    entry.getValue().outputCount(),
+                    outputs,
                     entry.getValue().grindsRequired()
             ));
         }
@@ -189,31 +192,24 @@ public class trdJeiPlugin implements IModPlugin {
 
         @Override
         public void setRecipe(IRecipeLayoutBuilder builder, MillstoneWrapper recipe, IFocusGroup focuses) {
-            // Левая группа 3×3: входной предмет в ЛЕВОМ ВЕРХНЕМ слоте (5,5)
-            int[][] leftSlots = {
-                    {5, 5}, {23, 5}, {41, 5},
-                    {5, 23}, {23, 23}, {41, 23},
-                    {5, 41}, {23, 41}, {41, 41}
-            };
-            for (int[] pos : leftSlots) {
-                builder.addSlot(RecipeIngredientRole.INPUT, pos[0], pos[1]);
-            }
-            // Левый верхний слот — реальный вход
+            // Только реальный входной слот (без пустых заглушек слева)
             builder.addSlot(RecipeIngredientRole.INPUT, 5, 5)
                     .addItemStack(new ItemStack(recipe.input()));
 
-            // Правая группа 3×3: выход в ЛЕВОМ ВЕРХНЕМ слоте (83,5)
+            // Выходные слоты 3×3 справа — только реальные предметы, без пустых заглушек
             int[][] rightSlots = {
                     {83, 5}, {101, 5}, {119, 5},
                     {83, 23}, {101, 23}, {119, 23},
                     {83, 41}, {101, 41}, {119, 41}
             };
-            for (int[] pos : rightSlots) {
-                builder.addSlot(RecipeIngredientRole.OUTPUT, pos[0], pos[1]);
+            List<ItemStack> outputs = recipe.outputs();
+            for (int i = 0; i < outputs.size() && i < rightSlots.length; i++) {
+                ItemStack stack = outputs.get(i);
+                if (!stack.isEmpty()) {
+                    builder.addSlot(RecipeIngredientRole.OUTPUT, rightSlots[i][0], rightSlots[i][1])
+                            .addItemStack(stack.copy());
+                }
             }
-            // Левый верхний слот — реальный выход
-            builder.addSlot(RecipeIngredientRole.OUTPUT, 83, 5)
-                    .addItemStack(new ItemStack(recipe.output(), recipe.outputCount()));
         }
 
         @Override

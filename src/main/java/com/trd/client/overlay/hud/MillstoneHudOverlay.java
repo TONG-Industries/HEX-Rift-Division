@@ -16,6 +16,8 @@ import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+import java.util.List;
+
 @Mod.EventBusSubscriber(modid = MainRegistry.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class MillstoneHudOverlay {
 
@@ -42,7 +44,7 @@ public class MillstoneHudOverlay {
         int y = screenHeight / 2 + 4;
 
         ItemStack input = millstone.getInputStack();
-        ItemStack result = millstone.getResultStack();
+        List<ItemStack> results = millstone.getResultStacks();
         boolean processing = millstone.isProcessing();
         int current = millstone.getCurrentGrinds();
         int required = millstone.getRequiredGrinds();
@@ -53,9 +55,12 @@ public class MillstoneHudOverlay {
         String subText = null;
         int subColor = 0xAAAAAA;
 
-        if (!result.isEmpty()) {
+        if (!results.isEmpty()) {
             // Готово к сбору
-            mainText = "✓ " + result.getHoverName().getString();
+            mainText = "✓ " + results.get(0).getHoverName().getString();
+            if (results.size() > 1) {
+                mainText += " + " + (results.size() - 1);
+            }
             mainColor = 0x55FF55; // Зелёный
             subText = "ПКМ чтобы забрать";
 
@@ -86,31 +91,30 @@ public class MillstoneHudOverlay {
 
         // Рендер основного текста
         int textWidth = font.width(mainText);
+        int maxWidth = textWidth;
 
         // Корректировка если вылезает за экран
         if (x + textWidth + 4 > screenWidth) {
             x = screenWidth / 2 - textWidth - 12;
         }
 
-        // Фон под текст
-        graphics.fill(x - 3, y - 2, x + textWidth + 3, y + font.lineHeight + 2, 0x90000000);
-        graphics.drawString(font, mainText, x, y, mainColor, true);
-
         // Дополнительная строка (если есть)
         if (subText != null) {
-            int subWidth = font.width(subText);
+            maxWidth = Math.max(maxWidth, font.width(subText));
+        }
+
+        int bgHeight = subText != null ? y + font.lineHeight * 2 + 5 : y + font.lineHeight + 2;
+        graphics.fill(x - 3, y - 2, x + maxWidth + 3, bgHeight, 0x90000000);
+        graphics.drawString(font, mainText, x, y, mainColor, true);
+
+        if (subText != null) {
             int subY = y + font.lineHeight + 3;
-
-            // Расширяем фон если нужно
-            int maxWidth = Math.max(textWidth, subWidth);
-            graphics.fill(x - 3, y - 2, x + maxWidth + 3, subY + font.lineHeight + 2, 0x90000000);
-
             graphics.drawString(font, subText, x, subY, subColor, true);
         }
 
-        // Иконка предмета слева от текста (опционально)
-        if (!result.isEmpty()) {
-            graphics.renderItem(result, x - 20, y - 2);
+        // Иконка предмета слева от текста
+        if (!results.isEmpty()) {
+            graphics.renderItem(results.get(0), x - 20, y - 2);
         } else if (!input.isEmpty()) {
             graphics.renderItem(input, x - 20, y - 2);
         }

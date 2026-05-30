@@ -128,7 +128,11 @@ public class ModLangProvider extends LanguageProvider {
                 add("metal.trd.tin", "Tin");
                 add("metal.trd.zinc", "Zinc");
                 add("metal.trd.titanium", "Titanium");
+                add("metal.trd.lead", "Lead");
+                add("metal.trd.beryllium", "Beryllium");
                 add("metal.trd.industrial_copper", "Industrial Copper");
+                add("metal.trd.tungsten", "Tungsten");
+                add("metal.trd.neodymium", "Neodymium");
 
                 add("jei.category.trd.smelting", "Smelting");
                 add("jei.category.trd.casting", "Casting");
@@ -335,6 +339,10 @@ public class ModLangProvider extends LanguageProvider {
                 add("metal.trd.zinc", "Цинк");
                 add("metal.trd.titanium", "Титан");
                 add("metal.trd.industrial_copper", "Промышленная медь");
+                add("metal.trd.lead", "Свинец");
+                add("metal.trd.beryllium", "Бериллий");
+                add("metal.trd.tungsten", "Вольфрам");
+                add("metal.trd.neodymium", "Неодим");
 
                 add("item.trd.hot_ingot.tooltip", "§6§lРАСКАЛЁННЫЙ! §r§7(%s%%)");
                 add(ModBlocks.SEQUOIA_BARK.get(), "Кора секвойи");

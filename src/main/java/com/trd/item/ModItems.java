@@ -73,6 +73,32 @@ public class ModItems {
     //ОБЫЧНЫЕ ПРЕДМЕТЫ
     public static final RegistryObject<Item> DEPTH_WORM_SPAWN_EGG = ITEMS.register("depth_worm_spawn_egg",
             () -> new DepthWormSpawnEggItem(new Item.Properties()));
+    public static final RegistryObject<Item> IRON_PLATE = ITEMS.register("iron_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ALUMINUM_PLATE = ITEMS.register("aluminum_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> STEEL_PLATE = ITEMS.register("steel_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> INDUSTRIAL_COPPER_PLATE = ITEMS.register("industrial_copper_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> TUNGSTEN_PLATE = ITEMS.register("tungsten_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> LEAD_PLATE = ITEMS.register("lead_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> GOLD_PLATE = ITEMS.register("gold_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> TITANIUM_PLATE = ITEMS.register("titanium_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> LIGNITE = ITEMS.register("lignite",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> CINNABAR = ITEMS.register("cinnabar",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> SULFUR = ITEMS.register("sulfur",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> SEQUESTRUM = ITEMS.register("sequestrum",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> FLUORITE = ITEMS.register("fluorite",
+            () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> DEPTH_WORM_BRUTAL_SPAWN_EGG = ITEMS.register("depth_worm_brutal_spawn_egg",
             () -> new DepthWormBrutalSpawnEggItem(new Item.Properties()));
@@ -147,6 +173,9 @@ public class ModItems {
             () -> new CastPickaxeSteelItem(new Item.Properties()));
 
     public static final RegistryObject<Item> MOLD_INGOT = ITEMS.register("mold_ingot",
+            () -> new Item(new Item.Properties()));
+
+    public static final RegistryObject<Item> MOLD_PLATE = ITEMS.register("mold_plate",
             () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> MOLD_PICKAXE = ITEMS.register("mold_pickaxe",

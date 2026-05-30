@@ -28,10 +28,15 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
     @Override
     protected void generate() {
 
-        registerOreWithMultipleDrops(ModBlocks.BAUXITE, ModItems.BAUXITE_CHUNK);
-        registerOreWithMultipleDrops(ModBlocks.DOLOMITE, ModItems.DOLOMITE_CHUNK);
-        registerOreWithMultipleDrops(ModBlocks.LIMESTONE, ModItems.LIMESTONE_CHUNK);
-
+        registerOreWithMultipleDrops(ModBlocks.LIGNITE_ORE, ModItems.LIGNITE);
+        registerOreWithMultipleDrops(ModBlocks.CINNABAR_ORE, ModItems.CINNABAR);
+        registerOreWithMultipleDrops(ModBlocks.CINNABAR_ORE_DEEPSLATE, ModItems.CINNABAR);
+        registerOreWithMultipleDrops(ModBlocks.SULFUR_ORE, ModItems.SULFUR);
+        registerOreWithMultipleDrops(ModBlocks.SULFUR_ORE_DEEPSLATE, ModItems.SULFUR);
+        registerOreWithMultipleDrops(ModBlocks.SEQUESTRUM_ORE, ModItems.SEQUESTRUM);
+        registerOreWithMultipleDrops(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE, ModItems.SEQUESTRUM);
+        registerOreWithMultipleDrops(ModBlocks.FLUORITE_ORE, ModItems.FLUORITE);
+        registerOreWithMultipleDrops(ModBlocks.FLUORITE_ORE_DEEPSLATE, ModItems.FLUORITE);
 
 
         // --- ДЕФОЛТ ДЛЯ ВСЕХ ОСТАЛЬНЫХ БЛОКОВ ---
