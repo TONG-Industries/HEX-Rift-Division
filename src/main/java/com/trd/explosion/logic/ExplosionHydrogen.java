@@ -21,11 +21,11 @@ public class ExplosionHydrogen {
 
     // ========== НАСТРОЙКИ ==========
     public static float CENTER_EXPLOSION_RADIUS = 20.0f;
-    public static float CENTER_EXPLOSION_STRENGTH = 20.0f;   // не используется напрямую, но можно передать в level.explode
+    public static float CENTER_EXPLOSION_STRENGTH = 20.0f;
     public static int RAY_COUNT = 8000;
     public static float MAX_RANGE = 50.0f;
     public static float MAX_PENETRATION = 50.0f;
-    public static float VERTICAL_PENALTY = 0.75f;            // 75% уменьшения по вертикали
+    public static float VERTICAL_PENALTY = 0.75f;
     public static float BRANCH_CHANCE = 0.40f;
     public static float BRANCH_ANGLE = (float) Math.toRadians(45);
     public static float BRANCH_RANGE_MULTIPLIER = 0.50f;
@@ -65,7 +65,6 @@ public class ExplosionHydrogen {
             before.put(p, level.getBlockState(p));
         }
 
-        // Взрыв БЕЗ выпадения предметов
         level.explode(source, center.x, center.y, center.z,
                 CENTER_EXPLOSION_RADIUS, false, Level.ExplosionInteraction.TNT);
 
@@ -155,7 +154,6 @@ public class ExplosionHydrogen {
             BlockPos pos = new BlockPos((int) Math.floor(current.x), (int) Math.floor(current.y), (int) Math.floor(current.z));
 
             BlockState state = level.getBlockState(pos);
-            // Жидкости – уничтожаем без траты прочности и без дропа
             if (state.getFluidState().isSource() || state.getBlock() instanceof LiquidBlock) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
                 distance += 1.0f;
@@ -164,19 +162,23 @@ public class ExplosionHydrogen {
 
             if (!state.isAir()) {
                 float hardness = state.getDestroySpeed(level, pos);
-                if (hardness < 0) break; // непробиваемый блок (бедрок и т.п.)
+                if (hardness < 0) break;
 
                 float cost = Math.max(1.0f, hardness);
                 if (penetration >= cost) {
                     penetration -= cost;
-                    // Замена на базальт – дропа не будет
-                    level.setBlock(pos, ModBlocks.BASALT_ROUGH.get().defaultBlockState(), 3);
+                    // === ИСПРАВЛЕНИЕ: неполные блоки (цветы, снег, трава) просто удаляем ===
+                    if (!state.isCollisionShapeFullBlock(level, pos)) {
+                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+                    } else {
+                        level.setBlock(pos, ModBlocks.BASALT_ROUGH.get().defaultBlockState(), 3);
+                    }
+                    // =======================================================================
                 } else {
                     break;
                 }
             }
 
-            // Урон сущностям с удалением мёртвых без дропа
             for (LivingEntity entity : allEntities) {
                 if (entity == source || hitIds.contains(entity.getId())) continue;
                 if (entity.distanceToSqr(current.x, current.y, current.z) < 2.25) {

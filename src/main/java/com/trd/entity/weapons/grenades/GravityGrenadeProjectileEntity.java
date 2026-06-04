@@ -1,5 +1,7 @@
 package com.trd.entity.weapons.grenades;
 
+import com.trd.sound.ModSounds;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -34,6 +36,17 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
     private static final EntityDataAccessor<Float> CENTER_Z =
             SynchedEntityData.defineId(GravityGrenadeProjectileEntity.class, EntityDataSerializers.FLOAT);
 
+    // === НОВЫЕ ПОЛЯ ДЛЯ ТАЙМЕРА И ОТСКОКОВ (как у IF-гранат) ===
+    private static final EntityDataAccessor<Boolean> TIMER_ACTIVATED =
+            SynchedEntityData.defineId(GravityGrenadeProjectileEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> DETONATION_TIME =
+            SynchedEntityData.defineId(GravityGrenadeProjectileEntity.class, EntityDataSerializers.INT);
+
+    private static final int FUSE_SECONDS = 4;
+    private static final float MIN_BOUNCE_SPEED = 0.1f;
+    private static final float BOUNCE_MULTIPLIER = 0.4f;
+    // ===========================================================
+
     private static final int PULL_DURATION = 40;
     private static final float EFFECT_RADIUS = 15.0f;
     private static final float PULL_STRENGTH = 0.6f;
@@ -60,6 +73,10 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         this.entityData.define(CENTER_X, 0.0f);
         this.entityData.define(CENTER_Y, 0.0f);
         this.entityData.define(CENTER_Z, 0.0f);
+        // === НОВЫЕ ПОЛЯ ===
+        this.entityData.define(TIMER_ACTIVATED, false);
+        this.entityData.define(DETONATION_TIME, 0);
+        // ==================
     }
 
     @Override
@@ -71,6 +88,16 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
     public void tick() {
         super.tick();
         if (level().isClientSide) return;
+
+        // === ТАЙМЕР ДЕТОНАЦИИ (как у IF-гранат) ===
+        if (this.entityData.get(TIMER_ACTIVATED)) {
+            if (this.tickCount >= this.entityData.get(DETONATION_TIME)) {
+                if (!this.entityData.get(EFFECT_ACTIVE)) {
+                    activateEffect(this.position());
+                }
+            }
+        }
+        // =========================================
 
         if (this.entityData.get(EFFECT_ACTIVE)) {
             int ticks = this.entityData.get(ACTIVE_TICKS);
@@ -92,9 +119,6 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         }
     }
 
-    /**
-     * Притягиваем ВСЕ сущности, кроме гранаты и владельца.
-     */
     private void applyPull(Vec3 center) {
         double radiusSq = EFFECT_RADIUS * EFFECT_RADIUS;
         AABB area = new AABB(center, center).inflate(EFFECT_RADIUS);
@@ -115,9 +139,6 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         }
     }
 
-    /**
-     * Разбрасываем ВСЕ сущности с усиленным вертикальным импульсом.
-     */
     private void applyPush(Vec3 center) {
         double radiusSq = EFFECT_RADIUS * EFFECT_RADIUS;
         AABB area = new AABB(center, center).inflate(EFFECT_RADIUS);
@@ -135,7 +156,7 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
             double spreadX = Math.cos(yaw) * 0.5 * factor;
             double spreadZ = Math.sin(yaw) * 0.5 * factor;
             double pushHor = PUSH_STRENGTH * factor;
-            double pushUp = UP_BOOST + RANDOM.nextDouble() * 1.8; // увеличенный случайный бонус
+            double pushUp = UP_BOOST + RANDOM.nextDouble() * 1.8;
 
             Vec3 impulse = new Vec3(
                     dir.x * pushHor + spreadX,
@@ -145,7 +166,6 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
             e.setDeltaMovement(impulse);
             e.hasImpulse = true;
             if (!(e instanceof LivingEntity)) {
-                // Для неживых сущностей можно тихо, но для живых оставляем звук
                 continue;
             }
             e.level().playSound(null, e.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.0f, 0.8f);
@@ -154,24 +174,45 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
                 SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 3.0f, 0.5f);
     }
 
-    /**
-     * Попадание в блок → активация в точке удара.
-     */
     @Override
     protected void onHitBlock(BlockHitResult result) {
-        super.onHitBlock(result);
-        if (level().isClientSide || exploded) return;
-        activateEffect(result.getLocation());
+        // НЕ вызываем super.onHitBlock, чтобы граната не удалялась при ударе
+        if (level().isClientSide || exploded || this.entityData.get(EFFECT_ACTIVE)) return;
+        activateTimer();
+        handleBounce(result);
     }
 
-    /**
-     * Попадание в любую сущность → активация без отскока (коллизия отключена).
-     */
     @Override
     protected void onHitEntity(EntityHitResult result) {
-        if (level().isClientSide || exploded) return;
-        // Не вызываем super.onHitEntity(), чтобы не было отскока/коллизии
-        activateEffect(result.getEntity().position());
+        if (level().isClientSide || exploded || this.entityData.get(EFFECT_ACTIVE)) return;
+        activateTimer();
+    }
+
+    private void activateTimer() {
+        if (!this.entityData.get(TIMER_ACTIVATED)) {
+            this.entityData.set(TIMER_ACTIVATED, true);
+            this.entityData.set(DETONATION_TIME, this.tickCount + (FUSE_SECONDS * 20));
+        }
+    }
+
+    private void handleBounce(BlockHitResult result) {
+        Vec3 velocity = this.getDeltaMovement();
+        float speed = (float) velocity.length();
+
+        if (speed < MIN_BOUNCE_SPEED) {
+            this.setDeltaMovement(Vec3.ZERO);
+            this.setNoGravity(true);
+            return;
+        }
+
+        BlockPos blockPos = result.getBlockPos();
+        level().playSound(null, blockPos, ModSounds.BOUNCE_RANDOM.get(), SoundSource.NEUTRAL, 2.1F, 1.0F);
+
+        Vec3 currentVelocity = this.getDeltaMovement();
+        Vec3 hitNormal = Vec3.atLowerCornerOf(result.getDirection().getNormal());
+        Vec3 reflectedVelocity = currentVelocity.subtract(hitNormal.scale(2 * currentVelocity.dot(hitNormal)));
+        this.setDeltaMovement(reflectedVelocity.scale(BOUNCE_MULTIPLIER));
+        this.hasImpulse = true;
     }
 
     private void activateEffect(Vec3 hitPos) {
@@ -196,6 +237,10 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         tag.putDouble("CenterY", this.entityData.get(CENTER_Y));
         tag.putDouble("CenterZ", this.entityData.get(CENTER_Z));
         tag.putBoolean("Exploded", exploded);
+        // === СОХРАНЕНИЕ ТАЙМЕРА ===
+        tag.putBoolean("TimerActivated", this.entityData.get(TIMER_ACTIVATED));
+        tag.putInt("DetonationTime", this.entityData.get(DETONATION_TIME));
+        // ===========================
     }
 
     @Override
@@ -209,5 +254,9 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
             this.entityData.set(CENTER_Z, (float) tag.getDouble("CenterZ"));
         }
         this.exploded = tag.getBoolean("Exploded");
+        // === ЗАГРУЗКА ТАЙМЕРА ===
+        this.entityData.set(TIMER_ACTIVATED, tag.getBoolean("TimerActivated"));
+        this.entityData.set(DETONATION_TIME, tag.getInt("DetonationTime"));
+        // =========================
     }
 }

@@ -3,12 +3,14 @@ package com.trd.entity.weapons.grenades;
 import com.trd.explosion.logic.ExplosionFireRaycast;
 import com.trd.explosion.logic.ExplosionHE;
 import com.trd.explosion.logic.ExplosionStandard;
+import com.trd.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,6 +36,8 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
             SynchedEntityData.defineId(GrenadeIfProjectileEntity.class, EntityDataSerializers.INT);
 
     private static final int FUSE_SECONDS = 4;
+    private static final float MIN_BOUNCE_SPEED = 0.1f;
+    private static final float BOUNCE_MULTIPLIER = 0.4f;
 
     private GrenadeIfType grenadeType;
     private boolean exploded = false;
@@ -79,7 +83,6 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         super.tick();
         if (level().isClientSide) return;
 
-        // Плавное прилипание к сущности — как у червя
         if (this.entityData.get(DATA_STUCK) && stuckEntityId != -1) {
             Entity entity = level().getEntity(stuckEntityId);
             if (entity != null && entity.isAlive()) {
@@ -113,7 +116,7 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
-        super.onHitBlock(result);
+        // НЕ вызываем super.onHitBlock для неслаймовых, иначе граната удалится (discard)
         if (level().isClientSide || exploded) return;
 
         activateTimer();
@@ -123,17 +126,19 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         }
 
         if (grenadeType == GrenadeIfType.GRENADE_IF_SLIME) {
+            super.onHitBlock(result); // слаймовую не трогаем, оставляем старую логику
             this.entityData.set(DATA_STUCK, true);
             this.setDeltaMovement(Vec3.ZERO);
             this.setNoGravity(true);
             Vec3 pos = result.getLocation();
             this.setPos(pos.x, pos.y, pos.z);
+        } else {
+            handleBounce(result);
         }
     }
 
     @Override
     protected void onHitEntity(EntityHitResult result) {
-        super.onHitEntity(result);
         if (level().isClientSide || exploded) return;
 
         activateTimer();
@@ -143,6 +148,7 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         }
 
         if (grenadeType == GrenadeIfType.GRENADE_IF_SLIME) {
+            super.onHitEntity(result); // слаймовую не трогаем
             stickToEntity(result.getEntity());
         }
     }
@@ -154,13 +160,32 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         }
     }
 
+    private void handleBounce(BlockHitResult result) {
+        Vec3 velocity = this.getDeltaMovement();
+        float speed = (float) velocity.length();
+
+        if (speed < MIN_BOUNCE_SPEED) {
+            this.setDeltaMovement(Vec3.ZERO);
+            this.setNoGravity(true);
+            return;
+        }
+
+        BlockPos blockPos = result.getBlockPos();
+        level().playSound(null, blockPos, ModSounds.BOUNCE_RANDOM.get(), SoundSource.NEUTRAL, 2.1F, 1.0F);
+
+        Vec3 currentVelocity = this.getDeltaMovement();
+        Vec3 hitNormal = Vec3.atLowerCornerOf(result.getDirection().getNormal());
+        Vec3 reflectedVelocity = currentVelocity.subtract(hitNormal.scale(2 * currentVelocity.dot(hitNormal)));
+        this.setDeltaMovement(reflectedVelocity.scale(BOUNCE_MULTIPLIER));
+        this.hasImpulse = true;
+    }
+
     private void stickToEntity(Entity entity) {
         this.entityData.set(DATA_STUCK, true);
         this.stuckEntityId = entity.getId();
         this.setNoGravity(true);
         this.entityData.set(STUCK_ENTITY_ID, entity.getId());
 
-        // Вычисляем смещение от центра моба так, чтобы граната касалась его хитбокса снаружи
         Vec3 mobCenter = entity.getBoundingBox().getCenter();
         Vec3 toGrenade = this.position().subtract(mobCenter);
         double dist = toGrenade.length();
