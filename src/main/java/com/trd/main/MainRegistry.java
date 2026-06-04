@@ -329,6 +329,7 @@ public class MainRegistry {
             event.accept(ModItems.GRENADE_IF_HE);
             event.accept(ModItems.GRENADE_IF_SLIME);
             event.accept(ModItems.GRENADE_IF_FIRE);
+            event.accept(ModItems.GRAVITY_GRENADE.get());
             event.accept(ModItems.GRENADE_NUC);
             event.accept(ModItems.TURRET_CHIP);
             event.accept(ModItems.TURRET_LIGHT_PORTATIVE_PLACER);

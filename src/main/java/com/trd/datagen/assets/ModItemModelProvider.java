@@ -59,6 +59,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.SULFUR);
         simpleItem(ModItems.SEQUESTRUM);
         simpleItem(ModItems.FLUORITE);
+        simpleItem(ModItems.GRAVITY_GRENADE);
         simpleItem(ModItems.STEEL_PLATE);
         simpleItem(ModItems.INDUSTRIAL_COPPER_PLATE);
         simpleItem(ModItems.ALUMINUM_PLATE);

@@ -2,6 +2,7 @@ package com.trd.entity;
 
 import com.trd.entity.mobs.depth_worm.DepthWormBrutalEntity;
 import com.trd.entity.mobs.grenadier.GrenadierZombieEntity;
+import com.trd.entity.weapons.grenades.GravityGrenadeProjectileEntity;
 import com.trd.entity.weapons.grenades.GrenadeIfProjectileEntity;
 import com.trd.entity.weapons.grenades.GrenadeNucProjectileEntity;
 import com.trd.entity.weapons.grenades.GrenadeProjectileEntity;
@@ -40,7 +41,13 @@ public class ModEntities {
                             .updateInterval(1)
                             .setShouldReceiveVelocityUpdates(true)
                             .build("turret_bullet"));
-
+    public static final RegistryObject<EntityType<GravityGrenadeProjectileEntity>> GRAVITY_GRENADE_PROJECTILE =
+            ENTITY_TYPES.register("gravity_grenade_projectile",
+                    () -> EntityType.Builder.<GravityGrenadeProjectileEntity>of(GravityGrenadeProjectileEntity::new, MobCategory.MISC)
+                            .sized(0.4F, 0.4F)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .build("gravity_grenade_projectile"));
     public static final RegistryObject<EntityType<GrenadierZombieEntity>> GRENADIER_ZOMBIE =
             ENTITY_TYPES.register("grenadier_zombie",
                     () -> EntityType.Builder.of(GrenadierZombieEntity::new, MobCategory.MONSTER)
