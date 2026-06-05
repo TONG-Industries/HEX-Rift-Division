@@ -47,9 +47,15 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
     private static final float MIN_BOUNCE_SPEED = 0.1f;
     private static final float BOUNCE_MULTIPLIER = 0.4f;
 
-    private static final int PULL_DURATION = 80;
-    private static final double ORBIT_RADIUS = 1.5;
-    private static final double ORBITS_COUNT = 4.0;
+    // === НАСТРОЙКИ ВРАЩЕНИЯ ===
+    private static final int PULL_DURATION = 80;           // длительность фазы вращения (тиков)
+    private static final double ORBITS_COUNT = 4.0;        // сколько оборотов за PULL_DURATION
+    private static final double ORBIT_SPEED = 2.0;         // МНОЖИТЕЛЬ СКОРОСТИ ВРАЩЕНИЯ (1.0 = база, 2.0 = в 2 раза быстрее)
+    private static final double ORBIT_RADIUS_START = 5.0;  // начальный радиус орбиты
+    private static final double ORBIT_RADIUS_END = 0.5;    // конечный радиус (перед gather)
+    private static final double ORBIT_HEIGHT_MIN = 1.0;    // минимальная высота вращения относительно центра
+    private static final double ORBIT_HEIGHT_MAX = 3.5;    // максимальная высота
+    private static final double HEIGHT_CHANGE_SPEED = 0.08;// скорость изменения высоты
 
     private static final float EFFECT_RADIUS = 15.0f;
     private static final float PUSH_STRENGTH = 2.5f;
@@ -57,9 +63,9 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
     private static final Random RANDOM = new Random();
 
     // === ПАРАМЕТРЫ ЧАСТИЦ ===
-    private static final int PARTICLES_PER_TICK = 12;      // сколько частиц спавнить за тик
-    private static final double PARTICLE_ORBIT_RADIUS = 3.0; // радиус орбиты частиц
-    private static final double PARTICLE_SPIRAL_SPEED = 0.5; // скорость сжатия спирали частиц
+    private static final int PARTICLES_PER_TICK = 12;
+    private static final double PARTICLE_ORBIT_RADIUS = 2.0;
+    private static final double PARTICLE_SPIRAL_SPEED = 0.3;
 
     private boolean exploded = false;
 
@@ -93,7 +99,6 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
     public void tick() {
         super.tick();
         if (level().isClientSide) {
-            // === КЛИЕНТСКАЯ СТОРОНА: частицы вокруг гранаты ===
             if (this.entityData.get(EFFECT_ACTIVE)) {
                 spawnVortexParticles();
             }
@@ -134,18 +139,97 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         }
     }
 
-    // === ЧАСТИЦЫ НА СЕРВЕРЕ (синхронизируются с клиентом) ===
+    // === ОСНОВНАЯ ЛОГИКА ВРАЩЕНИЯ ===
+    private void applyPull(Vec3 center, int tick) {
+        double radiusSq = EFFECT_RADIUS * EFFECT_RADIUS;
+        AABB area = new AABB(center, center).inflate(EFFECT_RADIUS);
+        List<Entity> entities = level().getEntitiesOfClass(Entity.class, area, e -> e != this);
+
+        // Прогресс от 0.0 (начало) до 1.0 (конец фазы вращения)
+        double progress = (double) tick / PULL_DURATION;
+
+        // Радиус орбиты уменьшается от START до END по мере приближения к центру
+        double currentOrbitRadius = ORBIT_RADIUS_START + (ORBIT_RADIUS_END - ORBIT_RADIUS_START) * progress;
+
+        // Угловая скорость с учётом множителя ORBIT_SPEED
+        double angularSpeed = (2.0 * Math.PI * ORBITS_COUNT * ORBIT_SPEED) / PULL_DURATION;
+        double tangentialSpeed = angularSpeed * currentOrbitRadius;
+
+        for (Entity e : entities) {
+            double distSq = e.distanceToSqr(center);
+            if (distSq > radiusSq) continue;
+
+            // === ВЫСОТА: каждый моб крутится на СВОЕЙ высоте, но плавно подтягивается к диапазону ===
+            // Используем hash от ID сущности, чтобы высота была постоянной для конкретного моба
+            double entityHash = Math.abs(e.getId() * 0.6180339887) % 1.0; // золотое сечение для равномерности
+            double targetHeightOffset = ORBIT_HEIGHT_MIN + entityHash * (ORBIT_HEIGHT_MAX - ORBIT_HEIGHT_MIN);
+
+            // Плавно меняем высоту: в начале моб на своей высоте, к концу подтягивается к targetHeightOffset
+            // Но также добавляем синусоидальное качание для динамики
+            double timeOffset = tick * 0.15 + entityHash * Math.PI * 2;
+            double heightWobble = Math.sin(timeOffset) * 0.4 * (1.0 - progress); // качание уменьшается к концу
+            double finalTargetY = center.y + targetHeightOffset + heightWobble;
+
+            // === ГОРИЗОНТАЛЬНАЯ ОРБИТА ===
+            double dx = e.getX() - center.x;
+            double dz = e.getZ() - center.z;
+            double horizontalDist = Math.sqrt(dx * dx + dz * dz);
+
+            // Текущий угол моба относительно центра
+            double currentAngle = Math.atan2(dz, dx);
+
+            // Желаемый угол: крутим по часовой с постоянной скоростью
+            // Каждый моб имеет свой phase offset, чтобы не слипались в кучу
+            double phaseOffset = entityHash * Math.PI * 2;
+            double targetAngle = (tick * angularSpeed + phaseOffset) % (Math.PI * 2);
+
+            // Координаты точки на идеальной орбите
+            double targetX = center.x + Math.cos(targetAngle) * currentOrbitRadius;
+            double targetZ = center.z + Math.sin(targetAngle) * currentOrbitRadius;
+
+            // Вектор к целевой точке орбиты
+            Vec3 toOrbit = new Vec3(targetX - e.getX(), 0, targetZ - e.getZ());
+
+            // Скорость подтягивания к орбите: чем дальше, тем быстрее
+            double orbitPullStrength = 0.35 + progress * 0.2; // усиливается к концу
+
+            // Тангенциальная скорость (вращение)
+            Vec3 tangent = new Vec3(-Math.sin(targetAngle), 0, Math.cos(targetAngle)).scale(tangentialSpeed);
+
+            // Вертикальная скорость: плавно к целевой высоте
+            double yDiff = finalTargetY - e.getY();
+            double ySpeed = yDiff * HEIGHT_CHANGE_SPEED;
+            // Ограничиваем, чтобы не было рывков
+            if (ySpeed > 0.6) ySpeed = 0.6;
+            if (ySpeed < -0.6) ySpeed = -0.6;
+
+            // Собираем итоговую скорость
+            Vec3 newVel = new Vec3(
+                    toOrbit.x * orbitPullStrength + tangent.x,
+                    ySpeed,
+                    toOrbit.z * orbitPullStrength + tangent.z
+            );
+
+            // Ограничение скорости
+            if (newVel.length() > 4.0) newVel = newVel.scale(4.0 / newVel.length());
+
+            e.setDeltaMovement(newVel);
+            e.hasImpulse = true;
+            e.fallDistance = 0;
+            e.setOnGround(false);
+        }
+    }
+
+    // === ЧАСТИЦЫ (без изменений в логике, адаптированы под новые параметры) ===
     private void spawnServerParticles(Vec3 center, int tick, boolean isGather) {
         ServerLevel serverLevel = (ServerLevel) this.level();
 
         if (isGather) {
-            // Фаза сжатия — вспышка и стягивание всех частиц к центру
             serverLevel.sendParticles(
                     ParticleTypes.FLASH,
                     center.x, center.y + 0.5, center.z,
                     1, 0, 0, 0, 0
             );
-            // Множество частиц, летящих к центру
             for (int i = 0; i < 30; i++) {
                 double angle = RANDOM.nextDouble() * Math.PI * 2;
                 double dist = RANDOM.nextDouble() * EFFECT_RADIUS;
@@ -154,32 +238,30 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
                 double py = center.y + RANDOM.nextDouble() * 4 - 2;
 
                 Vec3 toCenter = new Vec3(center.x - px, center.y + 0.5 - py, center.z - pz);
-                Vec3 vel = toCenter.normalize().scale(0.8);
+                Vec3 vel = toCenter.normalize().scale(8);
 
                 serverLevel.sendParticles(
-                        ParticleTypes.PORTAL, // можно заменить на кастомные
+                        ParticleTypes.PORTAL,
                         px, py, pz,
                         0, vel.x, vel.y, vel.z, 0.5
                 );
             }
         } else {
-            // Фаза вращения — спиральные частицы
             double progress = (double) tick / PULL_DURATION;
             double currentOrbitRadius = PARTICLE_ORBIT_RADIUS * (1.0 - progress * 0.7);
 
             for (int i = 0; i < PARTICLES_PER_TICK; i++) {
-                double angle = (tick * 0.5 + i * (Math.PI * 2 / PARTICLES_PER_TICK)) % (Math.PI * 2);
+                double angle = (tick * 0.5 * ORBIT_SPEED + i * (Math.PI * 2 / PARTICLES_PER_TICK)) % (Math.PI * 2);
                 double px = center.x + Math.cos(angle) * currentOrbitRadius;
                 double pz = center.z + Math.sin(angle) * currentOrbitRadius;
                 double py = center.y + 0.5 + Math.sin(tick * 0.2 + i) * 0.3;
 
-                // Скорость частицы по касательной (вращение) + к центру (сжатие)
                 double tangentX = -Math.sin(angle);
                 double tangentZ = Math.cos(angle);
                 double toCenterFactor = PARTICLE_SPIRAL_SPEED * progress;
 
                 serverLevel.sendParticles(
-                        ParticleTypes.PORTAL, // можно заменить на DRAGON_BREATH, WITCH, SOUL_FIRE_FLAME и т.д.
+                        ParticleTypes.PORTAL,
                         px, py, pz,
                         0,
                         tangentX * 0.15 - Math.cos(angle) * toCenterFactor,
@@ -189,7 +271,6 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
                 );
             }
 
-            // Дополнительные частицы "потока" от дальних мобов к центру
             if (tick % 5 == 0) {
                 AABB area = new AABB(center, center).inflate(EFFECT_RADIUS);
                 List<Entity> entities = level().getEntitiesOfClass(Entity.class, area, e -> e != this);
@@ -211,10 +292,8 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         }
     }
 
-    // === КЛИЕНТСКИЕ ЧАСТИЦЫ (локально, без сети) ===
     private void spawnVortexParticles() {
-        // Дополнительный локальный эффект вихря вокруг самой гранаты
-        double angle = (this.tickCount * 0.8) % (Math.PI * 2);
+        double angle = (this.tickCount * 0.8 * ORBIT_SPEED) % (Math.PI * 2);
         double radius = 0.4;
         for (int i = 0; i < 3; i++) {
             double a = angle + i * (Math.PI * 2 / 3);
@@ -232,18 +311,15 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         }
     }
 
-    // === ВЗРЫВНЫЕ ЧАСТИЦЫ ===
     private void spawnExplosionParticles(Vec3 center) {
         ServerLevel serverLevel = (ServerLevel) this.level();
 
-        // Центральный взрыв (как у TNT)
         serverLevel.sendParticles(
                 ParticleTypes.EXPLOSION_EMITTER,
                 center.x, center.y + 0.5, center.z,
                 1, 0, 0, 0, 0
         );
 
-        // Множество мелких взрывов по радиусу (ударная волна)
         for (int i = 0; i < 20; i++) {
             double angle = RANDOM.nextDouble() * Math.PI * 2;
             double dist = RANDOM.nextDouble() * 3.0;
@@ -258,7 +334,6 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
             );
         }
 
-        // Дым и обломки, летящие наружу
         for (int i = 0; i < 40; i++) {
             double angle = RANDOM.nextDouble() * Math.PI * 2;
             double speed = 0.3 + RANDOM.nextDouble() * 0.5;
@@ -273,7 +348,6 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
             );
         }
 
-        // Искры
         for (int i = 0; i < 15; i++) {
             serverLevel.sendParticles(
                     ParticleTypes.FIREWORK,
@@ -288,56 +362,6 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
     }
 
     // === ОСТАЛЬНЫЕ МЕТОДЫ БЕЗ ИЗМЕНЕНИЙ ===
-
-    private void applyPull(Vec3 center, int tick) {
-        double radiusSq = EFFECT_RADIUS * EFFECT_RADIUS;
-        AABB area = new AABB(center, center).inflate(EFFECT_RADIUS);
-        List<Entity> entities = level().getEntitiesOfClass(Entity.class, area, e -> e != this);
-
-        double angularSpeed = (2.0 * Math.PI * ORBITS_COUNT) / PULL_DURATION;
-        double tangentialSpeed = angularSpeed * ORBIT_RADIUS;
-
-        for (Entity e : entities) {
-            double distSq = e.distanceToSqr(center);
-            if (distSq > radiusSq) continue;
-
-            double dx = e.getX() - center.x;
-            double dz = e.getZ() - center.z;
-            double horizontalDist = Math.sqrt(dx * dx + dz * dz);
-
-            double angle = Math.atan2(dz, dx);
-            Vec3 tangent = new Vec3(-Math.sin(angle), 0.0, Math.cos(angle));
-
-            Vec3 radialDir;
-            if (horizontalDist < 0.001) {
-                radialDir = new Vec3(1.0, 0.0, 0.0);
-            } else {
-                radialDir = new Vec3(dx / horizontalDist, 0.0, dz / horizontalDist);
-            }
-
-            double radialDiff = ORBIT_RADIUS - horizontalDist;
-            double radialSpeed = radialDiff * 0.25;
-            if (radialSpeed > 0.5) radialSpeed = 0.5;
-            if (radialSpeed < -0.5) radialSpeed = -0.5;
-
-            double yTarget = center.y + 0.5;
-            double yDiff = yTarget - e.getY();
-            double ySpeed = yDiff * 0.15;
-            if (ySpeed > 0.4) ySpeed = 0.4;
-            if (ySpeed < -0.4) ySpeed = -0.4;
-
-            Vec3 newVel = new Vec3(
-                    tangent.x * tangentialSpeed + radialDir.x * radialSpeed,
-                    ySpeed,
-                    tangent.z * tangentialSpeed + radialDir.z * radialSpeed
-            );
-
-            e.setDeltaMovement(newVel);
-            e.hasImpulse = true;
-            e.fallDistance = 0;
-            e.setOnGround(false);
-        }
-    }
 
     private void applyGather(Vec3 center) {
         double radiusSq = EFFECT_RADIUS * EFFECT_RADIUS;
@@ -424,7 +448,7 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         }
 
         BlockPos blockPos = result.getBlockPos();
-        level().playSound(null, blockPos, ModSounds.BOUNCE_RANDOM.get(), SoundSource.NEUTRAL, 2.1F, 1.0F);
+        level().playSound(null, blockPos, ModSounds.BOUNCE_RANDOM.get(), SoundSource.NEUTRAL, 2.1F, 1.1F);
 
         Vec3 currentVelocity = this.getDeltaMovement();
         Vec3 hitNormal = Vec3.atLowerCornerOf(result.getDirection().getNormal());
@@ -443,7 +467,7 @@ public class GravityGrenadeProjectileEntity extends ThrowableItemProjectile {
         this.setDeltaMovement(Vec3.ZERO);
         this.setNoGravity(true);
         level().playSound(null, hitPos.x, hitPos.y, hitPos.z,
-                SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.5f, 0.6f);
+                SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 3f, 0.6f);
     }
 
     @Override

@@ -101,7 +101,7 @@ public class ModItems {
     public static final RegistryObject<Item> FLUORITE = ITEMS.register("fluorite",
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> GRAVITY_GRENADE = ITEMS.register("gravity_grenade",
-            () -> new GravityGrenadeItem(new Item.Properties().stacksTo(8), ModEntities.GRAVITY_GRENADE_PROJECTILE));
+            () -> new GravityGrenadeItem(new Item.Properties().stacksTo(16), ModEntities.GRAVITY_GRENADE_PROJECTILE));
     public static final RegistryObject<Item> DEPTH_WORM_BRUTAL_SPAWN_EGG = ITEMS.register("depth_worm_brutal_spawn_egg",
             () -> new DepthWormBrutalSpawnEggItem(new Item.Properties()));
 

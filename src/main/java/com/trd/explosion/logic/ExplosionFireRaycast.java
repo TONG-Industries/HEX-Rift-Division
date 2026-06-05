@@ -21,7 +21,7 @@ public class ExplosionFireRaycast {
 
     private static final int RAYS = 40;
     private static final float MAX_RANGE = 30.0f;
-    private static final float MAX_PENETRATION = 30.0f;
+    private static final float MAX_PENETRATION = 100.0f;
     private static final Random RANDOM = new Random();
 
     public static void explode(ServerLevel level, Vec3 center, Entity source, float radius) {
