@@ -19,9 +19,9 @@ import java.util.Set;
 
 public class ExplosionFireRaycast {
 
-    private static final int RAYS = 40; // Ещё меньше для производительности
+    private static final int RAYS = 40;
     private static final float MAX_RANGE = 30.0f;
-    private static final float MAX_PENETRATION = 30.0f;
+    private static final float MAX_PENETRATION = 100.0f;
     private static final Random RANDOM = new Random();
 
     public static void explode(ServerLevel level, Vec3 center, Entity source, float radius) {
@@ -47,14 +47,15 @@ public class ExplosionFireRaycast {
         while (distance < MAX_RANGE && penetration > 0) {
             Vec3 current = origin.add(direction.scale(distance));
 
-            // Ширина луча: у центра radius блоков, к концу 0.5 (1 блок)
             float currentRadius = radius * (1.0f - (distance / MAX_RANGE));
             currentRadius = Math.max(0.5f, currentRadius);
 
             int r = (int) Math.ceil(currentRadius);
             BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
-            // Проходим по сечению луча
+            float stepCost = 0.2f; // базовое затухание за шаг
+            boolean blocked = false;
+
             for (int x = -r; x <= r; x++) {
                 for (int y = -r; y <= r; y++) {
                     for (int z = -r; z <= r; z++) {
@@ -63,25 +64,42 @@ public class ExplosionFireRaycast {
                         pos.set(current.x + x, current.y + y, current.z + z);
                         BlockState state = level.getBlockState(pos);
 
-                        // НЕ ломаем блоки! Только поджигаем
                         if (state.isAir()) {
-                            // Воздух → огонь
+                            // Воздух → огонь, минимальный расход энергии
                             level.setBlock(pos, Blocks.FIRE.defaultBlockState(), 3);
+                            stepCost += 0.1f;
                         } else if (state.isFlammable(level, pos, Direction.UP)) {
-                            // Горючее → огонь
+                            // Горючее → огонь, небольшой расход
                             level.setBlock(pos, Blocks.FIRE.defaultBlockState(), 3);
+                            stepCost += 0.3f;
+                        } else {
+                            // Негорючий твёрдый блок — препятствие для луча
+                            float hardness = state.getDestroySpeed(level, pos);
+                            if (hardness < 0) {
+                                // Непробиваемый (бедрок и т.п.) — луч останавливается
+                                blocked = true;
+                                break;
+                            }
+                            // Значительно слабее чем у водородного взрыва
+                            stepCost += Math.max(0.3f, hardness * 0.15f);
                         }
-                        // Негорючие блоки оставляем как есть
                     }
+                    if (blocked) break;
                 }
+                if (blocked) break;
             }
 
-            // Урон мобам в сечении (слабый)
+            if (blocked) break;
+
+            penetration -= stepCost;
+            if (penetration <= 0) break;
+
+            // Урон мобам в сечении
             for (LivingEntity entity : allEntities) {
                 if (entity == source || hitIds.contains(entity.getId())) continue;
                 double distToRay = entity.distanceToSqr(current.x, current.y, current.z);
                 if (distToRay < currentRadius * currentRadius * 2) {
-                    float damage = penetration * 0.8f; // Слабее чем был
+                    float damage = penetration * 0.8f;
                     entity.hurt(level.damageSources().explosion(source, source), damage);
                     entity.setSecondsOnFire((int)(penetration * 1.5f));
                     hitIds.add(entity.getId());
@@ -89,7 +107,6 @@ public class ExplosionFireRaycast {
             }
 
             distance += 1.5f;
-            penetration -= 1.2f; // Быстрее тухнет
         }
     }
 

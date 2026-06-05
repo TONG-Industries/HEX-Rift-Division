@@ -133,6 +133,9 @@ public class ClientModEvents {
                 EntityRenderers.register(entityType, ThrownItemRenderer::new));
         ModEntities.GRENADE_IF_PROJECTILE.ifPresent(entityType ->
                 EntityRenderers.register(entityType, ThrownItemRenderer::new));
+        ModEntities.GRAVITY_GRENADE_PROJECTILE.ifPresent(entityType ->
+                EntityRenderers.register(entityType, ThrownItemRenderer::new));
+
     }
 
     // ВАЖНО: Добавляем (priority = net.minecraftforge.eventbus.api.EventPriority.HIGHEST)

@@ -18,6 +18,7 @@ import com.trd.item.rotation.GearItem;
 import com.trd.item.tools.*;
 import com.trd.item.tools.cast_pickaxes.materials.CastPickaxeIronItem;
 import com.trd.item.tools.cast_pickaxes.materials.CastPickaxeSteelItem;
+import com.trd.item.weapons.grenades.GravityGrenadeItem;
 import com.trd.item.weapons.grenades.GrenadeIfItem;
 import com.trd.item.weapons.grenades.GrenadeItem;
 import com.trd.item.weapons.grenades.GrenadeNucItem;
@@ -99,6 +100,8 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> FLUORITE = ITEMS.register("fluorite",
             () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> GRAVITY_GRENADE = ITEMS.register("gravity_grenade",
+            () -> new GravityGrenadeItem(new Item.Properties().stacksTo(16), ModEntities.GRAVITY_GRENADE_PROJECTILE));
 
     public static final RegistryObject<Item> DEPTH_WORM_BRUTAL_SPAWN_EGG = ITEMS.register("depth_worm_brutal_spawn_egg",
             () -> new DepthWormBrutalSpawnEggItem(new Item.Properties()));
