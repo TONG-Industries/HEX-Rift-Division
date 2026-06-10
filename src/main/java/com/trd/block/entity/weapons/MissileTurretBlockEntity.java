@@ -13,6 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -96,7 +97,10 @@ public class MissileTurretBlockEntity extends BlockEntity {
     /**
      * === ФИКС: проверяем линию видимости от турели до моба ===
      */
-    private boolean hasLineOfSight(ServerLevel level, Vec3 from, Vec3 to) {
+    /**
+     * === ФИКС: игнорируем сам блок турели при касте луча ===
+     */
+    private boolean hasLineOfSight(ServerLevel level, BlockPos turretPos, Vec3 from, Vec3 to) {
         HitResult hit = level.clip(new ClipContext(
                 from, to,
                 ClipContext.Block.COLLIDER,
@@ -105,6 +109,22 @@ public class MissileTurretBlockEntity extends BlockEntity {
         ));
 
         if (hit.getType() == HitResult.Type.MISS) return true;
+
+        // Если первое препятствие — сама турель, пропускаем её и кастуем дальше
+        if (hit instanceof BlockHitResult blockHit && blockHit.getBlockPos().equals(turretPos)) {
+            Vec3 dir = to.subtract(from).normalize();
+            Vec3 newFrom = hit.getLocation().add(dir.scale(0.05));
+            HitResult hit2 = level.clip(new ClipContext(
+                    newFrom, to,
+                    ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE,
+                    null
+            ));
+            if (hit2.getType() == HitResult.Type.MISS) return true;
+            double hitDist = hit2.getLocation().distanceToSqr(to);
+            return hitDist < 4.0;
+        }
+
         double hitDist = hit.getLocation().distanceToSqr(to);
         return hitDist < 4.0;
     }
@@ -113,13 +133,11 @@ public class MissileTurretBlockEntity extends BlockEntity {
         Vec3 turretCenter = Vec3.atCenterOf(pos).add(0, 0.5, 0);
         AABB searchBox = new AABB(pos).inflate(SEARCH_RADIUS);
 
-        // === ФИКС: ищем ВСЕХ монстров, независимо от высоты ===
         List<Monster> monsters = level.getEntitiesOfClass(
                 Monster.class,
                 searchBox,
                 entity -> {
                     if (!entity.isAlive() || entity.isRemoved()) return false;
-                    // Моб должен быть в радиусе по горизонтали
                     double dx = entity.getX() - pos.getX();
                     double dz = entity.getZ() - pos.getZ();
                     return (dx * dx + dz * dz) <= SEARCH_RADIUS_SQR;
@@ -133,11 +151,11 @@ public class MissileTurretBlockEntity extends BlockEntity {
         for (Monster monster : monsters) {
             Vec3 targetCenter = monster.getBoundingBox().getCenter();
 
-            // === ФИКС: проверяем открытое небо НАД мобом ===
-            if (!hasOpenSky(level, targetCenter)) continue;
+            // === УБРАНО: hasOpenSky — мешает атаке мобов в подземельях/под навесами ===
+            // if (!hasOpenSky(level, targetCenter)) continue;
 
-            // Проверяем линию видимости от турели до моба
-            if (!hasLineOfSight(level, turretCenter, targetCenter)) continue;
+            // === ФИКС: передаём pos, чтобы hasLineOfSight игнорировал сам блок турели ===
+            if (!hasLineOfSight(level, pos, turretCenter, targetCenter)) continue;
 
             double distSqr = monster.distanceToSqr(turretCenter.x, turretCenter.y, turretCenter.z);
             double score = calculateTargetScore(monster, distSqr, turretCenter);

@@ -133,9 +133,11 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
                 // Продолжаем лететь вертикально вверх
                 this.setDeltaMovement(0, SPEED * 0.8, 0);
 
-                // === ФИКС: поворот во время набора высоты (вертикально) ===
+// === ФИКС: начальная ориентация — строго вверх ===
                 this.setYRot(0);
-                this.setXRot(-90); // Смотрим вверх
+                this.setXRot(-90);
+                this.yRotO = 0;
+                this.xRotO = -90;
 
                 // Движение
                 Vec3 motion = this.getDeltaMovement();
@@ -262,17 +264,12 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
 
         double horizontalDist = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
 
-        // Yaw: куда смотрим по горизонтали (0 = +Z)
-        float yaw = (float) (Math.atan2(vel.x, vel.z) * (180D / Math.PI));
-
-        // Pitch: наклон от вертикали
-        // vel.y = 0, horizontalDist = 1 → pitch = 0 (горизонтально)
-        // vel.y = 1, horizontalDist = 0 → pitch = 90 (вертикально вверх)
-        float pitch = (float) (Math.atan2(vel.y, horizontalDist) * (180D / Math.PI));
+        // === ФИКС: стандартные Minecraft-углы ===
+        float yaw = (float) (-Math.atan2(vel.x, vel.z) * (180D / Math.PI));
+        float pitch = (float) (-Math.atan2(vel.y, horizontalDist) * (180D / Math.PI));
 
         this.setYRot(yaw);
-        this.setXRot(pitch); // ПОЛОЖИТЕЛЬНЫЙ = вверх, как надо для верхушки блока
-
+        this.setXRot(pitch);
         this.yRotO = yaw;
         this.xRotO = pitch;
     }

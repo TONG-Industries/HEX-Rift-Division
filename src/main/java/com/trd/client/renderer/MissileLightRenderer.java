@@ -42,16 +42,14 @@ public class MissileLightRenderer extends EntityRenderer<MissileLightEntity> {
         float yaw = entity.yRotO + (entity.getYRot() - entity.yRotO) * partialTick;
         float pitch = entity.xRotO + (entity.getXRot() - entity.xRotO) * partialTick;
 
-        // Сначала центрируем точку вращения в центре блока
+// Центрируем точку вращения
         poseStack.translate(0.5, 0.5, 0.5);
 
-        // Поворачиваем: верхушка (+Y) → направление движения
-        // Сначала yaw (вокруг Y)
-        poseStack.mulPose(Axis.YP.rotationDegrees(-yaw + 180));
-        // Затем pitch (вокруг X) — наклоняем верхушку вперёд
-        poseStack.mulPose(Axis.XP.rotationDegrees(-pitch - 90));
+// === ФИКС: верхушка блока (+Y) смотрит по направлению движения ===
+        poseStack.mulPose(Axis.YP.rotationDegrees(-yaw));
+        poseStack.mulPose(Axis.XP.rotationDegrees(90 + pitch));
 
-        // Возвращаем центр
+// Возвращаем центр
         poseStack.translate(-0.5, -0.5, -0.5);
 
         // Рендерим блок БЕЗ масштабирования
