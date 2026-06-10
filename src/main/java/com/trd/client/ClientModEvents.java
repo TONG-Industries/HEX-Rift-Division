@@ -135,6 +135,7 @@ public class ClientModEvents {
                 EntityRenderers.register(entityType, ThrownItemRenderer::new));
         ModEntities.GRAVITY_GRENADE_PROJECTILE.ifPresent(entityType ->
                 EntityRenderers.register(entityType, ThrownItemRenderer::new));
+        EntityRenderers.register(ModEntities.MISSILE_LIGHT.get(), MissileLightRenderer::new);
 
     }
 

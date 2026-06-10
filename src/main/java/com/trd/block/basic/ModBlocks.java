@@ -24,6 +24,7 @@ import com.trd.block.basic.industrial.rotation.MotorElectroBlock;
 import com.trd.block.basic.industrial.rotation.ShaftBlock;
 import com.trd.block.basic.necrosis.hive.HiveRootsBlock;
 
+import com.trd.block.basic.weapons.MissileTurretBlock;
 import com.trd.multiblock.industrial.FuelTankBlock;
 import com.trd.multiblock.industrial.HeaterBlock;
 
@@ -528,6 +529,14 @@ public class ModBlocks {
     //декоративные блоки
     public static final RegistryObject<Block> BEAM_BLOCK = registerBlock("beam_block",
             () -> new BeamBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> TROMBONE = registerBlock("trombone",
+            () -> new MissileTurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
+                    .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> MISSILE_LIGHT = registerBlock("missile_light",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE)
                     .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> BEAM_COLLISION = BLOCKS.register("beam_collision",

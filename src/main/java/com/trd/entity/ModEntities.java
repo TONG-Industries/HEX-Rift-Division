@@ -6,6 +6,7 @@ import com.trd.entity.weapons.grenades.GravityGrenadeProjectileEntity;
 import com.trd.entity.weapons.grenades.GrenadeIfProjectileEntity;
 import com.trd.entity.weapons.grenades.GrenadeNucProjectileEntity;
 import com.trd.entity.weapons.grenades.GrenadeProjectileEntity;
+import com.trd.entity.weapons.missiles.MissileLightEntity;
 import com.trd.main.MainRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -59,6 +60,15 @@ public class ModEntities {
                     () -> EntityType.Builder.of(DepthWormEntity::new, MobCategory.MONSTER)
                             .sized(0.6f, 0.6f) // Размер хитбокса (сделаем его поменьше для лучшего пути)
                             .build(new ResourceLocation(MainRegistry.MOD_ID, "depth_worm").toString()));
+
+    public static final RegistryObject<EntityType<MissileLightEntity>> MISSILE_LIGHT =
+            ENTITY_TYPES.register("missile_light",
+                    () -> EntityType.Builder.<MissileLightEntity>of(MissileLightEntity::new, MobCategory.MISC)
+                            .sized(0.4f, 1f) // Вытянутая, как ракета
+                            .clientTrackingRange(128)
+                            .updateInterval(1)
+                            .setShouldReceiveVelocityUpdates(true)
+                            .build("missile_light"));
 
     public static final RegistryObject<EntityType<DepthWormBrutalEntity>> DEPTH_WORM_BRUTAL =
             ENTITY_TYPES.register("depth_worm_brutal",

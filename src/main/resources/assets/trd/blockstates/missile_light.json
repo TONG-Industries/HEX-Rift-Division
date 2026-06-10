@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "trd:block/missile_light"
+    }
+  }
+}
