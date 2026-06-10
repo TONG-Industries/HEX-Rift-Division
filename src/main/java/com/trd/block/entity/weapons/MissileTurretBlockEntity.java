@@ -4,6 +4,8 @@ import com.trd.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.ClipContext;
@@ -24,7 +26,7 @@ public class MissileTurretBlockEntity extends BlockEntity {
     public static final double SEARCH_RADIUS_SQR = SEARCH_RADIUS * SEARCH_RADIUS;
     public static final int COOLDOWN_TICKS = 200;
     public static final int SALVO_SIZE = 3;
-    public static final int SALVO_INTERVAL = 10;
+    public static final int SALVO_INTERVAL = 20; // 1 секунда
     public static final float LAUNCH_HEIGHT = 1.0f;
 
     private int cooldownTimer = 0;
@@ -35,7 +37,6 @@ public class MissileTurretBlockEntity extends BlockEntity {
     private int scanTimer = 0;
     private static final int SCAN_INTERVAL = 5;
 
-    // === КЛЮЧЕВОЙ ФИКС: super() с НЕ-null типом ===
     public MissileTurretBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MISSILE_TURRET_BE.get(), pos, state);
     }
@@ -74,37 +75,27 @@ public class MissileTurretBlockEntity extends BlockEntity {
         }
     }
 
-    private LivingEntity findBestTarget(ServerLevel level, BlockPos pos) {
-        Vec3 turretCenter = Vec3.atCenterOf(pos).add(0, 0.5, 0);
-        AABB searchBox = new AABB(pos).inflate(SEARCH_RADIUS);
+    /**
+     * === ФИКС: проверяем открытое небо НАД мобом, а не от турели до моба ===
+     */
+    private boolean hasOpenSky(ServerLevel level, Vec3 mobPos) {
+        // Проверяем от позиции головы моба до build limit
+        Vec3 from = mobPos.add(0, 1.5, 0); // над головой моба
+        Vec3 to = new Vec3(from.x, level.getMaxBuildHeight(), from.z);
 
-        List<Monster> monsters = level.getEntitiesOfClass(
-                Monster.class,
-                searchBox,
-                entity -> entity.isAlive() && !entity.isRemoved()
-        );
+        HitResult hit = level.clip(new ClipContext(
+                from, to,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
+                null
+        ));
 
-        if (monsters.isEmpty()) return null;
-
-        List<TargetScore> scoredTargets = new ArrayList<>();
-
-        for (Monster monster : monsters) {
-            double distSqr = monster.distanceToSqr(turretCenter.x, turretCenter.y, turretCenter.z);
-            if (distSqr > SEARCH_RADIUS_SQR) continue;
-
-            Vec3 targetCenter = monster.getBoundingBox().getCenter();
-            if (!hasLineOfSight(level, turretCenter, targetCenter)) continue;
-
-            double score = calculateTargetScore(monster, distSqr, turretCenter);
-            scoredTargets.add(new TargetScore(monster, score));
-        }
-
-        if (scoredTargets.isEmpty()) return null;
-
-        scoredTargets.sort(Comparator.comparingDouble(ts -> ts.score));
-        return scoredTargets.get(0).entity;
+        return hit.getType() == HitResult.Type.MISS;
     }
 
+    /**
+     * === ФИКС: проверяем линию видимости от турели до моба ===
+     */
     private boolean hasLineOfSight(ServerLevel level, Vec3 from, Vec3 to) {
         HitResult hit = level.clip(new ClipContext(
                 from, to,
@@ -116,6 +107,47 @@ public class MissileTurretBlockEntity extends BlockEntity {
         if (hit.getType() == HitResult.Type.MISS) return true;
         double hitDist = hit.getLocation().distanceToSqr(to);
         return hitDist < 4.0;
+    }
+
+    private LivingEntity findBestTarget(ServerLevel level, BlockPos pos) {
+        Vec3 turretCenter = Vec3.atCenterOf(pos).add(0, 0.5, 0);
+        AABB searchBox = new AABB(pos).inflate(SEARCH_RADIUS);
+
+        // === ФИКС: ищем ВСЕХ монстров, независимо от высоты ===
+        List<Monster> monsters = level.getEntitiesOfClass(
+                Monster.class,
+                searchBox,
+                entity -> {
+                    if (!entity.isAlive() || entity.isRemoved()) return false;
+                    // Моб должен быть в радиусе по горизонтали
+                    double dx = entity.getX() - pos.getX();
+                    double dz = entity.getZ() - pos.getZ();
+                    return (dx * dx + dz * dz) <= SEARCH_RADIUS_SQR;
+                }
+        );
+
+        if (monsters.isEmpty()) return null;
+
+        List<TargetScore> scoredTargets = new ArrayList<>();
+
+        for (Monster monster : monsters) {
+            Vec3 targetCenter = monster.getBoundingBox().getCenter();
+
+            // === ФИКС: проверяем открытое небо НАД мобом ===
+            if (!hasOpenSky(level, targetCenter)) continue;
+
+            // Проверяем линию видимости от турели до моба
+            if (!hasLineOfSight(level, turretCenter, targetCenter)) continue;
+
+            double distSqr = monster.distanceToSqr(turretCenter.x, turretCenter.y, turretCenter.z);
+            double score = calculateTargetScore(monster, distSqr, turretCenter);
+            scoredTargets.add(new TargetScore(monster, score));
+        }
+
+        if (scoredTargets.isEmpty()) return null;
+
+        scoredTargets.sort(Comparator.comparingDouble(ts -> ts.score));
+        return scoredTargets.get(0).entity;
     }
 
     private double calculateTargetScore(Monster monster, double distSqr, Vec3 turretPos) {
@@ -149,6 +181,10 @@ public class MissileTurretBlockEntity extends BlockEntity {
             isSalvoActive = false;
             return;
         }
+
+        // Звук запуска
+        level.playSound(null, pos, SoundEvents.FIREWORK_ROCKET_LAUNCH,
+                SoundSource.BLOCKS, 2.0F, 0.8F + level.random.nextFloat() * 0.4F);
 
         net.minecraft.core.Direction facing = state.getValue(
                 com.trd.block.basic.weapons.MissileTurretBlock.FACING);

@@ -10,7 +10,6 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
@@ -34,24 +33,28 @@ public class MissileLightRenderer extends EntityRenderer<MissileLightEntity> {
 
         poseStack.pushPose();
 
-        // Центрируем модель
-        poseStack.translate(-0.5, 0, -0.5);
+        // === БЕЗ МАСШТАБИРОВАНИЯ — рендерим как обычный блок 1x1x1 ===
+        // Центрируем блок на позиции сущности
+        poseStack.translate(-0.5, -0.5, -0.5);
 
-        // Масштабируем под размер ракеты (блок 1x1x1 → 0.4x1.2)
-        poseStack.scale(0.4f, 1.2f, 0.4f);
+        // === ПОВОРОТ: верхушка блока (= +Y) смотрит по направлению движения ===
+        // Интерполяция для плавности
+        float yaw = entity.yRotO + (entity.getYRot() - entity.yRotO) * partialTick;
+        float pitch = entity.xRotO + (entity.getXRot() - entity.xRotO) * partialTick;
 
-        // Поворачиваем по направлению движения
-        // Сначала центрируем точку вращения
+        // Сначала центрируем точку вращения в центре блока
         poseStack.translate(0.5, 0.5, 0.5);
 
-        // Применяем повороты
-        poseStack.mulPose(Axis.YP.rotationDegrees(-entity.getYRot() + 180));
-        poseStack.mulPose(Axis.XP.rotationDegrees(entity.getXRot()));
+        // Поворачиваем: верхушка (+Y) → направление движения
+        // Сначала yaw (вокруг Y)
+        poseStack.mulPose(Axis.YP.rotationDegrees(-yaw + 180));
+        // Затем pitch (вокруг X) — наклоняем верхушку вперёд
+        poseStack.mulPose(Axis.XP.rotationDegrees(-pitch - 90));
 
         // Возвращаем центр
         poseStack.translate(-0.5, -0.5, -0.5);
 
-        // Рендерим блок MISSILE_LIGHT
+        // Рендерим блок БЕЗ масштабирования
         BlockState state = ModBlocks.MISSILE_LIGHT.get().defaultBlockState();
 
         blockRenderer.renderSingleBlock(
@@ -71,7 +74,6 @@ public class MissileLightRenderer extends EntityRenderer<MissileLightEntity> {
 
     @Override
     public ResourceLocation getTextureLocation(MissileLightEntity entity) {
-        // Не используется, т.к. рендерим как блок
         return new ResourceLocation(MainRegistry.MOD_ID, "block/missile_light");
     }
 }
