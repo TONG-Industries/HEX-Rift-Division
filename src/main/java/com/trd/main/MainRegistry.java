@@ -335,11 +335,13 @@ public class MainRegistry {
             event.accept(ModItems.TURRET_LIGHT_PORTATIVE_PLACER);
             event.accept(ModItems.MACHINEGUN);
             event.accept(ModBlocks.TURRET_LIGHT_PLACER);
+            event.accept(ModBlocks.TROMBONE);
             event.accept(ModItems.AMMO_TURRET);
             event.accept(ModItems.AMMO_TURRET_HOLLOW);
             event.accept(ModItems.AMMO_TURRET_PIERCING);
             event.accept(ModItems.AMMO_TURRET_FIRE);
             event.accept(ModItems.AMMO_TURRET_RADIO);
+            event.accept(ModBlocks.MISSILE_LIGHT);
 
         }
 

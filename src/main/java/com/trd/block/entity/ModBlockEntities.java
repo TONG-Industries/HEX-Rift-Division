@@ -11,6 +11,7 @@ import com.trd.block.entity.industrial.casting.SmallSmelterBlockEntity;
 import com.trd.block.entity.industrial.rotation.BearingBlockEntity;
 import com.trd.block.entity.industrial.rotation.MotorElectroBlockEntity;
 import com.trd.block.entity.industrial.rotation.ShaftBlockEntity;
+import com.trd.block.entity.weapons.MissileTurretBlockEntity;
 import com.trd.multiblock.industrial.FuelTankBlockEntity;
 import com.trd.multiblock.industrial.HeaterBlockEntity;
 
@@ -73,6 +74,10 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("turret_light_placer",
                     () -> BlockEntityType.Builder.of(TurretLightPlacerBlockEntity::new, ModBlocks.TURRET_LIGHT_PLACER.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<MissileTurretBlockEntity>> MISSILE_TURRET_BE =
+            BLOCK_ENTITIES.register("missile_turret",
+                    () -> BlockEntityType.Builder.of(MissileTurretBlockEntity::new,
+                            TROMBONE.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<MachineBatteryBlockEntity>> MACHINE_BATTERY_BE =
             BLOCK_ENTITIES.register("machine_battery_be", () -> {
