@@ -77,11 +77,11 @@ public class MissileTurretBlockEntity extends BlockEntity {
     }
 
     /**
-     * === ФИКС: проверяем открытое небо НАД мобом, а не от турели до моба ===
+     * === ФИКС: проверяем открытое небо НАД мобом, без привязки к турели ===
      */
     private boolean hasOpenSky(ServerLevel level, Vec3 mobPos) {
-        // Проверяем от позиции головы моба до build limit
-        Vec3 from = mobPos.add(0, 1.5, 0); // над головой моба
+        // От позиции головы моба до build limit
+        Vec3 from = mobPos.add(0, 1.5, 0);
         Vec3 to = new Vec3(from.x, level.getMaxBuildHeight(), from.z);
 
         HitResult hit = level.clip(new ClipContext(
@@ -93,7 +93,6 @@ public class MissileTurretBlockEntity extends BlockEntity {
 
         return hit.getType() == HitResult.Type.MISS;
     }
-
     /**
      * === ФИКС: проверяем линию видимости от турели до моба ===
      */
@@ -130,9 +129,9 @@ public class MissileTurretBlockEntity extends BlockEntity {
     }
 
     private LivingEntity findBestTarget(ServerLevel level, BlockPos pos) {
-        Vec3 turretCenter = Vec3.atCenterOf(pos).add(0, 0.5, 0);
         AABB searchBox = new AABB(pos).inflate(SEARCH_RADIUS);
 
+        // Ищем ВСЕХ монстров в радиусе по горизонтали
         List<Monster> monsters = level.getEntitiesOfClass(
                 Monster.class,
                 searchBox,
@@ -151,14 +150,11 @@ public class MissileTurretBlockEntity extends BlockEntity {
         for (Monster monster : monsters) {
             Vec3 targetCenter = monster.getBoundingBox().getCenter();
 
-            // === УБРАНО: hasOpenSky — мешает атаке мобов в подземельях/под навесами ===
-            // if (!hasOpenSky(level, targetCenter)) continue;
+            // === ФИКС: чистая проверка "крыши над головой", без привязки к турели ===
+            if (!hasOpenSky(level, targetCenter)) continue;
 
-            // === ФИКС: передаём pos, чтобы hasLineOfSight игнорировал сам блок турели ===
-            if (!hasLineOfSight(level, pos, turretCenter, targetCenter)) continue;
-
-            double distSqr = monster.distanceToSqr(turretCenter.x, turretCenter.y, turretCenter.z);
-            double score = calculateTargetScore(monster, distSqr, turretCenter);
+            double distSqr = monster.distanceToSqr(pos.getX(), pos.getY(), pos.getZ());
+            double score = calculateTargetScore(monster, distSqr, Vec3.atCenterOf(pos));
             scoredTargets.add(new TargetScore(monster, score));
         }
 
@@ -200,18 +196,30 @@ public class MissileTurretBlockEntity extends BlockEntity {
             return;
         }
 
-        // Звук запуска
         level.playSound(null, pos, SoundEvents.FIREWORK_ROCKET_LAUNCH,
                 SoundSource.BLOCKS, 2.0F, 0.8F + level.random.nextFloat() * 0.4F);
 
         net.minecraft.core.Direction facing = state.getValue(
                 com.trd.block.basic.weapons.MissileTurretBlock.FACING);
-        Vec3 launchPos = Vec3.atCenterOf(pos)
-                .add(0, LAUNCH_HEIGHT, 0)
-                .add(facing.getStepX() * 0.3, 0, facing.getStepZ() * 0.3);
 
-        double spreadX = (level.random.nextDouble() - 0.5) * 0.3;
-        double spreadZ = (level.random.nextDouble() - 0.5) * 0.3;
+        // === ФИКС: 3 точки спавна в зависимости от номера ракеты в залпе ===
+        Vec3 basePos = Vec3.atCenterOf(pos).add(0, LAUNCH_HEIGHT, 0);
+        Vec3 launchPos;
+
+        // facing — куда смотрит лицо блока (от игрока при установке)
+        // Смещения: право/лево/низ относительно лица блока
+        Vec3 right = new Vec3(-facing.getStepZ(), 0, facing.getStepX()); // вектор "вправо" от лица
+        Vec3 up = new Vec3(0, 1, 0);
+
+        switch (salvoCounter) {
+            case 0 -> launchPos = basePos.add(right.scale(0.25)).add(up.scale(0.15)); // верхний правый
+            case 1 -> launchPos = basePos.add(right.scale(-0.25)).add(up.scale(0.15)); // верхний левый
+            case 2 -> launchPos = basePos.add(right.scale(-0.25)).add(up.scale(-0.15)); // нижний левый
+            default -> launchPos = basePos; // fallback
+        }
+
+        double spreadX = (level.random.nextDouble() - 0.5) * 0.1;
+        double spreadZ = (level.random.nextDouble() - 0.5) * 0.1;
         launchPos = launchPos.add(spreadX, 0, spreadZ);
 
         com.trd.entity.weapons.missiles.MissileLightEntity missile =

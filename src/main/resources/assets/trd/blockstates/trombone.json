@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "trd:block/trombone"
-    }
+    "facing=north": { "model": "trd:block/trombone", "y": 0 },
+    "facing=south": { "model": "trd:block/trombone", "y": 180 },
+    "facing=west":  { "model": "trd:block/trombone", "y": 270 },
+    "facing=east":  { "model": "trd:block/trombone", "y": 90 }
   }
 }
