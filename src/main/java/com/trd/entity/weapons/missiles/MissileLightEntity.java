@@ -33,10 +33,10 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
             SynchedEntityData.defineId(MissileLightEntity.class, EntityDataSerializers.BOOLEAN);
 
     // === КОНФИГ ===
-    public static final float SPEED = 1.67f;           // ~5/3 блоков/сек
-    public static final float MAX_TURN_RATE = 0.45f;   // ВОЗВРАЩЕНА старая манёвренность (~25-30 град/сек)
+    public static final float SPEED = 1.67f;
+    public static final float MAX_TURN_RATE = 0.1f;
     public static final int MAX_LIFETIME = 200;         // 10 секунд
-    public static final int BOOST_DURATION = 40;       // === НОВОЕ: 2 секунды набора высоты ===
+    public static final int BOOST_DURATION = 30;
     public static final float DETONATION_RADIUS = 4.0f;
     public static final float DETONATION_DAMAGE = 25.0f;
     public static final float ARMING_DISTANCE = 2.0f;
@@ -126,23 +126,37 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
         // === НОВОЕ: фаза набора высоты (первые 2 секунды) ===
         if (isBoostPhase()) {
             if (age >= BOOST_DURATION) {
-                // Заканчиваем фазу набора высоты, начинаем наведение
                 this.entityData.set(BOOST_PHASE, false);
                 this.entityData.set(ARMED, true);
             } else {
-                // Продолжаем лететь вертикально вверх
                 this.setDeltaMovement(0, SPEED * 0.8, 0);
-
-// === ФИКС: начальная ориентация — строго вверх ===
                 this.setYRot(0);
                 this.setXRot(-90);
                 this.yRotO = 0;
                 this.xRotO = -90;
 
-                // Движение
+                // === ФИКС: проверяем столкновения даже во время набора высоты ===
+                Vec3 currentPos = this.position();
                 Vec3 motion = this.getDeltaMovement();
-                this.setPos(this.getX() + motion.x, this.getY() + motion.y, this.getZ() + motion.z);
+                Vec3 nextPos = currentPos.add(motion);
 
+                BlockHitResult blockHit = this.level().clip(new net.minecraft.world.level.ClipContext(
+                        currentPos, nextPos,
+                        net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                        net.minecraft.world.level.ClipContext.Fluid.NONE,
+                        this
+                ));
+
+                if (blockHit.getType() != net.minecraft.world.phys.HitResult.Type.MISS) {
+                    this.setPos(blockHit.getLocation());
+                    explode();
+                    return;
+                }
+
+                checkEntityCollision(currentPos, nextPos);
+
+                this.setPos(nextPos.x, nextPos.y, nextPos.z);
+                alignRotationToVelocity();
                 spawnTrailParticles();
                 return;
             }
@@ -160,17 +174,39 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
 
         // Наведение
         if (isArmed()) {
+            // === ФИКС: при потере цели ракета летит по инерции, не взрывается ===
             LivingEntity target = getTarget();
 
-            // Самоуничтожение при потере цели
-            if (target == null || !target.isAlive()) {
-                lostTargetTimer++;
-                if (lostTargetTimer > 10) {
-                    explode();
-                    return;
-                }
-            } else {
+            if (target != null && target.isAlive()) {
                 lostTargetTimer = 0;
+
+                Vec3 targetPos = target.getBoundingBox().getCenter();
+                Vec3 toTarget = targetPos.subtract(currentPos).normalize();
+                Vec3 currentDir = currentVel.normalize();
+
+                // Плавный поворот
+                double dot = currentDir.dot(toTarget);
+                double angle = Math.acos(Math.max(-1.0, Math.min(1.0, dot)));
+                double maxAngle = MAX_TURN_RATE;
+
+                Vec3 newDir;
+                if (angle <= maxAngle) {
+                    newDir = toTarget;
+                } else {
+                    Vec3 cross = currentDir.cross(toTarget);
+                    if (cross.lengthSqr() < 0.0001) {
+                        newDir = toTarget;
+                    } else {
+                        cross = cross.normalize();
+                        newDir = rotateVector(currentDir, cross, maxAngle);
+                    }
+                }
+
+                this.setDeltaMovement(newDir.scale(SPEED));
+            } else {
+                // Цель потеряна — просто продолжаем лететь по текущему направлению
+                // Не трогаем deltaMovement, сохраняем инерцию
+                lostTargetTimer = 0; // Сбрасываем, больше не нужен
             }
 
             if (target != null && target.isAlive()) {
