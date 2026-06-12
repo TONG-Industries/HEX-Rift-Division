@@ -1,3 +1,4 @@
 # Made in Blockbench 5.1.4
-newmtl stator
+newmtl m_61b0c23f-dbe4-b58d-0f98-25fd82880871
 map_Kd trd:block/stator
+newmtl none
