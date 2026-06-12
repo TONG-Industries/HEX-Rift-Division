@@ -16,7 +16,7 @@ import com.trd.item.energy.EnergyCellItem;
 import com.trd.item.energy.ModBatteryItem;
 import com.trd.item.weapons.turrets.TurretChipItem;
 
-public class TurretLightMenu extends AbstractContainerMenu {
+public class TromboneMenu extends AbstractContainerMenu {
 
     private final TurretAmmoContainer ammoContainer;
     private final ContainerData data;
@@ -24,10 +24,10 @@ public class TurretLightMenu extends AbstractContainerMenu {
 
     public static final int AMMO_SLOT_COUNT = 9;
     public static final int CHIP_SLOT_INDEX = 9;
-    public static final int BATTERY_SLOT_INDEX = 10;        // [НОВОЕ]
-    public static final int TOTAL_TURRET_SLOTS = 11;        // [ИЗМЕНЕНО] было 10
+    public static final int BATTERY_SLOT_INDEX = 10;
+    public static final int TOTAL_TURRET_SLOTS = 11;
 
-    // --- КОНСТАНТЫ ДЛЯ ДАННЫХ ---
+    // --- КОНСТАНТЫ ДАННЫХ ---
     public static final int DATA_ENERGY = 0;
     public static final int DATA_MAX_ENERGY = 1;
     public static final int DATA_STATUS = 2;
@@ -38,10 +38,12 @@ public class TurretLightMenu extends AbstractContainerMenu {
     public static final int DATA_TARGET_PLAYERS = 7;
     public static final int DATA_KILLS = 8;
     public static final int DATA_LIFETIME = 9;
-    private static final int DATA_COUNT = 10;
+    public static final int DATA_EXTRA_1 = 10;
+    public static final int DATA_EXTRA_2 = 11;
+    private static final int DATA_COUNT = 12;
 
-    public TurretLightMenu(int containerId, Inventory playerInventory, TurretAmmoContainer ammoContainer, ContainerData data, BlockPos pos) {
-        super(ModMenuTypes.TURRET_AMMO_MENU.get(), containerId);
+    public TromboneMenu(int containerId, Inventory playerInventory, TurretAmmoContainer ammoContainer, ContainerData data, BlockPos pos) {
+        super(ModMenuTypes.TROMBONE_MENU.get(), containerId);
         checkContainerDataCount(data, DATA_COUNT);
 
         this.ammoContainer = ammoContainer;
@@ -66,11 +68,10 @@ public class TurretLightMenu extends AbstractContainerMenu {
             @Override public void setChanged() { super.setChanged(); ammoContainer.onContentsChanged(this.getSlotIndex()); }
         });
 
-        // [НОВОЕ] Слот БАТАРЕИ (10) — 180, 81
+        // Слот БАТАРЕИ (10) — 180, 81
         this.addSlot(new SlotItemHandler(ammoContainer, BATTERY_SLOT_INDEX, 180, 81) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                // Принимаем любые предметы с энергией
                 return stack.getCapability(ForgeCapabilities.ENERGY).isPresent()
                         || stack.getItem() instanceof ModBatteryItem
                         || stack.getItem() instanceof EnergyCellItem;
@@ -91,7 +92,7 @@ public class TurretLightMenu extends AbstractContainerMenu {
         }
     }
 
-    public TurretLightMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+    public TromboneMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
         this(containerId, playerInventory, new TurretAmmoContainer(), new SimpleContainerData(DATA_COUNT), extraData.readBlockPos());
     }
 
@@ -107,19 +108,17 @@ public class TurretLightMenu extends AbstractContainerMenu {
             ItemStack stack = slot.getItem();
             itemstack = stack.copy();
 
-            int totalSlots = TOTAL_TURRET_SLOTS; // 11
+            int totalSlots = TOTAL_TURRET_SLOTS;
             int playerInvStart = totalSlots;
             int playerInvEnd = playerInvStart + 27;
             int hotbarStart = playerInvEnd;
             int hotbarEnd = hotbarStart + 9;
 
             if (index < totalSlots) {
-                // Из слотов турели → в инвентарь игрока
                 if (!this.moveItemStackTo(stack, playerInvStart, hotbarEnd, true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // Из инвентаря игрока → в слоты турели
                 if (stack.getItem() instanceof TurretChipItem) {
                     if (!this.moveItemStackTo(stack, CHIP_SLOT_INDEX, CHIP_SLOT_INDEX + 1, false)) {
                         return ItemStack.EMPTY;
@@ -131,7 +130,6 @@ public class TurretLightMenu extends AbstractContainerMenu {
                         return ItemStack.EMPTY;
                     }
                 } else {
-                    // Патроны → слоты 0-8
                     if (!this.moveItemStackTo(stack, 0, AMMO_SLOT_COUNT, false)) {
                         return ItemStack.EMPTY;
                     }

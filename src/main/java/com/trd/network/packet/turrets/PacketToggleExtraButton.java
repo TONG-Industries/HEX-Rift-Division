@@ -5,24 +5,27 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
-import com.trd.block.entity.weapons.TurretLightPlacerBlockEntity;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
 
 import java.util.function.Supplier;
 
-public class PacketToggleTurret {
+public class PacketToggleExtraButton {
     private final BlockPos pos;
+    private final int buttonId; // 1 или 2
 
-    public PacketToggleTurret(BlockPos pos) {
+    public PacketToggleExtraButton(BlockPos pos, int buttonId) {
         this.pos = pos;
+        this.buttonId = buttonId;
     }
 
-    public PacketToggleTurret(FriendlyByteBuf buf) {
+    public PacketToggleExtraButton(FriendlyByteBuf buf) {
         this.pos = buf.readBlockPos();
+        this.buttonId = buf.readInt();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeBlockPos(pos);
+        buf.writeInt(buttonId);
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
@@ -31,11 +34,8 @@ public class PacketToggleTurret {
             ServerPlayer player = context.getSender();
             if (player != null) {
                 BlockEntity be = player.level().getBlockEntity(pos);
-                // [ИСПРАВЛЕНО] Поддержка обоих типов турелей
-                if (be instanceof TurretLightPlacerBlockEntity turretBE) {
-                    turretBE.togglePower();
-                } else if (be instanceof MissileTurretBlockEntity missileBE) {
-                    missileBE.togglePower();
+                if (be instanceof MissileTurretBlockEntity turretBE) {
+                    turretBE.toggleExtraButton(buttonId);
                 }
             }
         });

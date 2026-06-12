@@ -1,6 +1,7 @@
 package com.trd.menu;
 
 import com.trd.main.MainRegistry;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -48,6 +49,10 @@ public class ModMenuTypes {
 //    public static final RegistryObject<MenuType<MiningPortMenu>> MINING_PORT_MENU =
 //            MENUS.register("mining_port_menu",
 //                    () -> IForgeMenuType.create(MiningPortMenu::new));
+
+    public static final RegistryObject<MenuType<TromboneMenu>> TROMBONE_MENU =
+            MENUS.register("trombone_menu",
+                    () -> IForgeMenuType.create((windowId, inv, data) -> new TromboneMenu(windowId, inv, data)));
 
     public static final RegistryObject<MenuType<FluidBarrelMenu>> FLUID_BARREL_MENU =
             MENUS.register("fluid_barrel_menu",

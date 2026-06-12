@@ -3,6 +3,7 @@ package com.trd.network;
 
 import com.trd.network.packet.fluids.*;
 //import com.trd.network.packet.rotation.PacketToggleRetractMode;
+import com.trd.network.packet.turrets.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -19,10 +20,7 @@ import com.trd.network.packet.guns.PacketUnloadGun;
 //import com.trd.network.packet.rotation.PacketToggleMotor;
 //import com.trd.network.packet.rotation.PacketToggleMotorMode;
 //import com.trd.network.packet.rotation.PacketToggleShaftPlacer;
-import com.trd.network.packet.turrets.PacketChipFeedback;
-import com.trd.network.packet.turrets.PacketModifyTurretChip;
-import com.trd.network.packet.turrets.PacketToggleTurret;
-import com.trd.network.packet.turrets.PacketUpdateTurretSettings;
+
 
 public class ModPacketHandler {
     private static final String PROTOCOL_VERSION = "1";
@@ -179,5 +177,9 @@ public class ModPacketHandler {
                 com.trd.network.packet.energy.SyncMotorRpmPacket::decode,
                 com.trd.network.packet.energy.SyncMotorRpmPacket::handle
         );
+        INSTANCE.registerMessage(id++, PacketToggleExtraButton.class,
+                PacketToggleExtraButton::toBytes,
+                PacketToggleExtraButton::new,
+                (msg, ctx) -> { msg.handle(ctx); ctx.get().setPacketHandled(true); });
     }
 }
