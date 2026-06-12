@@ -8,6 +8,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -27,7 +28,7 @@ public class MissileTurretBlockEntity extends BlockEntity {
     public static final double SEARCH_RADIUS_SQR = SEARCH_RADIUS * SEARCH_RADIUS;
     public static final int COOLDOWN_TICKS = 200;
     public static final int SALVO_SIZE = 3;
-    public static final int SALVO_INTERVAL = 20; // 1 секунда
+    public static final int SALVO_INTERVAL = 20;
     public static final float LAUNCH_HEIGHT = 1.0f;
 
     private int cooldownTimer = 0;
@@ -38,16 +39,50 @@ public class MissileTurretBlockEntity extends BlockEntity {
     private int scanTimer = 0;
     private static final int SCAN_INTERVAL = 5;
 
+    // [НОВОЕ] GUI-related поля (1:1 с TurretLightPlacerBlockEntity)
+    private boolean isSwitchedOn = false;
+    private int bootTimer = 0;
+    private static final int BOOT_DURATION = 60;
+
+    private boolean targetHostile = true;
+    private boolean targetNeutral = false;
+    private boolean targetPlayers = true;
+
+    private int killCount = 0;
+    private long lifetimeTicks = 0;
+
+    // [НОВОЕ] Дополнительные кнопки
+    private boolean extraButton1 = true; // По умолчанию включена
+    private boolean extraButton2 = true; // По умолчанию включена
+
+    // [НОВОЕ] Энергия (заглушки для совместимости GUI)
+    private long energy = 0;
+    private long capacity = 100000;
+    private static final long MAX_RECEIVE = 10000;
+
     public MissileTurretBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MISSILE_TURRET_BE.get(), pos, state);
+        this.ammoContainer.setOnContentsChanged(this::setChanged);
     }
-
+    private final TurretAmmoContainer ammoContainer = new TurretAmmoContainer();
+    public TurretAmmoContainer getAmmoContainer() { return ammoContainer; }
     public static void tick(Level level, BlockPos pos, BlockState state, MissileTurretBlockEntity turret) {
         if (level.isClientSide) return;
+        turret.lifetimeTicks++;
         turret.tickServer((ServerLevel) level, pos, state);
     }
 
     private void tickServer(ServerLevel level, BlockPos pos, BlockState state) {
+        // [НОВОЕ] Логика загрузки и выключателя
+        if (!isSwitchedOn) {
+            return;
+        }
+
+        if (bootTimer > 0) {
+            bootTimer--;
+            return;
+        }
+
         if (cooldownTimer > 0) cooldownTimer--;
 
         if (isSalvoActive) {
@@ -76,11 +111,7 @@ public class MissileTurretBlockEntity extends BlockEntity {
         }
     }
 
-    /**
-     * === ФИКС: проверяем открытое небо НАД мобом, без привязки к турели ===
-     */
     private boolean hasOpenSky(ServerLevel level, Vec3 mobPos) {
-        // От позиции головы моба до build limit
         Vec3 from = mobPos.add(0, 1.5, 0);
         Vec3 to = new Vec3(from.x, level.getMaxBuildHeight(), from.z);
 
@@ -93,12 +124,7 @@ public class MissileTurretBlockEntity extends BlockEntity {
 
         return hit.getType() == HitResult.Type.MISS;
     }
-    /**
-     * === ФИКС: проверяем линию видимости от турели до моба ===
-     */
-    /**
-     * === ФИКС: игнорируем сам блок турели при касте луча ===
-     */
+
     private boolean hasLineOfSight(ServerLevel level, BlockPos turretPos, Vec3 from, Vec3 to) {
         HitResult hit = level.clip(new ClipContext(
                 from, to,
@@ -109,7 +135,6 @@ public class MissileTurretBlockEntity extends BlockEntity {
 
         if (hit.getType() == HitResult.Type.MISS) return true;
 
-        // Если первое препятствие — сама турель, пропускаем её и кастуем дальше
         if (hit instanceof BlockHitResult blockHit && blockHit.getBlockPos().equals(turretPos)) {
             Vec3 dir = to.subtract(from).normalize();
             Vec3 newFrom = hit.getLocation().add(dir.scale(0.05));
@@ -131,7 +156,6 @@ public class MissileTurretBlockEntity extends BlockEntity {
     private LivingEntity findBestTarget(ServerLevel level, BlockPos pos) {
         AABB searchBox = new AABB(pos).inflate(SEARCH_RADIUS);
 
-        // Ищем ВСЕХ монстров в радиусе по горизонтали
         List<Monster> monsters = level.getEntitiesOfClass(
                 Monster.class,
                 searchBox,
@@ -150,7 +174,6 @@ public class MissileTurretBlockEntity extends BlockEntity {
         for (Monster monster : monsters) {
             Vec3 targetCenter = monster.getBoundingBox().getCenter();
 
-            // === ФИКС: чистая проверка "крыши над головой", без привязки к турели ===
             if (!hasOpenSky(level, targetCenter)) continue;
 
             double distSqr = monster.distanceToSqr(pos.getX(), pos.getY(), pos.getZ());
@@ -202,20 +225,17 @@ public class MissileTurretBlockEntity extends BlockEntity {
         net.minecraft.core.Direction facing = state.getValue(
                 com.trd.block.basic.weapons.MissileTurretBlock.FACING);
 
-        // === ФИКС: 3 точки спавна в зависимости от номера ракеты в залпе ===
         Vec3 basePos = Vec3.atCenterOf(pos).add(0, LAUNCH_HEIGHT, 0);
         Vec3 launchPos;
 
-        // facing — куда смотрит лицо блока (от игрока при установке)
-        // Смещения: право/лево/низ относительно лица блока
-        Vec3 right = new Vec3(-facing.getStepZ(), 0, facing.getStepX()); // вектор "вправо" от лица
+        Vec3 right = new Vec3(-facing.getStepZ(), 0, facing.getStepX());
         Vec3 up = new Vec3(0, 1, 0);
 
         switch (salvoCounter) {
-            case 0 -> launchPos = basePos.add(right.scale(0.25)).add(up.scale(0.15)); // верхний правый
-            case 1 -> launchPos = basePos.add(right.scale(-0.25)).add(up.scale(0.15)); // верхний левый
-            case 2 -> launchPos = basePos.add(right.scale(-0.25)).add(up.scale(-0.15)); // нижний левый
-            default -> launchPos = basePos; // fallback
+            case 0 -> launchPos = basePos.add(right.scale(0.25)).add(up.scale(0.15));
+            case 1 -> launchPos = basePos.add(right.scale(-0.25)).add(up.scale(0.15));
+            case 2 -> launchPos = basePos.add(right.scale(-0.25)).add(up.scale(-0.15));
+            default -> launchPos = basePos;
         }
 
         double spreadX = (level.random.nextDouble() - 0.5) * 0.1;
@@ -240,12 +260,59 @@ public class MissileTurretBlockEntity extends BlockEntity {
 
     public void onRemove() {}
 
+    // [НОВОЕ] Методы для GUI (1:1 с TurretLightPlacerBlockEntity)
+    public void togglePower() {
+        this.isSwitchedOn = !this.isSwitchedOn;
+        if (this.isSwitchedOn) {
+            this.bootTimer = BOOT_DURATION;
+        } else {
+            this.bootTimer = 0;
+        }
+        setChanged();
+    }
+
+    public void toggleExtraButton(int buttonId) {
+        if (buttonId == 1) {
+            this.extraButton1 = !this.extraButton1;
+        } else if (buttonId == 2) {
+            this.extraButton2 = !this.extraButton2;
+        }
+        setChanged();
+    }
+
+    public void updateAttackSetting(int index, boolean value) {
+        switch (index) {
+            case 0 -> this.targetHostile = value;
+            case 1 -> this.targetNeutral = value;
+            case 2 -> this.targetPlayers = value;
+        }
+        setChanged();
+    }
+
+    public void incrementKills() {
+        this.killCount++;
+        setChanged();
+    }
+
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putInt("Cooldown", cooldownTimer);
         tag.putBoolean("SalvoActive", isSalvoActive);
         tag.putInt("SalvoCounter", salvoCounter);
+        tag.put("AmmoContainer", ammoContainer.serializeNBT());
+
+        // [НОВОЕ] Сохранение GUI-данных
+        tag.putBoolean("SwitchedOn", isSwitchedOn);
+        tag.putInt("BootTimer", bootTimer);
+        tag.putBoolean("TargetHostile", targetHostile);
+        tag.putBoolean("TargetNeutral", targetNeutral);
+        tag.putBoolean("TargetPlayers", targetPlayers);
+        tag.putInt("KillCount", killCount);
+        tag.putLong("Lifetime", lifetimeTicks);
+        tag.putBoolean("ExtraButton1", extraButton1);
+        tag.putBoolean("ExtraButton2", extraButton2);
+        tag.putLong("Energy", energy);
     }
 
     @Override
@@ -254,7 +321,67 @@ public class MissileTurretBlockEntity extends BlockEntity {
         cooldownTimer = tag.getInt("Cooldown");
         isSalvoActive = tag.getBoolean("SalvoActive");
         salvoCounter = tag.getInt("SalvoCounter");
+        if (tag.contains("AmmoContainer")) ammoContainer.deserializeNBT(tag.getCompound("AmmoContainer"));
+        // [НОВОЕ] Загрузка GUI-данных
+        isSwitchedOn = tag.getBoolean("SwitchedOn");
+        bootTimer = tag.getInt("BootTimer");
+        targetHostile = tag.getBoolean("TargetHostile");
+        targetNeutral = tag.getBoolean("TargetNeutral");
+        targetPlayers = tag.getBoolean("TargetPlayers");
+        killCount = tag.getInt("KillCount");
+        lifetimeTicks = tag.getLong("Lifetime");
+        extraButton1 = tag.getBoolean("ExtraButton1");
+        extraButton2 = tag.getBoolean("ExtraButton2");
+        energy = tag.getLong("Energy");
     }
+
+    // [НОВОЕ] ContainerData для синхронизации с GUI
+    protected final ContainerData data = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> (int) Math.min(MissileTurretBlockEntity.this.energy, Integer.MAX_VALUE);
+                case 1 -> (int) Math.min(MissileTurretBlockEntity.this.capacity, Integer.MAX_VALUE);
+                case 2 -> getStatusInt();
+                case 3 -> MissileTurretBlockEntity.this.isSwitchedOn ? 1 : 0;
+                case 4 -> MissileTurretBlockEntity.this.bootTimer;
+                case 5 -> MissileTurretBlockEntity.this.targetHostile ? 1 : 0;
+                case 6 -> MissileTurretBlockEntity.this.targetNeutral ? 1 : 0;
+                case 7 -> MissileTurretBlockEntity.this.targetPlayers ? 1 : 0;
+                case 8 -> MissileTurretBlockEntity.this.killCount;
+                case 9 -> (int)(MissileTurretBlockEntity.this.lifetimeTicks / 20);
+                case 10 -> MissileTurretBlockEntity.this.extraButton1 ? 1 : 0;
+                case 11 -> MissileTurretBlockEntity.this.extraButton2 ? 1 : 0;
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0 -> MissileTurretBlockEntity.this.energy = value;
+                case 3 -> MissileTurretBlockEntity.this.isSwitchedOn = (value == 1);
+                case 5 -> MissileTurretBlockEntity.this.targetHostile = (value == 1);
+                case 6 -> MissileTurretBlockEntity.this.targetNeutral = (value == 1);
+                case 7 -> MissileTurretBlockEntity.this.targetPlayers = (value == 1);
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 12;
+        }
+    };
+
+    private int getStatusInt() {
+        if (!isSwitchedOn) return 0;
+        if (bootTimer > 0) return 200 + (int)((1.0 - (double)bootTimer / BOOT_DURATION) * 100);
+        if (isSalvoActive) return 1;
+        if (cooldownTimer > 0) return 1000 + cooldownTimer;
+        return 1;
+    }
+
+    public ContainerData getDataAccess() { return this.data; }
 
     private record TargetScore(Monster entity, double score) {}
 }

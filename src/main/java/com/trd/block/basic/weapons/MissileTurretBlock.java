@@ -1,11 +1,11 @@
 package com.trd.block.basic.weapons;
 
-
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
+import com.trd.menu.TromboneMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -23,6 +23,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 public class MissileTurretBlock extends BaseEntityBlock {
@@ -87,20 +88,34 @@ public class MissileTurretBlock extends BaseEntityBlock {
         }
         super.onRemove(state, level, pos, newState, isMoving);
     }
+
+    @Override
+    public InteractionResult use(BlockState state, Level level, BlockPos pos,
+                                 Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof MissileTurretBlockEntity turret) {
+            if (player instanceof ServerPlayer serverPlayer) {
+                NetworkHooks.openScreen(serverPlayer,
+                        new net.minecraft.world.SimpleMenuProvider(
+                                (windowId, playerInventory, playerEntity) ->
+                                        new TromboneMenu(windowId, playerInventory,
+                                                turret.getAmmoContainer(),
+                                                turret.getDataAccess(),
+                                                pos),
+                                net.minecraft.network.chat.Component.literal("Trombone")
+                        ),
+                        buf -> buf.writeBlockPos(pos)
+                );
+            }
+            return InteractionResult.CONSUME; // [ИСПРАВЛЕНО] для сервера
+        }
+        return InteractionResult.sidedSuccess(level.isClientSide); // [ИСПРАВЛЕНО] для клиента
+    }
+
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return level.isClientSide ? null : createTickerHelper(type, ModBlockEntities.MISSILE_TURRET_BE.get(),
                 (lvl, pos, st, be) -> MissileTurretBlockEntity.tick(lvl, pos, st, (MissileTurretBlockEntity) be));
-    }
-    @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos,
-                                 Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof MissileTurretBlockEntity turret) {
-            // TODO: Открыть GUI настроек (приоритеты целей и т.д.)
-            return InteractionResult.SUCCESS;
-        }
-        return InteractionResult.SUCCESS;
     }
 
     @Override
@@ -111,7 +126,7 @@ public class MissileTurretBlock extends BaseEntityBlock {
     @Override
     public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof MissileTurretBlockEntity turret) {
-            return turret.getCooldownProgress(); // Для компаратора
+            return turret.getCooldownProgress();
         }
         return 0;
     }
