@@ -107,10 +107,18 @@ public class StatorVisual extends AbstractBlockEntityVisual<StatorBlockEntity> i
                         coil.rotateX((float) Math.toRadians(90));
                     }
                     
-                    // Rotate for slot position
+                    // Move to the center of the multiblock hole (1 block 'up' in local space)
+                    coil.translate(0f, 1f, 0f);
+                    
+                    // Rotate for slot position around the Z axis
                     coil.rotateZ((float) Math.toRadians(i * 30));
+                    
+                    // Move outward radially by 1.1 blocks
+                    coil.translate(0f, 1.1f, 0f);
 
+                    // Center the OBJ model itself
                     coil.translate(-0.5f, -0.5f, -0.5f);
+                    
                     coil.setChanged();
                     coilInstances.add(coil);
                 }
@@ -118,14 +126,27 @@ public class StatorVisual extends AbstractBlockEntityVisual<StatorBlockEntity> i
         }
     }
 
+    private final boolean[] slotHasCoil = new boolean[12];
+
     @Override
     public void beginFrame(Context ctx) {
-        // Coils change infrequently (only when players insert/extract)
-        // We can just rebuild them on demand or check if inventory changed.
-        // For simplicity, we just rebuild if needed (can optimize later).
-        rebuildCoils();
-        for (TransformedInstance coil : coilInstances) {
-            relight(pos, coil);
+        boolean changed = false;
+        IItemHandler handler = blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).orElse(null);
+        if (handler != null) {
+            int slots = Math.min(12, handler.getSlots());
+            for (int i = 0; i < slots; i++) {
+                boolean hasCoil = !handler.getStackInSlot(i).isEmpty();
+                if (hasCoil != slotHasCoil[i]) {
+                    slotHasCoil[i] = hasCoil;
+                    changed = true;
+                }
+            }
+        }
+        if (changed) {
+            rebuildCoils();
+            for (TransformedInstance coil : coilInstances) {
+                relight(pos, coil);
+            }
         }
     }
 

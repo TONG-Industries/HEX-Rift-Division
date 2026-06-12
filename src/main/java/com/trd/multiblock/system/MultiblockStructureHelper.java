@@ -502,45 +502,39 @@ public class MultiblockStructureHelper {
         });
     }
 
+    private final Map<String, VoxelShape> statorShapeCache = new HashMap<>();
+
     public VoxelShape generateStatorShape(Direction facing, Direction.Axis axis) {
-        // Cache could be expanded, but for now we'll compute it dynamically
-        VoxelShape finalShape = Shapes.empty();
-
-        VoxelShape controllerShape = partShapes.getOrDefault(this.controllerOffset, Block.box(0, 0, 0, 16, 16, 16));
-        finalShape = Shapes.or(finalShape, controllerShape); // controller is at origin
-
-        for (BlockPos gridPos : structureMap.keySet()) {
-            if (gridPos.equals(this.controllerOffset)) continue;
-
-            BlockPos relative = gridPos.subtract(this.controllerOffset);
-            BlockPos rotatedPos = rotateStatorPos(relative, facing, axis);
-
-            VoxelShape rawShape = partShapes.getOrDefault(gridPos, Block.box(0, 0, 0, 16, 16, 16));
-            // Rotate the box itself using bounding box math
-            VoxelShape rotatedShape = rotateShapeStator(rawShape, facing, axis);
-
-            VoxelShape placedShape = rotatedShape.move(rotatedPos.getX(), rotatedPos.getY(), rotatedPos.getZ());
-            finalShape = Shapes.or(finalShape, placedShape);
-        }
-        return finalShape.optimize();
+        String key = facing.name() + "_" + axis.name();
+        return statorShapeCache.computeIfAbsent(key, k -> {
+            // Box 1: X [-0.5, 1.5], Y [0.0, 3.0], Z [0.0, 1.0] -> -8, 0, 0 to 24, 48, 16
+            VoxelShape box1 = Block.box(-8, 0, 0, 24, 48, 16);
+            // Box 2: X [-1.0, 2.0], Y [0.5, 2.5], Z [0.0, 1.0] -> -16, 8, 0 to 32, 40, 16
+            VoxelShape box2 = Block.box(-16, 8, 0, 32, 40, 16);
+            VoxelShape baseShape = Shapes.or(box1, box2);
+            
+            // Hole: X [0.0, 1.0], Y [1.0, 2.0], Z [0.0, 1.0] -> 0, 16, 0 to 16, 32, 16
+            VoxelShape hole = Block.box(0, 16, 0, 16, 32, 16);
+            
+            baseShape = Shapes.joinUnoptimized(baseShape, hole, BooleanOp.ONLY_FIRST);
+            
+            return rotateShapeStatorExact(baseShape, facing, axis).optimize();
+        });
     }
 
-    private static VoxelShape rotateShapeStator(VoxelShape shape, Direction facing, Direction.Axis axis) {
+    private static VoxelShape rotateShapeStatorExact(VoxelShape shape, Direction facing, Direction.Axis axis) {
         VoxelShape[] buffer = { Shapes.empty() };
         shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
-            net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(minX, minY, minZ, maxX, maxY, maxZ);
-            
-            // Translate to center (-0.5), rotate, translate back (+0.5)
             net.minecraft.world.phys.Vec3 center = new net.minecraft.world.phys.Vec3(0.5, 0.5, 0.5);
-            net.minecraft.world.phys.Vec3 min = new net.minecraft.world.phys.Vec3(box.minX, box.minY, box.minZ).subtract(center);
-            net.minecraft.world.phys.Vec3 max = new net.minecraft.world.phys.Vec3(box.maxX, box.maxY, box.maxZ).subtract(center);
+            net.minecraft.world.phys.Vec3 min = new net.minecraft.world.phys.Vec3(minX, minY, minZ).subtract(center);
+            net.minecraft.world.phys.Vec3 max = new net.minecraft.world.phys.Vec3(maxX, maxY, maxZ).subtract(center);
             
-            // Rotate vertices
-            BlockPos p1 = rotateStatorPos(new BlockPos((int)Math.round(min.x*2), (int)Math.round(min.y*2), (int)Math.round(min.z*2)), facing, axis);
-            BlockPos p2 = rotateStatorPos(new BlockPos((int)Math.round(max.x*2), (int)Math.round(max.y*2), (int)Math.round(max.z*2)), facing, axis);
+            // Rotate the vector directly
+            net.minecraft.world.phys.Vec3 p1 = rotateVecStator(min, facing, axis);
+            net.minecraft.world.phys.Vec3 p2 = rotateVecStator(max, facing, axis);
             
-            double nx1 = p1.getX()/2.0 + 0.5; double ny1 = p1.getY()/2.0 + 0.5; double nz1 = p1.getZ()/2.0 + 0.5;
-            double nx2 = p2.getX()/2.0 + 0.5; double ny2 = p2.getY()/2.0 + 0.5; double nz2 = p2.getZ()/2.0 + 0.5;
+            double nx1 = p1.x + 0.5; double ny1 = p1.y + 0.5; double nz1 = p1.z + 0.5;
+            double nx2 = p2.x + 0.5; double ny2 = p2.y + 0.5; double nz2 = p2.z + 0.5;
             
             buffer[0] = Shapes.joinUnoptimized(buffer[0], Shapes.box(
                 Math.min(nx1, nx2), Math.min(ny1, ny2), Math.min(nz1, nz2),
@@ -548,6 +542,22 @@ public class MultiblockStructureHelper {
             ), BooleanOp.OR);
         });
         return buffer[0];
+    }
+    
+    private static net.minecraft.world.phys.Vec3 rotateVecStator(net.minecraft.world.phys.Vec3 localVec, Direction facing, Direction.Axis axis) {
+        net.minecraft.core.Vec3i vy = facing.getOpposite().getNormal();
+        net.minecraft.core.Vec3i vz = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE).getNormal();
+        net.minecraft.core.Vec3i vx = new net.minecraft.core.Vec3i(
+                vy.getY() * vz.getZ() - vy.getZ() * vz.getY(),
+                vy.getZ() * vz.getX() - vy.getX() * vz.getZ(),
+                vy.getX() * vz.getY() - vy.getY() * vz.getX()
+        );
+
+        return new net.minecraft.world.phys.Vec3(
+                localVec.x * vx.getX() + localVec.y * vy.getX() + localVec.z * vz.getX(),
+                localVec.x * vx.getY() + localVec.y * vy.getY() + localVec.z * vz.getY(),
+                localVec.x * vx.getZ() + localVec.y * vy.getZ() + localVec.z * vz.getZ()
+        );
     }
 
     public static VoxelShape rotateShape(VoxelShape shape, Direction facing) {

@@ -162,23 +162,34 @@ public class StatorBlock extends BaseEntityBlock implements IMultiblockControlle
 
         ItemStack stackInHand = player.getItemInHand(hand);
         boolean isCoil = stackInHand.getItem() == ModItems.COPPER_COIL.get() || stackInHand.getItem() == ModItems.WIRE_COIL.get();
+        boolean isScrewdriver = stackInHand.getItem() == ModItems.SCREWDRIVER.get();
 
-        // Calculate slot based on hit location
-        // The stator is a 3x3x1 multiblock, but this block is the center.
-        // We calculate angle from the center of the block.
-        net.minecraft.world.phys.Vec3 hitVec = hit.getLocation().subtract(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        // The stator is a 3x3x1 multiblock, but this block is the controller.
+        // We calculate angle from the center of the hole, which is (0, 1, 0) relative to controller.
+        Direction facing = state.getValue(FACING);
         Direction.Axis axis = state.getValue(AXIS);
+        BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), facing, axis);
+        net.minecraft.world.phys.Vec3 holeCenter = new net.minecraft.world.phys.Vec3(pos.getX() + 0.5 + holeOffset.getX(), pos.getY() + 0.5 + holeOffset.getY(), pos.getZ() + 0.5 + holeOffset.getZ());
+        net.minecraft.world.phys.Vec3 hitVec = hit.getLocation().subtract(holeCenter);
 
-        double u = 0, v = 0;
+        org.joml.Vector3f localVec = new org.joml.Vector3f((float)hitVec.x, (float)hitVec.y, (float)hitVec.z);
+        
         if (axis == Direction.Axis.X) {
-            u = hitVec.y; v = hitVec.z;
+            localVec.rotateY((float) Math.toRadians(-90));
         } else if (axis == Direction.Axis.Y) {
-            u = hitVec.x; v = hitVec.z;
-        } else { // Z
-            u = hitVec.x; v = hitVec.y;
+            localVec.rotateX((float) Math.toRadians(-90));
+            if (facing == Direction.WEST) {
+                localVec.rotateY((float) Math.toRadians(-90));
+            } else if (facing == Direction.SOUTH) {
+                localVec.rotateY((float) Math.toRadians(-180));
+            } else if (facing == Direction.EAST) {
+                localVec.rotateY((float) Math.toRadians(-270));
+            }
         }
 
-        // Calculate angle and slot index
+        double u = localVec.y;
+        double v = -localVec.x;
+
         double angle = Math.toDegrees(Math.atan2(v, u));
         if (angle < 0) angle += 360;
         int slot = (int) Math.round(angle / 30.0) % 12;
@@ -199,7 +210,7 @@ public class StatorBlock extends BaseEntityBlock implements IMultiblockControlle
                 }
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
-        } else if (stackInHand.isEmpty() && player.isCrouching()) {
+        } else if (isScrewdriver || (stackInHand.isEmpty() && player.isCrouching())) {
             ItemStack inSlot = handler.getStackInSlot(slot);
             if (!inSlot.isEmpty()) {
                 if (!level.isClientSide) {

@@ -54,6 +54,7 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+            syncToClient();
         }
     };
     private final LazyOptional<IItemHandler> itemHandlerCap = LazyOptional.of(() -> coilsInventory);
