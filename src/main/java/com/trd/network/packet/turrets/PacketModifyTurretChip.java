@@ -1,8 +1,5 @@
 package com.trd.network.packet.turrets;
 
-
-
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -14,6 +11,7 @@ import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 import com.trd.item.weapons.turrets.TurretChipItem;
 import com.trd.menu.TurretLightMenu;
+import com.trd.menu.TromboneMenu;
 import com.trd.network.ModPacketHandler;
 
 import java.util.Optional;
@@ -22,7 +20,7 @@ import java.util.function.Supplier;
 
 public class PacketModifyTurretChip {
     private final int action; // 0 = REMOVE, 1 = ADD
-    private final String payload; // Индекс для удаления или Ник для добавления
+    private final String payload;
 
     public PacketModifyTurretChip(int action, String payload) {
         this.action = action;
@@ -43,14 +41,20 @@ public class PacketModifyTurretChip {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();
-            if (player != null && player.containerMenu instanceof TurretLightMenu menu) {
-                ItemStack stack = menu.getAmmoContainer().getStackInSlot(9);
+            if (player != null) {
+                ItemStack stack = ItemStack.EMPTY;
+
+                // [ИСПРАВЛЕНО] Поддержка обоих типов меню
+                if (player.containerMenu instanceof TurretLightMenu menu) {
+                    stack = menu.getAmmoContainer().getStackInSlot(9);
+                } else if (player.containerMenu instanceof TromboneMenu menu) {
+                    stack = menu.getAmmoContainer().getStackInSlot(9);
+                }
 
                 if (stack.getItem() instanceof TurretChipItem) {
                     CompoundTag nbt = stack.getOrCreateTag();
                     ListTag list = nbt.getList("TurretOwners", Tag.TAG_STRING);
 
-                    // --- УДАЛЕНИЕ ---
                     if (action == 0) {
                         try {
                             int index = Integer.parseInt(payload);
@@ -60,12 +64,8 @@ public class PacketModifyTurretChip {
                                 stack.setTag(nbt);
                             }
                         } catch (Exception ignored) {}
-                    }
-
-                    // --- ДОБАВЛЕНИЕ ---
-                    else if (action == 1) {
+                    } else if (action == 1) {
                         String targetName = payload;
-                        // Ищем профиль игрока (даже оффлайн)
                         Optional<com.mojang.authlib.GameProfile> profile = player.getServer().getProfileCache().get(targetName);
 
                         if (profile.isPresent()) {
@@ -73,7 +73,6 @@ public class PacketModifyTurretChip {
                             String name = profile.get().getName();
                             String entry = id.toString() + "|" + name;
 
-                            // Проверка на дубликаты
                             boolean exists = false;
                             for (Tag t : list) {
                                 if (t.getAsString().equals(entry)) exists = true;
@@ -83,15 +82,11 @@ public class PacketModifyTurretChip {
                                 list.add(StringTag.valueOf(entry));
                                 nbt.put("TurretOwners", list);
                                 stack.setTag(nbt);
-                                // Отправляем успех
                                 sendFeedback(player, true);
                             } else {
-                                // Дубликат или место кончилось -> считаем как успех (чтобы не пугать 404), но не добавляем
-                                // Либо можно сделать статус "FULL"
                                 sendFeedback(player, true);
                             }
                         } else {
-                            // Игрок не найден -> 404
                             sendFeedback(player, false);
                         }
                     }

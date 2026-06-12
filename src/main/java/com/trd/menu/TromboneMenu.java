@@ -38,8 +38,8 @@ public class TromboneMenu extends AbstractContainerMenu {
     public static final int DATA_TARGET_PLAYERS = 7;
     public static final int DATA_KILLS = 8;
     public static final int DATA_LIFETIME = 9;
-    public static final int DATA_EXTRA_1 = 10; // [НОВОЕ] Доп кнопка 1
-    public static final int DATA_EXTRA_2 = 11; // [НОВОЕ] Доп кнопка 2
+    public static final int DATA_EXTRA_1 = 10;
+    public static final int DATA_EXTRA_2 = 11;
     private static final int DATA_COUNT = 12;
 
     public TromboneMenu(int containerId, Inventory playerInventory, TurretAmmoContainer ammoContainer, ContainerData data, BlockPos pos) {

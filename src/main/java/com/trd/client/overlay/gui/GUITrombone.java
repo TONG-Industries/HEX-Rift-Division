@@ -50,10 +50,9 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
     private int resultColor = 0xFFFFFF;
     private int resultDuration = 0;
 
-    // Таймеры нажатия кнопок
     private int timerPlus = 0, timerMinus = 0, timerCheck = 0,
             timerLeft = 0, timerRight = 0, timerMenu = 0,
-            timerExtra1 = 0, timerExtra2 = 0; // [НОВОЕ]
+            timerExtra1 = 0, timerExtra2 = 0;
 
     private static final int PRESS_DURATION = 10;
 
@@ -88,12 +87,16 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
         boolean isSwitchedOn = this.menu.getDataSlot(TromboneMenu.DATA_SWITCH) == 1;
         int bootTimer = this.menu.getDataSlot(TromboneMenu.DATA_BOOT_TIMER);
 
-        // [НОВОЕ] Состояния доп кнопок
         boolean isExtra1On = this.menu.getDataSlot(TromboneMenu.DATA_EXTRA_1) == 1;
         boolean isExtra2On = this.menu.getDataSlot(TromboneMenu.DATA_EXTRA_2) == 1;
 
-        // Анимация кнопок
-        if (isSwitchedOn) guiGraphics.blit(TEXTURE, x + 10, y + 62, 204, 103, 10, 32);
+        // === АНИМАЦИЯ КНОПКИ ВКЛЮЧЕНИЯ ===
+        // [ИСПРАВЛЕНО] Кнопка включения — зелёная полоса когда ВКЛЮЧЕНО
+        if (isSwitchedOn) {
+            guiGraphics.blit(TEXTURE, x + 10, y + 62, 204, 103, 10, 32);
+        }
+
+        // Анимация остальных кнопок
         if (timerPlus > 0) { timerPlus--; guiGraphics.blit(TEXTURE, x + 39, y + 62, 221, 171, 15, 15); }
         if (timerMinus > 0) { timerMinus--; guiGraphics.blit(TEXTURE, x + 56, y + 62, 204, 137, 15, 15); }
         if (timerCheck > 0) { timerCheck--; guiGraphics.blit(TEXTURE, x + 22, y + 62, 204, 171, 15, 15); }
@@ -101,24 +104,26 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
         if (timerRight > 0) { timerRight--; guiGraphics.blit(TEXTURE, x + 90, y + 62, 221, 120, 15, 15); }
         if (timerMenu > 0) { timerMenu--; guiGraphics.blit(TEXTURE, x + 73, y + 79, 221, 154, 15, 15); }
 
-        // [НОВОЕ] Анимация доп кнопок
+        // Доп кнопки
         if (isExtra1On) { guiGraphics.blit(TEXTURE, x + 39, y + 79, 221, 188, 15, 15); }
         if (timerExtra1 > 0) { timerExtra1--; guiGraphics.blit(TEXTURE, x + 39, y + 79, 221, 188, 15, 15); }
 
         if (isExtra2On) { guiGraphics.blit(TEXTURE, x + 56, y + 79, 204, 154, 15, 15); }
         if (timerExtra2 > 0) { timerExtra2--; guiGraphics.blit(TEXTURE, x + 56, y + 79, 204, 154, 15, 15); }
 
-        // Светодиод (LED)
+        // Светодиод чипа
         if (hasChip()) { guiGraphics.blit(TEXTURE, x + 12, y + 52, 221, 113, 6, 6); }
 
-        // Энергия
-        if (maxEnergy > 0 && energy > 0) {
+        // === ПОЛОСКА ЭНЕРГИИ (1:1 с TurretLightPlacerBlockEntity) ===
+        if (maxEnergy > 0) {
             int barHeight = 52;
             int filledHeight = (int) ((long) energy * barHeight / maxEnergy);
+            // Рисуем снизу вверх
             guiGraphics.blit(TEXTURE, x + 180, y + 27 + (barHeight - filledHeight), 204, 27 + (barHeight - filledHeight), 16, filledHeight);
         }
 
-        // --- ЭКРАН ---
+        // === ЭКРАН ===
+        // [ИСПРАВЛЕНО] Условие включения экрана: энергия > 10000 И включено
         if (energy > 10000 && isSwitchedOn) {
             guiGraphics.blit(TEXTURE, x + 10, y + 32, 0, 196, 95, 16);
 
@@ -126,32 +131,26 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
                 drawBootingText(guiGraphics, x + 10, y + 32, 95, 16);
                 if (uiState != STATE_NORMAL) uiState = STATE_NORMAL;
             } else {
-
                 switch (uiState) {
                     case STATE_MAIN_MENU:
                         drawMainMenu(guiGraphics, x + 10, y + 32, 95, 16);
                         break;
-
                     case STATE_ATTACK_MODE:
                         drawAttackMode(guiGraphics, x + 10, y + 32, 95, 16);
                         break;
-
                     case STATE_STATS:
                         drawStats(guiGraphics, x + 10, y + 32, 95, 16);
                         break;
-
                     case STATE_CHIP_LIST:
                         if (!hasChip()) { uiState = STATE_MAIN_MENU; break; }
                         drawChipUserList(guiGraphics, x + 10, y + 32, 95, 16);
                         break;
-
                     case STATE_ADD_INPUT:
                         cursorTimer++;
                         String display = inputString + ((cursorTimer / 10 % 2 == 0) ? "_" : "");
                         if (display.length() > 14) display = display.substring(display.length() - 14);
                         drawCenteredText(guiGraphics, display, 0xFFFF00, x + 10, y + 32, 95, 16);
                         break;
-
                     case STATE_RESULT_MSG:
                         if (resultDuration > 0) {
                             resultDuration--;
@@ -161,16 +160,18 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
                             else uiState = STATE_ADD_INPUT;
                         }
                         break;
-
                     default: // STATE_NORMAL
                         drawStatusText(guiGraphics, x + 10, y + 32, 95, 16, status, energy, maxEnergy);
                         break;
                 }
             }
         } else {
+            // [ИСПРАВЛЕНО] Если нет энергии или выключено — сбрасываем UI
             uiState = STATE_NORMAL;
         }
     }
+
+    // ... остальные методы draw* без изменений ...
 
     private void drawMainMenu(GuiGraphics guiGraphics, int x, int y, int w, int h) {
         if (selectedIndex < 0) selectedIndex = 2;
@@ -260,8 +261,6 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
             boolean hitMinus = (relX >= 56 && relX < 71 && relY >= 62 && relY < 77);
             boolean hitLeft  = (relX >= 73 && relX < 88 && relY >= 62 && relY < 77);
             boolean hitRight = (relX >= 90 && relX < 105 && relY >= 62 && relY < 77);
-
-            // [НОВОЕ] Дополнительные кнопки
             boolean hitExtra1 = (relX >= 39 && relX < 54 && relY >= 79 && relY < 94);
             boolean hitExtra2 = (relX >= 56 && relX < 71 && relY >= 79 && relY < 94);
 
@@ -278,6 +277,7 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
             if (hitExtra1) timerExtra1 = PRESS_DURATION;
             if (hitExtra2) timerExtra2 = PRESS_DURATION;
 
+            // === КНОПКА ВКЛЮЧЕНИЯ ===
             if (hitPower) {
                 ModPacketHandler.INSTANCE.send(
                         net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
@@ -285,7 +285,7 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
                 return true;
             }
 
-            // [НОВОЕ] Обработка доп кнопок
+            // Доп кнопки
             if (hitExtra1) {
                 ModPacketHandler.INSTANCE.send(
                         net.minecraftforge.network.PacketDistributor.SERVER.noArg(),
@@ -311,7 +311,6 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
             }
 
             if (uiState != STATE_NORMAL && uiState != STATE_RESULT_MSG) {
-
                 if (hitCheck) {
                     if (uiState == STATE_MAIN_MENU) {
                         if (selectedIndex == 0) {

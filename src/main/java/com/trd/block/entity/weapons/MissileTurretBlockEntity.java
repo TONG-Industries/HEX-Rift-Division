@@ -1,7 +1,15 @@
 package com.trd.block.entity.weapons;
 
 import com.trd.block.entity.ModBlockEntities;
+import com.trd.api.energy.EnergyNetworkManager;
+import com.trd.api.energy.IEnergyConnector;
+import com.trd.api.energy.IEnergyReceiver;
+import com.trd.block.entity.industrial.energy.EnergyNodeBlockEntity;
+import com.trd.capability.ModCapabilities;
+import com.trd.item.energy.ModBatteryItem;
+import com.trd.item.energy.EnergyCellItem;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -9,6 +17,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -17,12 +26,20 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.items.ItemStackHandler;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class MissileTurretBlockEntity extends BlockEntity {
+public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
 
     public static final double SEARCH_RADIUS = 100.0;
     public static final double SEARCH_RADIUS_SQR = SEARCH_RADIUS * SEARCH_RADIUS;
@@ -39,7 +56,12 @@ public class MissileTurretBlockEntity extends BlockEntity {
     private int scanTimer = 0;
     private static final int SCAN_INTERVAL = 5;
 
-    // [НОВОЕ] GUI-related поля (1:1 с TurretLightPlacerBlockEntity)
+    // === ЭНЕРГОСИСТЕМА (1:1 с TurretLightPlacerBlockEntity) ===
+    private final long MAX_RECEIVE = 10000;
+    private final TurretAmmoContainer ammoContainer = new TurretAmmoContainer();
+    private final LazyOptional<ItemStackHandler> itemHandlerOptional = LazyOptional.of(() -> ammoContainer);
+
+    // GUI-related поля
     private boolean isSwitchedOn = false;
     private int bootTimer = 0;
     private static final int BOOT_DURATION = 60;
@@ -51,21 +73,19 @@ public class MissileTurretBlockEntity extends BlockEntity {
     private int killCount = 0;
     private long lifetimeTicks = 0;
 
-    // [НОВОЕ] Дополнительные кнопки
-    private boolean extraButton1 = true; // По умолчанию включена
-    private boolean extraButton2 = true; // По умолчанию включена
+    // Дополнительные кнопки
+    private boolean extraButton1 = true;
+    private boolean extraButton2 = true;
 
-    // [НОВОЕ] Энергия (заглушки для совместимости GUI)
-    private long energy = 0;
-    private long capacity = 100000;
-    private static final long MAX_RECEIVE = 10000;
+    // Кэш здоровья для GUI (0-100) — для ракетницы используем как "готовность"
+    private int cachedStatus = 0;
 
     public MissileTurretBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MISSILE_TURRET_BE.get(), pos, state);
+        this.capacity = 100000; // MAX_ENERGY
         this.ammoContainer.setOnContentsChanged(this::setChanged);
     }
-    private final TurretAmmoContainer ammoContainer = new TurretAmmoContainer();
-    public TurretAmmoContainer getAmmoContainer() { return ammoContainer; }
+
     public static void tick(Level level, BlockPos pos, BlockState state, MissileTurretBlockEntity turret) {
         if (level.isClientSide) return;
         turret.lifetimeTicks++;
@@ -73,29 +93,77 @@ public class MissileTurretBlockEntity extends BlockEntity {
     }
 
     private void tickServer(ServerLevel level, BlockPos pos, BlockState state) {
-        // [НОВОЕ] Логика загрузки и выключателя
-        if (!isSwitchedOn) {
+        // === ЗАРЯДКА ОТ БАТАРЕЙКИ В СЛОТЕ 10 (1:1 с TurretLightPlacerBlockEntity) ===
+        ItemStack batteryStack = this.ammoContainer.getStackInSlot(10);
+        if (!batteryStack.isEmpty() && this.energy < this.capacity) {
+            // 1. Пробуем Forge Energy (FE)
+            batteryStack.getCapability(ForgeCapabilities.ENERGY).ifPresent(energyStorage -> {
+                if (energyStorage.canExtract()) {
+                    int maxReceive = (int) Math.min(this.MAX_RECEIVE, this.capacity - this.energy);
+                    if (maxReceive > 0) {
+                        int extracted = energyStorage.extractEnergy(maxReceive, false);
+                        if (extracted > 0) {
+                            this.energy += extracted;
+                            this.setChanged();
+                        }
+                    }
+                }
+            });
+
+            // 2. Если FE не сработал и буфер ещё не полон — пробуем HBM
+            if (this.energy < this.capacity) {
+                batteryStack.getCapability(ModCapabilities.ENERGY_PROVIDER).ifPresent(provider -> {
+                    if (provider.canExtract()) {
+                        long maxReceive = Math.min(this.MAX_RECEIVE, this.capacity - this.energy);
+                        long extracted = provider.extractEnergy(maxReceive, false);
+                        if (extracted > 0) {
+                            this.energy += extracted;
+                            this.setChanged();
+                        }
+                    }
+                });
+            }
+        }
+
+        // === ЛОГИКА ВЫКЛЮЧАТЕЛЯ ===
+        if (!this.isSwitchedOn) {
+            // Выключено — замираем, не тратим энергию
             return;
         }
 
-        if (bootTimer > 0) {
-            bootTimer--;
+        // === ЛОГИКА ЗАГРУЗКИ ===
+        if (this.bootTimer > 0) {
+            this.bootTimer--;
             return;
         }
 
+        // === ОСНОВНАЯ ЛОГИКА РАКЕТНИЦЫ ===
         if (cooldownTimer > 0) cooldownTimer--;
+
+        // Проверяем энергию для работы
+        long drainPerShot = 5000; // Энергия на один залп
+        long drainPerTick = 13;   // Базовое потребление при трекинге
 
         if (isSalvoActive) {
             salvoTimer--;
             if (salvoTimer <= 0) {
-                fireMissile(level, pos, state);
-                salvoCounter++;
-                if (salvoCounter >= SALVO_SIZE) {
+                // Проверяем энергию перед выстрелом
+                if (this.energy >= drainPerShot) {
+                    this.energy -= drainPerShot;
+                    this.setChanged();
+                    fireMissile(level, pos, state);
+                    salvoCounter++;
+                    if (salvoCounter >= SALVO_SIZE) {
+                        isSalvoActive = false;
+                        salvoCounter = 0;
+                        cooldownTimer = COOLDOWN_TICKS;
+                    } else {
+                        salvoTimer = SALVO_INTERVAL;
+                    }
+                } else {
+                    // Не хватает энергии — прерываем залп
                     isSalvoActive = false;
                     salvoCounter = 0;
-                    cooldownTimer = COOLDOWN_TICKS;
-                } else {
-                    salvoTimer = SALVO_INTERVAL;
                 }
             }
             return;
@@ -106,7 +174,12 @@ public class MissileTurretBlockEntity extends BlockEntity {
             if (scanTimer <= 0) {
                 scanTimer = SCAN_INTERVAL;
                 currentTarget = findBestTarget(level, pos);
-                if (currentTarget != null) startSalvo();
+                if (currentTarget != null) {
+                    // Проверяем энергию перед началом залпа
+                    if (this.energy >= drainPerShot * SALVO_SIZE) {
+                        startSalvo();
+                    }
+                }
             }
         }
     }
@@ -246,6 +319,9 @@ public class MissileTurretBlockEntity extends BlockEntity {
                 new com.trd.entity.weapons.missiles.MissileLightEntity(
                         level, launchPos, currentTarget, null);
         level.addFreshEntity(missile);
+
+        // Увеличиваем счётчик убийств (для статистики)
+        // incrementKills(); // Раскомментируй, если нужно считать только попадания
     }
 
     public int getCooldownProgress() {
@@ -260,7 +336,8 @@ public class MissileTurretBlockEntity extends BlockEntity {
 
     public void onRemove() {}
 
-    // [НОВОЕ] Методы для GUI (1:1 с TurretLightPlacerBlockEntity)
+    // === МЕТОДЫ GUI (1:1 с TurretLightPlacerBlockEntity) ===
+
     public void togglePower() {
         this.isSwitchedOn = !this.isSwitchedOn;
         if (this.isSwitchedOn) {
@@ -294,6 +371,46 @@ public class MissileTurretBlockEntity extends BlockEntity {
         setChanged();
     }
 
+    // === EnergyNodeBlockEntity overrides ===
+
+    @Override
+    public long getReceiveSpeed() { return MAX_RECEIVE; }
+
+    @Override
+    public long getProvideSpeed() { return 0; }
+
+    @Override
+    public boolean canConnectEnergy(Direction side) { return side != Direction.UP; }
+
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        itemHandlerOptional.invalidate();
+    }
+
+    @Override
+    public void onChunkUnloaded() {
+        super.onChunkUnloaded();
+        if (this.level != null && !this.level.isClientSide) {
+            EnergyNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
+        }
+    }
+
+    @Override
+    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+        if (side == Direction.UP) return super.getCapability(cap, side);
+        if (cap == ForgeCapabilities.ITEM_HANDLER) return itemHandlerOptional.cast();
+        return super.getCapability(cap, side);
+    }
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        itemHandlerOptional.invalidate();
+    }
+
+    // === NBT ===
+
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
@@ -302,7 +419,7 @@ public class MissileTurretBlockEntity extends BlockEntity {
         tag.putInt("SalvoCounter", salvoCounter);
         tag.put("AmmoContainer", ammoContainer.serializeNBT());
 
-        // [НОВОЕ] Сохранение GUI-данных
+        // GUI-данные
         tag.putBoolean("SwitchedOn", isSwitchedOn);
         tag.putInt("BootTimer", bootTimer);
         tag.putBoolean("TargetHostile", targetHostile);
@@ -312,7 +429,6 @@ public class MissileTurretBlockEntity extends BlockEntity {
         tag.putLong("Lifetime", lifetimeTicks);
         tag.putBoolean("ExtraButton1", extraButton1);
         tag.putBoolean("ExtraButton2", extraButton2);
-        tag.putLong("Energy", energy);
     }
 
     @Override
@@ -322,7 +438,8 @@ public class MissileTurretBlockEntity extends BlockEntity {
         isSalvoActive = tag.getBoolean("SalvoActive");
         salvoCounter = tag.getInt("SalvoCounter");
         if (tag.contains("AmmoContainer")) ammoContainer.deserializeNBT(tag.getCompound("AmmoContainer"));
-        // [НОВОЕ] Загрузка GUI-данных
+
+        // GUI-данные
         isSwitchedOn = tag.getBoolean("SwitchedOn");
         bootTimer = tag.getInt("BootTimer");
         targetHostile = tag.getBoolean("TargetHostile");
@@ -332,26 +449,38 @@ public class MissileTurretBlockEntity extends BlockEntity {
         lifetimeTicks = tag.getLong("Lifetime");
         extraButton1 = tag.getBoolean("ExtraButton1");
         extraButton2 = tag.getBoolean("ExtraButton2");
-        energy = tag.getLong("Energy");
     }
 
-    // [НОВОЕ] ContainerData для синхронизации с GUI
+    // === ContainerData (1:1 с TurretLightPlacerBlockEntity) ===
+
+    public int getEnergyStoredInt() { return (int) Math.min(energy, Integer.MAX_VALUE); }
+    public int getMaxEnergyStoredInt() { return (int) Math.min(capacity, Integer.MAX_VALUE); }
+
+    private int getStatusInt() {
+        if (!isSwitchedOn) return 0; // OFFLINE
+        if (bootTimer > 0) return 200 + (int)((1.0 - (double)bootTimer / BOOT_DURATION) * 100); // BOOTING
+        if (isSalvoActive) return 1; // ONLINE (стрельба)
+        if (cooldownTimer > 0) return 1000 + cooldownTimer; // COOLDOWN/RESPAWN
+        if (energy < 10000) return 0; // Недостаточно энергии для работы
+        return 1; // ONLINE (готов)
+    }
+
     protected final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
             return switch (index) {
-                case 0 -> (int) Math.min(MissileTurretBlockEntity.this.energy, Integer.MAX_VALUE);
-                case 1 -> (int) Math.min(MissileTurretBlockEntity.this.capacity, Integer.MAX_VALUE);
+                case 0 -> getEnergyStoredInt();
+                case 1 -> getMaxEnergyStoredInt();
                 case 2 -> getStatusInt();
-                case 3 -> MissileTurretBlockEntity.this.isSwitchedOn ? 1 : 0;
-                case 4 -> MissileTurretBlockEntity.this.bootTimer;
-                case 5 -> MissileTurretBlockEntity.this.targetHostile ? 1 : 0;
-                case 6 -> MissileTurretBlockEntity.this.targetNeutral ? 1 : 0;
-                case 7 -> MissileTurretBlockEntity.this.targetPlayers ? 1 : 0;
-                case 8 -> MissileTurretBlockEntity.this.killCount;
-                case 9 -> (int)(MissileTurretBlockEntity.this.lifetimeTicks / 20);
-                case 10 -> MissileTurretBlockEntity.this.extraButton1 ? 1 : 0;
-                case 11 -> MissileTurretBlockEntity.this.extraButton2 ? 1 : 0;
+                case 3 -> isSwitchedOn ? 1 : 0;
+                case 4 -> bootTimer;
+                case 5 -> targetHostile ? 1 : 0;
+                case 6 -> targetNeutral ? 1 : 0;
+                case 7 -> targetPlayers ? 1 : 0;
+                case 8 -> killCount;
+                case 9 -> (int)(lifetimeTicks / 20);
+                case 10 -> extraButton1 ? 1 : 0;
+                case 11 -> extraButton2 ? 1 : 0;
                 default -> 0;
             };
         }
@@ -359,11 +488,11 @@ public class MissileTurretBlockEntity extends BlockEntity {
         @Override
         public void set(int index, int value) {
             switch (index) {
-                case 0 -> MissileTurretBlockEntity.this.energy = value;
-                case 3 -> MissileTurretBlockEntity.this.isSwitchedOn = (value == 1);
-                case 5 -> MissileTurretBlockEntity.this.targetHostile = (value == 1);
-                case 6 -> MissileTurretBlockEntity.this.targetNeutral = (value == 1);
-                case 7 -> MissileTurretBlockEntity.this.targetPlayers = (value == 1);
+                case 0 -> energy = value;
+                case 3 -> isSwitchedOn = (value == 1);
+                case 5 -> targetHostile = (value == 1);
+                case 6 -> targetNeutral = (value == 1);
+                case 7 -> targetPlayers = (value == 1);
             }
         }
 
@@ -373,15 +502,8 @@ public class MissileTurretBlockEntity extends BlockEntity {
         }
     };
 
-    private int getStatusInt() {
-        if (!isSwitchedOn) return 0;
-        if (bootTimer > 0) return 200 + (int)((1.0 - (double)bootTimer / BOOT_DURATION) * 100);
-        if (isSalvoActive) return 1;
-        if (cooldownTimer > 0) return 1000 + cooldownTimer;
-        return 1;
-    }
-
     public ContainerData getDataAccess() { return this.data; }
+    public TurretAmmoContainer getAmmoContainer() { return ammoContainer; }
 
     private record TargetScore(Monster entity, double score) {}
 }

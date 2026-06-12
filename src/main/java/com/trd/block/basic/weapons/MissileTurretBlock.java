@@ -3,8 +3,10 @@ package com.trd.block.basic.weapons;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
 import com.trd.menu.TromboneMenu;
+import com.trd.api.energy.EnergyNetworkManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -74,8 +76,13 @@ public class MissileTurretBlock extends BaseEntityBlock {
         return new MissileTurretBlockEntity(pos, state);
     }
 
+    // === ЭНЕРГОСЕТЬ (1:1 с TurretLightPlacerBlock) ===
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
+        super.onPlace(state, level, pos, oldState, isMoving);
+        if (!level.isClientSide) {
+            EnergyNetworkManager.get((ServerLevel) level).addNode(pos);
+        }
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof MissileTurretBlockEntity turret) {
             turret.onPlace();
         }
@@ -83,10 +90,24 @@ public class MissileTurretBlock extends BaseEntityBlock {
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof MissileTurretBlockEntity turret) {
-            turret.onRemove();
+        if (!state.is(newState.getBlock())) {
+            if (!level.isClientSide) {
+                // Выбрасываем содержимое инвентаря
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof MissileTurretBlockEntity turretBE) {
+                    com.trd.block.entity.weapons.TurretAmmoContainer container = turretBE.getAmmoContainer();
+                    for (int i = 0; i < container.getSlots(); i++) {
+                        net.minecraft.world.item.ItemStack stack = container.getStackInSlot(i);
+                        if (!stack.isEmpty()) {
+                            net.minecraft.world.Containers.dropItemStack(
+                                    level, pos.getX(), pos.getY(), pos.getZ(), stack);
+                        }
+                    }
+                }
+                EnergyNetworkManager.get((ServerLevel) level).removeNode(pos);
+            }
+            super.onRemove(state, level, pos, newState, isMoving);
         }
-        super.onRemove(state, level, pos, newState, isMoving);
     }
 
     @Override
@@ -106,9 +127,9 @@ public class MissileTurretBlock extends BaseEntityBlock {
                         buf -> buf.writeBlockPos(pos)
                 );
             }
-            return InteractionResult.CONSUME; // [ИСПРАВЛЕНО] для сервера
+            return InteractionResult.CONSUME;
         }
-        return InteractionResult.sidedSuccess(level.isClientSide); // [ИСПРАВЛЕНО] для клиента
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Nullable

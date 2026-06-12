@@ -1,18 +1,18 @@
 package com.trd.network.packet.turrets;
 
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import com.trd.block.entity.weapons.TurretLightPlacerBlockEntity;
+import com.trd.block.entity.weapons.MissileTurretBlockEntity;
 
 import java.util.function.Supplier;
 
 public class PacketUpdateTurretSettings {
     private final BlockPos pos;
-    private final int settingIndex; // 0=Hostile, 1=Neutral, 2=Players
+    private final int settingIndex;
     private final boolean value;
 
     public PacketUpdateTurretSettings(BlockPos pos, int settingIndex, boolean value) {
@@ -40,9 +40,9 @@ public class PacketUpdateTurretSettings {
             if (player != null) {
                 BlockEntity be = player.level().getBlockEntity(pos);
                 if (be instanceof TurretLightPlacerBlockEntity turretBE) {
-                    // Метод нужно добавить в BlockEntity!
-                    // Он должен менять значения в ContainerData
                     turretBE.updateAttackSetting(settingIndex, value);
+                } else if (be instanceof MissileTurretBlockEntity missileBE) {
+                    missileBE.updateAttackSetting(settingIndex, value);
                 }
             }
         });
