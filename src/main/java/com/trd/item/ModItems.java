@@ -204,6 +204,9 @@ public class ModItems {
     public static final RegistryObject<Item> WIRE_COIL = ITEMS.register("wire_coil",
             () -> new WireCoilItem(new Item.Properties().stacksTo(1)));
 
+    public static final RegistryObject<Item> COPPER_COIL = ITEMS.register("copper_coil",
+            () -> new WireCoilItem(new Item.Properties().stacksTo(64)));
+
     public static final RegistryObject<Item> BEAM_PLACER = ITEMS.register("beam_placer",
             () -> new BeamPlacerItem(new Item.Properties().stacksTo(1)));
 
@@ -282,6 +285,9 @@ public class ModItems {
 
     public static final RegistryObject<Item> HEATER_ITEM = ITEMS.register("heater",
             () -> new MultiblockBlockItem(ModBlocks.HEATER.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> STATOR_ITEM = ITEMS.register("stator",
+            () -> new com.trd.item.StatorMultiblockItem(ModBlocks.STATOR_BLOCK.get(), new Item.Properties()));
 
 
 

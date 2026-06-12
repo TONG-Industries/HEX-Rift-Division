@@ -103,6 +103,7 @@ public class ClientModEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.BEARING_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TACHOMETER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.STATOR_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
 
 //        event.registerBlockEntityRenderer(ModBlockEntities.WIND_GEN_FLUGER_BE.get(), WindGenFlugerRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TURRET_LIGHT_PLACER_BE.get(), TurretLightPlacerRenderer::new);
@@ -151,6 +152,8 @@ public class ClientModEvents {
         event.register(new net.minecraft.resources.ResourceLocation("trd", "block/tachometr"));
         event.register(new ResourceLocation("trd", "block/fuel_tank_big"));
         event.register(new ResourceLocation("trd", "block/flywheel_light"));
+        event.register(new ResourceLocation("trd", "block/stator"));
+        event.register(new ResourceLocation("trd", "block/stator_coil_copper"));
 
         // 3. Динамические модели
         for (String name : ModModels.GEAR_MODELS.keySet()) {
@@ -223,6 +226,19 @@ public class ClientModEvents {
 
                 @Override
                 public boolean skipVanillaRender(com.trd.block.entity.industrial.rotation.TachometerBlockEntity be) {
+                    return true;
+                }
+            });
+
+            VisualizerRegistry.setVisualizer(ModBlockEntities.STATOR_BE.get(), new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.trd.block.entity.industrial.rotation.StatorBlockEntity>() {
+
+                @Override
+                public dev.engine_room.flywheel.api.visual.BlockEntityVisual<? super com.trd.block.entity.industrial.rotation.StatorBlockEntity> createVisual(dev.engine_room.flywheel.api.visualization.VisualizationContext ctx, com.trd.block.entity.industrial.rotation.StatorBlockEntity be, float partialTick) {
+                    return new com.trd.client.render.flywheel.StatorVisual(ctx, be, partialTick);
+                }
+
+                @Override
+                public boolean skipVanillaRender(com.trd.block.entity.industrial.rotation.StatorBlockEntity be) {
                     return true;
                 }
             });

@@ -16,6 +16,9 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,6 +50,14 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
     private long energyStored = 0;
     private boolean wasFull = false;
 
+    private final ItemStackHandler coilsInventory = new ItemStackHandler(12) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+        }
+    };
+    private final LazyOptional<IItemHandler> itemHandlerCap = LazyOptional.of(() -> coilsInventory);
+
     // ===================== CAPABILITY =====================
     private final LazyOptional<IEnergyProvider> providerCap = LazyOptional.of(() -> this);
     private final LazyOptional<IEnergyConnector> connectorCap = LazyOptional.of(() -> this);
@@ -61,6 +72,9 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
             if (cap == ModCapabilities.ENERGY_PROVIDER) return providerCap.cast();
             if (cap == ModCapabilities.ENERGY_CONNECTOR) return connectorCap.cast();
         }
+        if (cap == ForgeCapabilities.ITEM_HANDLER) {
+            return itemHandlerCap.cast();
+        }
         return super.getCapability(cap, side);
     }
 
@@ -69,6 +83,7 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
         super.invalidateCaps();
         providerCap.invalidate();
         connectorCap.invalidate();
+        itemHandlerCap.invalidate();
     }
 
     // ===================== IEnergyConnector =====================
@@ -206,13 +221,49 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
             if (shaft.hasRotor()) {
                 long speed = Math.abs(shaft.getSpeed());
                 if (speed > 0 && energyStored < MAX_ENERGY) {
-                    long generated = speed * 2;
-                    energyStored = Math.min(MAX_ENERGY, energyStored + generated);
-                    setChanged();
-                    checkFullStateChange();
+                    float rotorEfficiency = 1.0f;
+                    com.trd.api.rotation.RotorType rotorType = shaft.getRotorType();
+                    if (rotorType != null) rotorEfficiency = rotorType.getEfficiency();
+
+                    int coilCount = getCoilCount();
+                    float symmetryMultiplier = calculateSymmetryMultiplier();
+
+                    // Formula: Base gen * Rotor Efficiency * Coils * Symmetry
+                    long generated = (long) ((speed * 0.1) * rotorEfficiency * coilCount * symmetryMultiplier);
+                    if (generated > 0) {
+                        energyStored = Math.min(MAX_ENERGY, energyStored + generated);
+                        setChanged();
+                        checkFullStateChange();
+                    }
                 }
             }
         }
+    }
+
+    private int getCoilCount() {
+        int count = 0;
+        for (int i = 0; i < coilsInventory.getSlots(); i++) {
+            if (!coilsInventory.getStackInSlot(i).isEmpty()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private float calculateSymmetryMultiplier() {
+        float multiplier = 1.0f;
+        for (int i = 0; i < 6; i++) {
+            net.minecraft.world.item.ItemStack slotA = coilsInventory.getStackInSlot(i);
+            net.minecraft.world.item.ItemStack slotB = coilsInventory.getStackInSlot(i + 6);
+            if (!slotA.isEmpty() && !slotB.isEmpty()) {
+                if (net.minecraft.world.item.ItemStack.isSameItemSameTags(slotA, slotB)) {
+                    multiplier += 0.2f; // Bonus for symmetrical pair
+                }
+            } else if (!slotA.isEmpty() || !slotB.isEmpty()) {
+                multiplier -= 0.1f; // Penalty for asymmetrical pair (only one side has coil)
+            }
+        }
+        return Math.max(0.1f, multiplier); // Ensure it doesn't go below 0.1x
     }
 
     // ===================== ВНУТРЕННИЕ МЕТОДЫ =====================
@@ -243,6 +294,7 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
         super.saveAdditional(tag); // speed, lastSyncedSpeed, networkScale
         tag.putLong("EnergyStored", energyStored);
         tag.putBoolean("WasFull", wasFull);
+        tag.put("CoilsInventory", coilsInventory.serializeNBT());
     }
 
     @Override
@@ -250,5 +302,8 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
         super.load(tag); // speed, lastSyncedSpeed, networkScale
         energyStored = tag.getLong("EnergyStored");
         wasFull = tag.getBoolean("WasFull");
+        if (tag.contains("CoilsInventory")) {
+            coilsInventory.deserializeNBT(tag.getCompound("CoilsInventory"));
+        }
     }
 }

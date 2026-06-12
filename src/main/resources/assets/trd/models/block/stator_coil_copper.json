@@ -1,0 +1,8 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/stator_coil_copper.obj",
+  "flip_v": true,
+  "textures": {
+    "default": "trd:block/stator_coil_copper"
+  }
+}

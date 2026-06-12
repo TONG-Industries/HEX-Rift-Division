@@ -23,6 +23,9 @@ public class ModModels {
     public static final PartialModel ROTOR = PartialModel.of(new ResourceLocation("trd", "block/rotor"));
     public static final PartialModel FLYWHEEL = PartialModel.of(new ResourceLocation("trd", "block/flywheel_light"));
 
+    public static final PartialModel STATOR = PartialModel.of(new ResourceLocation("trd", "block/stator"));
+    public static final PartialModel STATOR_COIL_COPPER = PartialModel.of(new ResourceLocation("trd", "block/stator_coil_copper"));
+
 
     public static final PartialModel FUEL_TANK_BIG = PartialModel.of(new ResourceLocation("trd", "block/fuel_tank_big"));
 

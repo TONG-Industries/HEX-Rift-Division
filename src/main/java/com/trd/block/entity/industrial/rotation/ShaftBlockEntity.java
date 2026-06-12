@@ -28,6 +28,13 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
         return !attachedRotor.isEmpty();
     }
 
+    public com.trd.api.rotation.RotorType getRotorType() {
+        if (hasRotor()) {
+            return com.trd.api.rotation.RotorType.COPPER; // Hardcoded for now as only basic rotor exists
+        }
+        return null;
+    }
+
     public ItemStack getAttachedRotor() {
         return attachedRotor;
     }
