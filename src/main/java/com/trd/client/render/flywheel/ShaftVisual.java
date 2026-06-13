@@ -194,7 +194,7 @@ public class ShaftVisual extends AbstractBlockEntityVisual<ShaftBlockEntity> imp
         }
 
         if (blockEntity.hasRotor()) {
-            PartialModel rotorModel = ModModels.ROTOR;
+            PartialModel rotorModel = ModModels.COPPER_ROTOR;
             if (rotorModel != null) {
                 this.rotorInstance = instancerProvider().instancer(InstanceTypes.TRANSFORMED, Models.partial(rotorModel)).createInstance();
                 setupStatic(this.rotorInstance, 0);

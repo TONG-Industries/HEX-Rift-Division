@@ -54,17 +54,19 @@ public class StatorBlock extends BaseEntityBlock implements IMultiblockControlle
         if (helper == null) {
             Map<Character, Supplier<BlockState>> symbols = Map.of(
                     '#', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
+                    'E', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
                     'O', () -> this.defaultBlockState()
             );
             Map<Character, PartRole> roles = Map.of(
                     '#', PartRole.DEFAULT,
+                    'E', PartRole.ENERGY_CONNECTOR,
                     'O', PartRole.CONTROLLER
             );
             helper = MultiblockStructureHelper.createFromLayersWithRoles(
                     new String[][]{
                             {"#O#"},
-                            {"# #"},
-                            {"###"}
+                            {"E E"},
+                            {"#E#"}
                     },
                     symbols,
                     () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
@@ -170,21 +172,36 @@ public class StatorBlock extends BaseEntityBlock implements IMultiblockControlle
         Direction.Axis axis = state.getValue(AXIS);
         BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), facing, axis);
         net.minecraft.world.phys.Vec3 holeCenter = new net.minecraft.world.phys.Vec3(pos.getX() + 0.5 + holeOffset.getX(), pos.getY() + 0.5 + holeOffset.getY(), pos.getZ() + 0.5 + holeOffset.getZ());
-        net.minecraft.world.phys.Vec3 hitVec = hit.getLocation().subtract(holeCenter);
+        net.minecraft.world.phys.Vec3 normal;
+        if (axis == Direction.Axis.X) normal = new net.minecraft.world.phys.Vec3(1, 0, 0);
+        else if (axis == Direction.Axis.Y) normal = new net.minecraft.world.phys.Vec3(0, 1, 0);
+        else normal = new net.minecraft.world.phys.Vec3(0, 0, 1);
+
+        net.minecraft.world.phys.Vec3 eyePos = player.getEyePosition(1.0f);
+        net.minecraft.world.phys.Vec3 lookVec = player.getViewVector(1.0f);
+        
+        net.minecraft.world.phys.Vec3 hitVec = hit.getLocation().subtract(holeCenter); // fallback
+        double denom = normal.dot(lookVec);
+        if (Math.abs(denom) > 0.0001) {
+            double t = normal.dot(holeCenter.subtract(eyePos)) / denom;
+            if (t > 0 && t < 10) {
+                hitVec = eyePos.add(lookVec.scale(t)).subtract(holeCenter);
+            }
+        }
 
         org.joml.Vector3f localVec = new org.joml.Vector3f((float)hitVec.x, (float)hitVec.y, (float)hitVec.z);
         
         if (axis == Direction.Axis.X) {
             localVec.rotateY((float) Math.toRadians(-90));
         } else if (axis == Direction.Axis.Y) {
-            localVec.rotateX((float) Math.toRadians(-90));
-            if (facing == Direction.WEST) {
-                localVec.rotateY((float) Math.toRadians(-90));
-            } else if (facing == Direction.SOUTH) {
+            if (facing == Direction.NORTH) {
                 localVec.rotateY((float) Math.toRadians(-180));
             } else if (facing == Direction.EAST) {
+                localVec.rotateY((float) Math.toRadians(-90));
+            } else if (facing == Direction.WEST) {
                 localVec.rotateY((float) Math.toRadians(-270));
             }
+            localVec.rotateX((float) Math.toRadians(90));
         }
 
         double u = localVec.y;

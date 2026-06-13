@@ -13,6 +13,7 @@ import com.trd.item.food.FoodZamaz;
 import com.trd.event.SlagItem;
 import com.trd.item.mobs.DepthWormBrutalSpawnEggItem;
 import com.trd.item.mobs.MoryLahItem;
+import com.trd.item.energy.StatorCoilItem;
 import com.trd.item.energy.WireCoilItem;
 import com.trd.item.rotation.GearItem;
 import com.trd.item.tools.*;
@@ -205,7 +206,7 @@ public class ModItems {
             () -> new WireCoilItem(new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> COPPER_COIL = ITEMS.register("copper_coil",
-            () -> new WireCoilItem(new Item.Properties().stacksTo(64)));
+            () -> new StatorCoilItem(new Item.Properties().stacksTo(64), "copper", 1, 500, 20, 3.0f));
 
     public static final RegistryObject<Item> BEAM_PLACER = ITEMS.register("beam_placer",
             () -> new BeamPlacerItem(new Item.Properties().stacksTo(1)));
@@ -405,7 +406,7 @@ public class ModItems {
     public static final RegistryObject<Item> BEVEL_GEAR = ITEMS.register("bevel_gear",
             () -> new com.trd.item.rotation.BevelGearItem(new Item.Properties(), ShaftMaterial.STEEL));
 
-    public static final RegistryObject<Item> ROTOR = ITEMS.register("rotor",
+    public static final RegistryObject<Item> COPPER_ROTOR = ITEMS.register("copper_rotor",
             () -> new com.trd.item.rotation.RotorItem(new Item.Properties()));
 
 //    public static final RegistryObject<Item> GEAR1_TITANIUM = ITEMS.register("gear1_titanium",

@@ -56,6 +56,7 @@ import com.trd.client.gecko.entity.turrets.TurretLightLinkedRenderer;
 import com.trd.client.gecko.entity.turrets.TurretLightRenderer;
 import com.trd.client.overlay.hud.OverlayAmmoHud;
 import com.trd.client.overlay.hud.TachometerOverlay;
+import com.trd.client.overlay.hud.StatorOverlay;
 import com.trd.entity.ModEntities;
 import com.trd.item.ModItems;
 import com.trd.main.MainRegistry;
@@ -284,6 +285,7 @@ public class ClientModEvents {
     public static void onRegisterGuiOverlays(RegisterGuiOverlaysEvent event) {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "ammo_hud", OverlayAmmoHud.HUD_AMMO);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "tachometer_hud", TachometerOverlay.HUD_TACHOMETER);
+        event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "stator_hud", StatorOverlay.HUD_STATOR);
     }
 
 

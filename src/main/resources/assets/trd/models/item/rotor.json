@@ -1,8 +1,0 @@
-{
-  "flip_v": true,
-  "loader": "forge:obj",
-  "model": "trd:models/block/rotor.obj",
-  "textures": {
-    "gear_texture": "trd:block/rotor"
-  }
-}

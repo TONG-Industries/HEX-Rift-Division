@@ -35,24 +35,22 @@ import org.jetbrains.annotations.Nullable;
  */
 public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergyProvider, IEnergyConnector {
 
-    // ===================== КОНСТАНТЫ =====================
-    public static final long MAX_ENERGY = 10000;
     public static final long MAX_EXTRACT = 2000;
-
-    /**
-     * Потребление момента из кинетической сети.
-     * Суммируется со всеми другими CONSUMER-узлами.
-     * Если сумма > мощность генераторов → перегрузка → сеть останавливается.
-     */
-    public static final long TORQUE_CONSUMPTION = 100L;
 
     // ===================== ПОЛЯ =====================
     private long energyStored = 0;
     private boolean wasFull = false;
+    private long lastSyncedEnergy = -1;
 
     private final ItemStackHandler coilsInventory = new ItemStackHandler(12) {
         @Override
         protected void onContentsChanged(int slot) {
+            long maxEn = getMaxEnergyDynamic();
+            if (energyStored > maxEn) {
+                energyStored = maxEn;
+            }
+            checkFullStateChange();
+            requestKineticRecalculation();
             setChanged();
             syncToClient();
         }
@@ -100,11 +98,11 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
     public long getEnergyStored() { return energyStored; }
 
     @Override
-    public long getMaxEnergyStored() { return MAX_ENERGY; }
+    public long getMaxEnergyStored() { return getMaxEnergyDynamic(); }
 
     @Override
     public void setEnergyStored(long energy) {
-        this.energyStored = Math.max(0, Math.min(energy, MAX_ENERGY));
+        this.energyStored = Math.max(0, Math.min(energy, getMaxEnergyDynamic()));
         checkFullStateChange();
     }
 
@@ -142,8 +140,22 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
      */
     @Override
     public long getConsumedTorque() {
-        // Потребляем момент только если есть активный ротор
-        return hasActiveRotor() ? TORQUE_CONSUMPTION : 0L;
+        if (energyStored >= getMaxEnergyDynamic()) return 0L;
+        if (!hasActiveRotor()) return 0L;
+
+        long totalLoad = 0;
+        for (int i = 0; i < 12; i++) {
+            net.minecraft.world.item.ItemStack stack = coilsInventory.getStackInSlot(i);
+            if (stack.getItem() instanceof com.trd.item.energy.StatorCoilItem coil) {
+                long load = coil.getBaseTorqueLoad();
+                net.minecraft.world.item.ItemStack opposite = coilsInventory.getStackInSlot((i + 6) % 12);
+                if (opposite.isEmpty()) {
+                    load *= coil.getAsymmetryMultiplier();
+                }
+                totalLoad += load;
+            }
+        }
+        return totalLoad;
     }
 
     /** Проверяет, есть ли активный ротор на валу, к которому прикреплён статор. */
@@ -152,7 +164,9 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
         BlockState state = getBlockState();
         if (!state.hasProperty(StatorBlock.FACING)) return false;
         Direction facing = state.getValue(StatorBlock.FACING);
-        BlockPos shaftPos = worldPosition.relative(facing);
+        Direction.Axis axis = state.getValue(StatorBlock.AXIS);
+        BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), facing, axis);
+        BlockPos shaftPos = worldPosition.offset(holeOffset);
         if (!level.isLoaded(shaftPos)) return false;
         var be = level.getBlockEntity(shaftPos);
         return be instanceof ShaftBlockEntity shaft && shaft.hasRotor();
@@ -190,7 +204,9 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
         BlockState state = getBlockState();
         if (!state.hasProperty(StatorBlock.FACING)) return java.util.Collections.emptyList();
         Direction facing = state.getValue(StatorBlock.FACING);
-        return java.util.List.of(myPos.relative(facing));
+        Direction.Axis axis = state.getValue(StatorBlock.AXIS);
+        BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), facing, axis);
+        return java.util.List.of(myPos.offset(holeOffset));
     }
 
     @Override
@@ -199,7 +215,9 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
         BlockState state = getBlockState();
         if (!state.hasProperty(StatorBlock.FACING)) return false;
         Direction facing = state.getValue(StatorBlock.FACING);
-        return neighborPos.equals(myPos.relative(facing));
+        Direction.Axis axis = state.getValue(StatorBlock.AXIS);
+        BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), facing, axis);
+        return neighborPos.equals(myPos.offset(holeOffset));
     }
 
     // ===================== TICK =====================
@@ -216,61 +234,59 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
         if (level == null || level.isClientSide) return;
 
         Direction facing = getBlockState().getValue(StatorBlock.FACING);
-        BlockPos shaftPos = worldPosition.relative(facing);
+        Direction.Axis axis = getBlockState().getValue(StatorBlock.AXIS);
+        BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), facing, axis);
+        BlockPos shaftPos = worldPosition.offset(holeOffset);
 
         if (level.getBlockEntity(shaftPos) instanceof ShaftBlockEntity shaft) {
             if (shaft.hasRotor()) {
                 long speed = Math.abs(shaft.getSpeed());
-                if (speed > 0 && energyStored < MAX_ENERGY) {
+                long maxEn = getMaxEnergyDynamic();
+                if (speed > 0 && energyStored < maxEn) {
                     float rotorEfficiency = 1.0f;
                     com.trd.api.rotation.RotorType rotorType = shaft.getRotorType();
                     if (rotorType != null) rotorEfficiency = rotorType.getEfficiency();
 
-                    int coilCount = getCoilCount();
-                    float symmetryMultiplier = calculateSymmetryMultiplier();
+                    long totalConversion = 0;
+                    for (int i = 0; i < 12; i++) {
+                        net.minecraft.world.item.ItemStack stack = coilsInventory.getStackInSlot(i);
+                        if (stack.getItem() instanceof com.trd.item.energy.StatorCoilItem coil) {
+                            totalConversion += coil.getEnergyConversionRate();
+                        }
+                    }
 
-                    // Formula: Base gen * Rotor Efficiency * Coils * Symmetry
-                    long generated = (long) ((speed * 0.1) * rotorEfficiency * coilCount * symmetryMultiplier);
+                    // Formula: Speed * Total Conversion * Rotor Efficiency
+                    long generated = (long) ((speed * totalConversion * rotorEfficiency) / 20.0f);
                     if (generated > 0) {
-                        energyStored = Math.min(MAX_ENERGY, energyStored + generated);
+                        energyStored = Math.min(maxEn, energyStored + generated);
                         setChanged();
                         checkFullStateChange();
                     }
                 }
             }
         }
+
+        if (energyStored != lastSyncedEnergy && level.getGameTime() % 10 == 0) {
+            lastSyncedEnergy = energyStored;
+            syncToClient();
+        }
     }
 
-    private int getCoilCount() {
-        int count = 0;
+    public long getMaxEnergyDynamic() {
+        long sum = 0;
         for (int i = 0; i < coilsInventory.getSlots(); i++) {
-            if (!coilsInventory.getStackInSlot(i).isEmpty()) {
-                count++;
+            net.minecraft.world.item.ItemStack stack = coilsInventory.getStackInSlot(i);
+            if (stack.getItem() instanceof com.trd.item.energy.StatorCoilItem coil) {
+                sum += coil.getEnergyBuffer();
             }
         }
-        return count;
-    }
-
-    private float calculateSymmetryMultiplier() {
-        float multiplier = 1.0f;
-        for (int i = 0; i < 6; i++) {
-            net.minecraft.world.item.ItemStack slotA = coilsInventory.getStackInSlot(i);
-            net.minecraft.world.item.ItemStack slotB = coilsInventory.getStackInSlot(i + 6);
-            if (!slotA.isEmpty() && !slotB.isEmpty()) {
-                if (net.minecraft.world.item.ItemStack.isSameItemSameTags(slotA, slotB)) {
-                    multiplier += 0.2f; // Bonus for symmetrical pair
-                }
-            } else if (!slotA.isEmpty() || !slotB.isEmpty()) {
-                multiplier -= 0.1f; // Penalty for asymmetrical pair (only one side has coil)
-            }
-        }
-        return Math.max(0.1f, multiplier); // Ensure it doesn't go below 0.1x
+        return sum;
     }
 
     // ===================== ВНУТРЕННИЕ МЕТОДЫ =====================
 
     private void checkFullStateChange() {
-        boolean isFull = energyStored >= MAX_ENERGY;
+        boolean isFull = energyStored >= getMaxEnergyDynamic();
         if (isFull != wasFull) {
             wasFull = isFull;
             requestKineticRecalculation();
@@ -280,7 +296,9 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
     private void requestKineticRecalculation() {
         if (level instanceof ServerLevel serverLevel) {
             Direction facing = getBlockState().getValue(StatorBlock.FACING);
-            BlockPos shaftPos = worldPosition.relative(facing);
+            Direction.Axis axis = getBlockState().getValue(StatorBlock.AXIS);
+            BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), facing, axis);
+            BlockPos shaftPos = worldPosition.offset(holeOffset);
             var net = KineticNetworkManager.get(serverLevel).getNetworkFor(shaftPos);
             if (net != null) {
                 net.requestRecalculation();

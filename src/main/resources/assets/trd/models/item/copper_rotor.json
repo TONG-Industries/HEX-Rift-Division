@@ -1,10 +1,10 @@
 {
+  "flip_v": true,
   "loader": "forge:obj",
   "model": "trd:models/block/rotor.obj",
-  "flip_v": true,
   "textures": {
     "m_f41ec8b5-684c-bb67-fb90-c1e5f22a5fdf": "trd:block/rotor",
-    "rotor": "trd:block/rotor",
+    "gear_texture": "trd:block/rotor",
     "particle": "trd:block/rotor"
   }
 }

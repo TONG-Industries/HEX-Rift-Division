@@ -355,9 +355,11 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
                 if (be instanceof StatorBlockEntity stator) {
                     // Статор смотрит на нас?
                     BlockState statorState = stator.getBlockState();
-                    if (statorState.hasProperty(com.trd.block.basic.industrial.rotation.StatorBlock.FACING)) {
+                    if (statorState.hasProperty(com.trd.block.basic.industrial.rotation.StatorBlock.FACING) && statorState.hasProperty(com.trd.block.basic.industrial.rotation.StatorBlock.AXIS)) {
                         Direction statorFacing = statorState.getValue(com.trd.block.basic.industrial.rotation.StatorBlock.FACING);
-                        if (sidePos.relative(statorFacing).equals(myPos)) {
+                        Direction.Axis statorAxis = statorState.getValue(com.trd.block.basic.industrial.rotation.StatorBlock.AXIS);
+                        BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), statorFacing, statorAxis);
+                        if (sidePos.offset(holeOffset).equals(myPos)) {
                             list.add(sidePos);
                         }
                     }
@@ -473,6 +475,9 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
 
     @Override
     public boolean canConnectMechanically(BlockPos myPos, BlockPos neighborPos, Rotational neighbor) {
+        if (neighbor instanceof StatorBlockEntity) {
+            return getPotentialConnections(level, myPos).contains(neighborPos);
+        }
 
         if (this.hasPulley() && neighbor instanceof ShaftBlockEntity neighborShaft && neighborShaft.hasPulley()) {
             if (neighborPos.equals(this.connectedPulley))

@@ -8,6 +8,7 @@ import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.engine_room.flywheel.lib.instance.InstanceTypes;
 import dev.engine_room.flywheel.lib.instance.TransformedInstance;
 import dev.engine_room.flywheel.lib.model.Models;
+import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
 import net.minecraft.core.Direction;
@@ -81,11 +82,15 @@ public class StatorVisual extends AbstractBlockEntityVisual<StatorBlockEntity> i
         if (handler != null) {
             for (int i = 0; i < handler.getSlots(); i++) {
                 if (!handler.getStackInSlot(i).isEmpty()) {
-                    boolean isCopper = handler.getStackInSlot(i).getItem() == ModItems.COPPER_COIL.get();
-                    // Assuming for now we only have copper coil, or fallback to it
-                    TransformedInstance coil = instancerProvider()
-                            .instancer(InstanceTypes.TRANSFORMED, Models.partial(ModModels.STATOR_COIL_COPPER))
-                            .createInstance();
+                    net.minecraft.world.item.ItemStack stack = handler.getStackInSlot(i);
+                    if (stack.getItem() instanceof com.trd.item.energy.StatorCoilItem coilItem) {
+                        String material = coilItem.getMaterialName();
+                        PartialModel model = ModModels.STATOR_COILS.getOrDefault(material, ModModels.STATOR_COILS.get("copper"));
+                        if (model == null) continue; // fallback just in case
+
+                        TransformedInstance coil = instancerProvider()
+                                .instancer(InstanceTypes.TRANSFORMED, Models.partial(model))
+                                .createInstance();
 
                     coil.setIdentityTransform()
                         .translate(localX, localY, localZ)
@@ -97,14 +102,14 @@ public class StatorVisual extends AbstractBlockEntityVisual<StatorBlockEntity> i
                     } else if (axis == Direction.Axis.Z) {
                         // default
                     } else if (axis == Direction.Axis.Y) {
-                        if (facing == Direction.WEST) {
-                            coil.rotateY((float) Math.toRadians(90));
-                        } else if (facing == Direction.SOUTH) {
+                        if (facing == Direction.NORTH) {
                             coil.rotateY((float) Math.toRadians(180));
                         } else if (facing == Direction.EAST) {
+                            coil.rotateY((float) Math.toRadians(90));
+                        } else if (facing == Direction.WEST) {
                             coil.rotateY((float) Math.toRadians(270));
                         }
-                        coil.rotateX((float) Math.toRadians(90));
+                        coil.rotateX((float) Math.toRadians(-90));
                     }
                     
                     // Move to the center of the multiblock hole (1 block 'up' in local space)
@@ -121,6 +126,7 @@ public class StatorVisual extends AbstractBlockEntityVisual<StatorBlockEntity> i
                     
                     coil.setChanged();
                     coilInstances.add(coil);
+                    }
                 }
             }
         }
