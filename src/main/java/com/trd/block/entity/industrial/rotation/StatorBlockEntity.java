@@ -57,6 +57,10 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
     };
     private final LazyOptional<IItemHandler> itemHandlerCap = LazyOptional.of(() -> coilsInventory);
 
+    public ItemStackHandler getCoilsInventory() {
+        return coilsInventory;
+    }
+
     // ===================== CAPABILITY =====================
     private final LazyOptional<IEnergyProvider> providerCap = LazyOptional.of(() -> this);
     private final LazyOptional<IEnergyConnector> connectorCap = LazyOptional.of(() -> this);
