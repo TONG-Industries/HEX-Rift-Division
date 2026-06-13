@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -221,11 +222,89 @@ public class MultiblockStructureHelper {
         return true;
     }
 
+    public boolean checkPlacement(Level level, BlockPos controllerPos, Direction.Axis axis, Player player) {
+        List<BlockPos> obstructions = new ArrayList<>();
+        for (BlockPos relativePos : structureMap.keySet()) {
+            if (relativePos.equals(BlockPos.ZERO)) continue;
+            BlockPos worldPos = getRotatedPosAxis(controllerPos, relativePos, axis);
+            BlockState existingState = level.getBlockState(worldPos);
+
+            if (!isBlockReplaceable(existingState)) {
+                obstructions.add(worldPos);
+            } else if (level instanceof ServerLevel serverLevel && EnergyNetworkManager.get(serverLevel).isBlockObstructingAnyWire(worldPos)) {
+                obstructions.add(worldPos);
+            }
+        }
+
+        if (!obstructions.isEmpty()) {
+            if (player != null) {
+                player.displayClientMessage(Component.literal("§cCannot place multiblock here! Area is obstructed."), true);
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean checkPlacementStator(Level level, BlockPos controllerPos, Direction facing, Direction.Axis axis, Player player) {
+        List<BlockPos> obstructions = new ArrayList<>();
+        for (BlockPos relativePos : structureMap.keySet()) {
+            if (relativePos.equals(BlockPos.ZERO)) continue;
+            BlockPos worldPos = getRotatedStatorPos(controllerPos, relativePos, facing, axis);
+            BlockState existingState = level.getBlockState(worldPos);
+
+            if (!isBlockReplaceable(existingState)) {
+                obstructions.add(worldPos);
+            } else if (level instanceof ServerLevel serverLevel && EnergyNetworkManager.get(serverLevel).isBlockObstructingAnyWire(worldPos)) {
+                obstructions.add(worldPos);
+            }
+        }
+
+        if (!obstructions.isEmpty()) {
+            if (player != null) {
+                player.displayClientMessage(Component.literal("§cCannot place multiblock here! Area is obstructed."), true);
+            }
+            return false;
+        }
+
+        return true;
+    }
+
     private static boolean isClimbPrefix(char c) {
         return c == '<' || c == '>' || c == '!' || c == '?';
     }
 
     public Set<BlockPos> getPartOffsets() { return this.partOffsets; }
+
+    public synchronized void placeStructure(Level level, BlockPos controllerPos, Direction.Axis axis, IMultiblockController controller) {
+        if (level.isClientSide) return;
+
+        List<BlockPos> allPlacedPositions = new ArrayList<>();
+
+        for (Map.Entry<BlockPos, Supplier<BlockState>> entry : structureMap.entrySet()) {
+            BlockPos gridPos = entry.getKey();
+            BlockPos worldPos = getRotatedPosAxis(controllerPos, gridPos, axis);
+
+            if (worldPos.equals(controllerPos)) continue;
+
+            BlockState partState = phantomBlockState.get();
+            if (partState.hasProperty(BlockStateProperties.AXIS)) {
+                partState = partState.setValue(BlockStateProperties.AXIS, axis);
+            }
+            level.setBlock(worldPos, partState, 3);
+            allPlacedPositions.add(worldPos);
+
+            BlockEntity be = level.getBlockEntity(worldPos);
+            if (be instanceof IMultiblockPart partBe) {
+                partBe.setControllerPos(controllerPos);
+                PartRole role = resolvePartRole(gridPos, controller);
+                partBe.setPartRole(role);
+            }
+        }
+
+        LOGGER.info("Multiblock placed at {} with {} parts (Axis {}).", controllerPos, allPlacedPositions.size(), axis);
+        updateFrameForController(level, controllerPos);
+    }
 
     public synchronized void placeStructure(Level level, BlockPos controllerPos, Direction facing, IMultiblockController controller) {
         if (level.isClientSide) return;
@@ -273,6 +352,54 @@ public class MultiblockStructureHelper {
         updateFrameForController(level, controllerPos);
     }
 
+    public synchronized void placeStructureStator(Level level, BlockPos controllerPos, Direction facing, Direction.Axis axis, IMultiblockController controller) {
+        if (level.isClientSide) return;
+
+        List<BlockPos> allPlacedPositions = new ArrayList<>();
+
+        for (Map.Entry<BlockPos, Supplier<BlockState>> entry : structureMap.entrySet()) {
+            BlockPos gridPos = entry.getKey();
+            BlockPos worldPos = getRotatedStatorPos(controllerPos, gridPos, facing, axis);
+
+            if (worldPos.equals(controllerPos)) continue;
+
+            BlockState partState = phantomBlockState.get();
+            if (partState.hasProperty(BlockStateProperties.FACING)) {
+                partState = partState.setValue(BlockStateProperties.FACING, facing);
+            }
+            if (partState.hasProperty(BlockStateProperties.AXIS)) {
+                partState = partState.setValue(BlockStateProperties.AXIS, axis);
+            }
+            level.setBlock(worldPos, partState, 3);
+            allPlacedPositions.add(worldPos);
+
+            BlockEntity be = level.getBlockEntity(worldPos);
+            if (be instanceof IMultiblockPart partBe) {
+                partBe.setControllerPos(controllerPos);
+                PartRole role = resolvePartRole(gridPos, controller);
+                partBe.setPartRole(role);
+            }
+        }
+
+        LOGGER.info("Stator Multiblock placed at {} with {} parts (Facing {}, Axis {}).", controllerPos, allPlacedPositions.size(), facing, axis);
+        updateFrameForController(level, controllerPos);
+    }
+
+    public void destroyStructure(Level level, BlockPos controllerPos, Direction.Axis axis) {
+        if (level.isClientSide || IS_DESTROYING.get()) return;
+        IS_DESTROYING.set(true);
+        try {
+            for (BlockPos gridPos : structureMap.keySet()) {
+                BlockPos worldPos = getRotatedPosAxis(controllerPos, gridPos, axis);
+                BlockEntity be = level.getBlockEntity(worldPos);
+                if (be instanceof IMultiblockPart) {
+                    level.levelEvent(2001, worldPos, Block.getId(level.getBlockState(worldPos)));
+                    level.setBlock(worldPos, Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        } finally { IS_DESTROYING.set(false); }
+    }
+
     public void destroyStructure(Level level, BlockPos controllerPos, Direction facing) {
         if (level.isClientSide || IS_DESTROYING.get()) return;
         IS_DESTROYING.set(true);
@@ -281,6 +408,21 @@ public class MultiblockStructureHelper {
                 BlockPos worldPos = getRotatedPos(controllerPos, gridPos, facing);
                 BlockEntity be = level.getBlockEntity(worldPos);
                 // Если блок в мире всё ещё является частью мультиблока, сносим его
+                if (be instanceof IMultiblockPart) {
+                    level.levelEvent(2001, worldPos, Block.getId(level.getBlockState(worldPos)));
+                    level.setBlock(worldPos, Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        } finally { IS_DESTROYING.set(false); }
+    }
+
+    public void destroyStructureStator(Level level, BlockPos controllerPos, Direction facing, Direction.Axis axis) {
+        if (level.isClientSide || IS_DESTROYING.get()) return;
+        IS_DESTROYING.set(true);
+        try {
+            for (BlockPos gridPos : structureMap.keySet()) {
+                BlockPos worldPos = getRotatedStatorPos(controllerPos, gridPos, facing, axis);
+                BlockEntity be = level.getBlockEntity(worldPos);
                 if (be instanceof IMultiblockPart) {
                     level.levelEvent(2001, worldPos, Block.getId(level.getBlockState(worldPos)));
                     level.setBlock(worldPos, Blocks.AIR.defaultBlockState(), 3);
@@ -360,6 +502,64 @@ public class MultiblockStructureHelper {
         });
     }
 
+    private final Map<String, VoxelShape> statorShapeCache = new HashMap<>();
+
+    public VoxelShape generateStatorShape(Direction facing, Direction.Axis axis) {
+        String key = facing.name() + "_" + axis.name();
+        return statorShapeCache.computeIfAbsent(key, k -> {
+            // Box 1: X [-0.5, 1.5], Y [0.0, 3.0], Z [0.0, 1.0] -> -8, 0, 0 to 24, 48, 16
+            VoxelShape box1 = Block.box(-8, 0, 0, 24, 48, 16);
+            // Box 2: X [-1.0, 2.0], Y [0.5, 2.5], Z [0.0, 1.0] -> -16, 8, 0 to 32, 40, 16
+            VoxelShape box2 = Block.box(-16, 8, 0, 32, 40, 16);
+            VoxelShape baseShape = Shapes.or(box1, box2);
+            
+            // Hole: X [0.0, 1.0], Y [1.0, 2.0], Z [0.0, 1.0] -> 0, 16, 0 to 16, 32, 16
+            VoxelShape hole = Block.box(0, 16, 0, 16, 32, 16);
+            
+            baseShape = Shapes.joinUnoptimized(baseShape, hole, BooleanOp.ONLY_FIRST);
+            
+            return rotateShapeStatorExact(baseShape, facing, axis).optimize();
+        });
+    }
+
+    private static VoxelShape rotateShapeStatorExact(VoxelShape shape, Direction facing, Direction.Axis axis) {
+        VoxelShape[] buffer = { Shapes.empty() };
+        shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+            net.minecraft.world.phys.Vec3 center = new net.minecraft.world.phys.Vec3(0.5, 0.5, 0.5);
+            net.minecraft.world.phys.Vec3 min = new net.minecraft.world.phys.Vec3(minX, minY, minZ).subtract(center);
+            net.minecraft.world.phys.Vec3 max = new net.minecraft.world.phys.Vec3(maxX, maxY, maxZ).subtract(center);
+            
+            // Rotate the vector directly
+            net.minecraft.world.phys.Vec3 p1 = rotateVecStator(min, facing, axis);
+            net.minecraft.world.phys.Vec3 p2 = rotateVecStator(max, facing, axis);
+            
+            double nx1 = p1.x + 0.5; double ny1 = p1.y + 0.5; double nz1 = p1.z + 0.5;
+            double nx2 = p2.x + 0.5; double ny2 = p2.y + 0.5; double nz2 = p2.z + 0.5;
+            
+            buffer[0] = Shapes.joinUnoptimized(buffer[0], Shapes.box(
+                Math.min(nx1, nx2), Math.min(ny1, ny2), Math.min(nz1, nz2),
+                Math.max(nx1, nx2), Math.max(ny1, ny2), Math.max(nz1, nz2)
+            ), BooleanOp.OR);
+        });
+        return buffer[0];
+    }
+    
+    private static net.minecraft.world.phys.Vec3 rotateVecStator(net.minecraft.world.phys.Vec3 localVec, Direction facing, Direction.Axis axis) {
+        net.minecraft.core.Vec3i vy = facing.getOpposite().getNormal();
+        net.minecraft.core.Vec3i vz = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE).getNormal();
+        net.minecraft.core.Vec3i vx = new net.minecraft.core.Vec3i(
+                vy.getY() * vz.getZ() - vy.getZ() * vz.getY(),
+                vy.getZ() * vz.getX() - vy.getX() * vz.getZ(),
+                vy.getX() * vz.getY() - vy.getY() * vz.getX()
+        );
+
+        return new net.minecraft.world.phys.Vec3(
+                localVec.x * vx.getX() + localVec.y * vy.getX() + localVec.z * vz.getX(),
+                localVec.x * vx.getY() + localVec.y * vy.getY() + localVec.z * vz.getY(),
+                localVec.x * vx.getZ() + localVec.y * vy.getZ() + localVec.z * vz.getZ()
+        );
+    }
+
     public static VoxelShape rotateShape(VoxelShape shape, Direction facing) {
         if (facing == Direction.NORTH) return shape;
 
@@ -370,6 +570,14 @@ public class MultiblockStructureHelper {
                 case SOUTH -> { newMinX = 1.0 - maxX; newMaxX = 1.0 - minX; newMinZ = 1.0 - maxZ; newMaxZ = 1.0 - minZ; }
                 case WEST  -> { newMinX = minZ; newMaxX = maxZ; newMinZ = 1.0 - maxX; newMaxZ = 1.0 - minX; }
                 case EAST  -> { newMinX = 1.0 - maxZ; newMaxX = 1.0 - minZ; newMinZ = minX; newMaxZ = maxX; }
+                case UP    -> {
+                    buffer[0] = Shapes.joinUnoptimized(buffer[0], Shapes.box(minX, 1.0 - maxZ, minY, maxX, 1.0 - minZ, maxY), BooleanOp.OR);
+                    return;
+                }
+                case DOWN  -> {
+                    buffer[0] = Shapes.joinUnoptimized(buffer[0], Shapes.box(minX, minZ, 1.0 - maxY, maxX, maxZ, 1.0 - minY), BooleanOp.OR);
+                    return;
+                }
                 default -> {}
             }
             buffer[0] = Shapes.joinUnoptimized(buffer[0], Shapes.box(newMinX, minY, newMinZ, newMaxX, maxY, newMaxZ), BooleanOp.OR);
@@ -382,12 +590,66 @@ public class MultiblockStructureHelper {
         return controllerWorldPos.offset(rotate(offsetFromController, facing));
     }
 
+    public BlockPos getRotatedPosAxis(BlockPos controllerWorldPos, BlockPos partLocalPos, Direction.Axis axis) {
+        BlockPos offsetFromController = partLocalPos.subtract(this.controllerOffset);
+        return controllerWorldPos.offset(rotateAxis(offsetFromController, axis));
+    }
+
     public static BlockPos rotate(BlockPos pos, Direction facing) {
         return switch (facing) {
             case SOUTH -> new BlockPos(-pos.getX(), pos.getY(), -pos.getZ());
             case WEST -> new BlockPos(pos.getZ(), pos.getY(), -pos.getX());
             case EAST -> new BlockPos(-pos.getZ(), pos.getY(), pos.getX());
+            case UP -> new BlockPos(pos.getX(), -pos.getZ(), pos.getY());
+            case DOWN -> new BlockPos(pos.getX(), pos.getZ(), -pos.getY());
             default -> pos;
         };
+    }
+
+    public static BlockPos rotateAxis(BlockPos pos, Direction.Axis axis) {
+        // Assume default orientation is Axis.Y (flat on ground, Y is up)
+        return switch (axis) {
+            case X -> new BlockPos(pos.getY(), -pos.getX(), pos.getZ());
+            case Z -> new BlockPos(pos.getX(), -pos.getZ(), pos.getY());
+            case Y -> pos;
+        };
+    }
+
+    public BlockPos getRotatedStatorPos(BlockPos controllerWorldPos, BlockPos partLocalPos, Direction facing, Direction.Axis axis) {
+        BlockPos offsetFromController = partLocalPos.subtract(this.controllerOffset);
+        return controllerWorldPos.offset(rotateStatorPos(offsetFromController, facing, axis));
+    }
+
+    public static BlockPos rotateStatorPos(BlockPos localPos, Direction facing, Direction.Axis axis) {
+        // local Y maps to -facing (Controller is at bottom relative to hole)
+        net.minecraft.core.Vec3i vy = facing.getOpposite().getNormal();
+        // local Z maps to the provided axis
+        net.minecraft.core.Vec3i vz = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE).getNormal();
+        // local X is cross product of vy and vz
+        net.minecraft.core.Vec3i vx = new net.minecraft.core.Vec3i(
+                vy.getY() * vz.getZ() - vy.getZ() * vz.getY(),
+                vy.getZ() * vz.getX() - vy.getX() * vz.getZ(),
+                vy.getX() * vz.getY() - vy.getY() * vz.getX()
+        );
+
+        return new BlockPos(
+                localPos.getX() * vx.getX() + localPos.getY() * vy.getX() + localPos.getZ() * vz.getX(),
+                localPos.getX() * vx.getY() + localPos.getY() * vy.getY() + localPos.getZ() * vz.getY(),
+                localPos.getX() * vx.getZ() + localPos.getY() * vy.getZ() + localPos.getZ() * vz.getZ()
+        );
+    }
+
+    public static VoxelShape rotateShapeAxis(VoxelShape shape, Direction.Axis axis) {
+        if (axis == Direction.Axis.Y) return shape;
+
+        VoxelShape[] buffer = { Shapes.empty() };
+        shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+            switch (axis) {
+                case X -> buffer[0] = Shapes.joinUnoptimized(buffer[0], Shapes.box(1.0 - maxY, minX, minZ, 1.0 - minY, maxX, maxZ), BooleanOp.OR);
+                case Z -> buffer[0] = Shapes.joinUnoptimized(buffer[0], Shapes.box(minX, 1.0 - maxZ, minY, maxX, 1.0 - minZ, maxY), BooleanOp.OR);
+                default -> {}
+            }
+        });
+        return buffer[0];
     }
 }

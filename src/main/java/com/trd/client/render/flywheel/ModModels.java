@@ -20,8 +20,11 @@ public class ModModels {
     public static final Map<String, PartialModel> PULLEY_MODELS = new HashMap<>();
     public static final PartialModel BELT_SEGMENT = PartialModel.of(new ResourceLocation("trd", "block/belt_segment"));
 
-    public static final PartialModel ROTOR = PartialModel.of(new ResourceLocation("trd", "block/rotor"));
+    public static final PartialModel COPPER_ROTOR = PartialModel.of(new ResourceLocation("trd", "block/rotor"));
     public static final PartialModel FLYWHEEL = PartialModel.of(new ResourceLocation("trd", "block/flywheel_light"));
+
+    public static final PartialModel STATOR = PartialModel.of(new ResourceLocation("trd", "block/stator"));
+    public static final Map<String, PartialModel> STATOR_COILS = new HashMap<>();
 
 
     public static final PartialModel FUEL_TANK_BIG = PartialModel.of(new ResourceLocation("trd", "block/fuel_tank_big"));
@@ -52,6 +55,7 @@ public class ModModels {
         }
 
         PULLEY_MODELS.put("pulley", PartialModel.of(new ResourceLocation("trd", "block/pulley")));
+        STATOR_COILS.put("copper", PartialModel.of(new ResourceLocation("trd", "block/stator_coil_copper")));
     }
 
     // Оставляем пустым. Этот метод просто служит "спусковым крючком",

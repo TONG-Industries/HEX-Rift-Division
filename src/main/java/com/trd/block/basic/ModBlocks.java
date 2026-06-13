@@ -490,7 +490,7 @@ public class ModBlocks {
     public static final RegistryObject<Block> MOTOR_ELECTRO = registerBlock("motor_electro",
             () -> new MotorElectroBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
 
-    public static final RegistryObject<Block> STATOR_BLOCK = registerBlock("stator",
+    public static final RegistryObject<Block> STATOR_BLOCK = BLOCKS.register("stator",
             () -> new com.trd.block.basic.industrial.rotation.StatorBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                     .noOcclusion()
                     .strength(5.0f, 6.0f)

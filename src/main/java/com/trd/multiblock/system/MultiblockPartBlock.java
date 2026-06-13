@@ -39,9 +39,7 @@ public class MultiblockPartBlock extends BaseEntityBlock {
         if (be instanceof IMultiblockPart part && part.getControllerPos() != null) {
             BlockState ctrlState = level.getBlockState(part.getControllerPos());
             if (ctrlState.getBlock() instanceof IMultiblockController controller) {
-                net.minecraft.core.Direction facing = ctrlState.hasProperty(HorizontalDirectionalBlock.FACING)
-                        ? ctrlState.getValue(HorizontalDirectionalBlock.FACING) : net.minecraft.core.Direction.NORTH;
-                VoxelShape masterShape = controller.getStructureHelper().generateShapeFromParts(facing);
+                VoxelShape masterShape = ctrlState.getShape(level, part.getControllerPos(), context);
                 BlockPos offset = part.getControllerPos().subtract(pos);
                 return masterShape.move(offset.getX(), offset.getY(), offset.getZ());
             }

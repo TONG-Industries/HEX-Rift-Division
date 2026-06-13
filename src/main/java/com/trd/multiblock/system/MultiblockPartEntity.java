@@ -52,13 +52,19 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
         setChanged();
 
         if (this.level != null && !this.level.isClientSide) {
-            FluidNetworkManager manager = FluidNetworkManager.get((ServerLevel) this.level);
+            FluidNetworkManager fluidManager = FluidNetworkManager.get((ServerLevel) this.level);
+            com.trd.api.energy.EnergyNetworkManager energyManager = com.trd.api.energy.EnergyNetworkManager.get((ServerLevel) this.level);
+            
             if (!wasNetworked && isNetworked) {
-                if (!manager.hasNode(this.getBlockPos())) {
-                    manager.addNode(this.getBlockPos());
+                if (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR) {
+                    if (!fluidManager.hasNode(this.getBlockPos())) fluidManager.addNode(this.getBlockPos());
+                }
+                if (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR) {
+                    if (!energyManager.hasNode(this.getBlockPos())) energyManager.addNode(this.getBlockPos());
                 }
             } else if (wasNetworked && !isNetworked) {
-                manager.removeNode(this.getBlockPos());
+                fluidManager.removeNode(this.getBlockPos());
+                energyManager.removeNode(this.getBlockPos());
             }
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
@@ -77,9 +83,13 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
     public void onLoad() {
         super.onLoad();
         if (this.level != null && !this.level.isClientSide && isNetworkedRole(this.role)) {
-            FluidNetworkManager manager = FluidNetworkManager.get((ServerLevel) this.level);
-            if (!manager.hasNode(this.getBlockPos())) {
-                manager.addNode(this.getBlockPos());
+            if (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR) {
+                FluidNetworkManager fluidManager = FluidNetworkManager.get((ServerLevel) this.level);
+                if (!fluidManager.hasNode(this.getBlockPos())) fluidManager.addNode(this.getBlockPos());
+            }
+            if (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR) {
+                com.trd.api.energy.EnergyNetworkManager energyManager = com.trd.api.energy.EnergyNetworkManager.get((ServerLevel) this.level);
+                if (!energyManager.hasNode(this.getBlockPos())) energyManager.addNode(this.getBlockPos());
             }
         }
     }
@@ -89,11 +99,12 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
         super.setRemoved();
         if (this.level != null && !this.level.isClientSide && isNetworkedRole(this.role)) {
             FluidNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
+            com.trd.api.energy.EnergyNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
         }
     }
 
     private static boolean isNetworkedRole(PartRole role) {
-        return role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR;
+        return role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.ENERGY_CONNECTOR;
     }
 
     @Override
@@ -106,10 +117,18 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
     @NotNull
     @Override
     public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.FLUID_HANDLER && role == PartRole.FLUID_CONNECTOR && controllerPos != null && level != null) {
-            BlockEntity be = level.getBlockEntity(controllerPos);
-            if (be instanceof IFluidTankProvider provider) {
-                return provider.getFluidHandlerCapability().cast();
+        if (controllerPos != null && level != null) {
+            if (cap == ForgeCapabilities.FLUID_HANDLER && (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR)) {
+                BlockEntity be = level.getBlockEntity(controllerPos);
+                if (be instanceof IFluidTankProvider provider) {
+                    return provider.getFluidHandlerCapability().cast();
+                }
+            } else if ((cap == com.trd.capability.ModCapabilities.ENERGY_PROVIDER || cap == com.trd.capability.ModCapabilities.ENERGY_CONNECTOR) 
+                        && (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR)) {
+                BlockEntity be = level.getBlockEntity(controllerPos);
+                if (be != null) {
+                    return be.getCapability(cap, side);
+                }
             }
         }
         return super.getCapability(cap, side);
