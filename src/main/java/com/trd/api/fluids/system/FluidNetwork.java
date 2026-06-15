@@ -3,6 +3,7 @@ package com.trd.api.fluids.system;
 import com.trd.block.basic.industrial.fluids.FluidPipeBlock;
 import com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity;
 import com.trd.block.entity.industrial.fluids.FluidPipeBlockEntity;
+import com.trd.multiblock.system.IMultiblockPart;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -33,14 +34,29 @@ public class FluidNetwork {
         List<IFluidHandler> pureReceivers = new ArrayList<>();
         List<IFluidHandler> buffers = new ArrayList<>();
 
+        // Set для дедупликации: один мультиблок может дать один хэндлер через несколько нод (FLUID_CONNECTOR + controller).
+        // Без дедупликации один бак попадает и в buffers и в pureProviders одновременно, ломая баланс.
+        Set<IFluidHandler> seenHandlers = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+
         for (FluidNode node : nodes) {
             BlockPos pos = node.getPos();
             if (!level.isLoaded(pos)) continue;
             BlockEntity be = level.getBlockEntity(pos);
             if (be == null || be instanceof FluidPipeBlockEntity) continue;
             be.getCapability(ForgeCapabilities.FLUID_HANDLER).ifPresent(handler -> {
-                // ФИКС: проверяем любой блок с режимом, а не только обычную бочку
-                if (be instanceof ITankWithMode tank) {
+                // Дедупликация: если этот хэндлер уже зарегистрирован, пропускаем
+                if (!seenHandlers.add(handler)) return;
+
+                // Определяем режим: если BE является частью мультиблока, берём режим с контроллера
+                ITankWithMode tank = null;
+                if (be instanceof ITankWithMode direct) {
+                    tank = direct;
+                } else if (be instanceof IMultiblockPart part && part.getControllerPos() != null) {
+                    BlockEntity ctrl = level.getBlockEntity(part.getControllerPos());
+                    if (ctrl instanceof ITankWithMode ctrlTank) tank = ctrlTank;
+                }
+
+                if (tank != null) {
                     int m = tank.getMode();
                     if (m == 1) pureReceivers.add(handler);
                     else if (m == 2) pureProviders.add(handler);
@@ -92,44 +108,73 @@ public class FluidNetwork {
 
     private void balance(ServerLevel level, List<IFluidHandler> buffers) {
         if (buffers.size() < 2) return;
+
+        // Считаем суммарное кол-во жидкости и суммарную ёмкость всех буферов
         long totalFluid = 0;
-        int validBuffers = 0;
+        long totalCapacity = 0;
         net.minecraft.world.level.material.Fluid type = null;
+
         for (IFluidHandler buf : buffers) {
             FluidStack fs = buf.getFluidInTank(0);
+            int cap = buf.getTankCapacity(0);
+            if (cap <= 0) continue;
             if (!fs.isEmpty()) {
                 totalFluid += fs.getAmount();
                 if (type == null) type = fs.getFluid();
             }
+            // Ёмкость учитываем для всех баков (в т.ч. пустых — они тоже участвуют в балансе)
+            totalCapacity += cap;
         }
-        for (IFluidHandler buf : buffers) {
-            FluidStack fs = buf.getFluidInTank(0);
-            if (fs.isEmpty() || fs.getFluid() == type) validBuffers++;
-        }
-        if (totalFluid == 0 || type == null || validBuffers < 2) return;
 
-        int avg = (int) (totalFluid / validBuffers);
-        List<IFluidHandler> donors = new ArrayList<>();
+        if (totalFluid == 0 || type == null || totalCapacity == 0) return;
+
+        // avgRatio — доля заполнения, к которой должен стремиться каждый бак
+        // (например 0.5 = 50% от своей ёмкости)
+        final double avgRatio = (double) totalFluid / totalCapacity;
+        final net.minecraft.world.level.material.Fluid fluidType = type;
+        final int DEADBAND = 5; // минимальная разница mB для начала переноса
+
+        List<IFluidHandler> donors    = new ArrayList<>();
         List<IFluidHandler> receivers = new ArrayList<>();
+
         for (IFluidHandler buf : buffers) {
             FluidStack fs = buf.getFluidInTank(0);
-            if (fs.isEmpty() || fs.getFluid() == type) {
-                int amt = fs.isEmpty() ? 0 : fs.getAmount();
-                if (amt > avg + 5) donors.add(buf);
-                else if (amt < avg - 5) receivers.add(buf);
-            }
+            int cap = buf.getTankCapacity(0);
+            if (cap <= 0) continue;
+
+            // Пропускаем баки с чужой жидкостью
+            if (!fs.isEmpty() && fs.getFluid() != fluidType) continue;
+
+            int current = fs.isEmpty() ? 0 : fs.getAmount();
+            int target  = (int) (cap * avgRatio);
+
+            if (current > target + DEADBAND) donors.add(buf);
+            else if (current < target - DEADBAND) receivers.add(buf);
         }
 
         for (IFluidHandler donor : donors) {
-            int donorExcess = donor.getFluidInTank(0).getAmount() - avg;
+            FluidStack donorFluid = donor.getFluidInTank(0);
+            if (donorFluid.isEmpty()) continue;
+
+            int donorCap     = donor.getTankCapacity(0);
+            int donorTarget  = (int) (donorCap * avgRatio);
+            int donorExcess  = donorFluid.getAmount() - donorTarget;
             if (donorExcess <= 0) continue;
+
             for (IFluidHandler receiver : receivers) {
-                int receiverAmt = receiver.getFluidInTank(0).isEmpty() ? 0 : receiver.getFluidInTank(0).getAmount();
-                int receiverDeficit = avg - receiverAmt;
-                if (receiverDeficit <= 0) continue;
-                int acceptedSim = receiver.fill(new FluidStack(type, Math.min(donorExcess, receiverDeficit)), IFluidHandler.FluidAction.SIMULATE);
+                if (donorExcess <= 0) break;
+
+                FluidStack recFluid = receiver.getFluidInTank(0);
+                int recCap    = receiver.getTankCapacity(0);
+                int recCurrent = recFluid.isEmpty() ? 0 : recFluid.getAmount();
+                int recTarget  = (int) (recCap * avgRatio);
+                int recDeficit = recTarget - recCurrent;
+                if (recDeficit <= 0) continue;
+
+                int toMove = Math.min(donorExcess, recDeficit);
+                int acceptedSim = receiver.fill(new FluidStack(fluidType, toMove), IFluidHandler.FluidAction.SIMULATE);
                 if (acceptedSim > 0) {
-                    FluidStack drained = donor.drain(new FluidStack(type, acceptedSim), IFluidHandler.FluidAction.EXECUTE);
+                    FluidStack drained = donor.drain(new FluidStack(fluidType, acceptedSim), IFluidHandler.FluidAction.EXECUTE);
                     if (!drained.isEmpty()) {
                         receiver.fill(drained, IFluidHandler.FluidAction.EXECUTE);
                         donorExcess -= drained.getAmount();
@@ -139,7 +184,6 @@ public class FluidNetwork {
                         }
                     }
                 }
-                if (donorExcess <= 0) break;
             }
         }
     }

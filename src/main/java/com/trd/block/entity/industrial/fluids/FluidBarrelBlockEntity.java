@@ -30,6 +30,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
@@ -51,6 +52,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider, ITankWithMode {
+
+    // === HOOK METHODS для подклассов ===
+    protected int getMaxTransferRate() { return MAX_TRANSFER_RATE; }
+    protected int getTankCapacity() { return getTier().getCapacity(); }
 
     public static final int MAX_TRANSFER_RATE = 200;
     public static final int TOTAL_SLOTS = 5;
@@ -100,9 +105,12 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
     };
 
     public FluidBarrelBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.FLUID_BARREL_BE.get(), pos, state);
-        int cap = getTier().getCapacity();
-        this.fluidTank = createTank(cap);
+        this(ModBlockEntities.FLUID_BARREL_BE.get(), pos, state);
+    }
+
+    protected FluidBarrelBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+        this.fluidTank = createTank(getTankCapacity());
         this.networkFluidHandler = createNetworkHandler();
     }
     @Override
@@ -118,7 +126,7 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
     public int getMode() {
         return mode;
     }
-    private FluidTank createTank(int capacity) {
+    protected FluidTank createTank(int capacity) {
         return new FluidTank(capacity) {
             @Override protected void onContentsChanged() {
                 setChanged();
@@ -135,7 +143,7 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         };
     }
 
-    private IFluidHandler createNetworkHandler() {
+    protected IFluidHandler createNetworkHandler() {
         return new IFluidHandler() {
             @Override public int getTanks() { return fluidTank.getTanks(); }
             @Override public @NotNull FluidStack getFluidInTank(int tank) { return fluidTank.getFluidInTank(tank); }
@@ -145,18 +153,18 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
             @Override public int fill(FluidStack resource, FluidAction action) {
                 if (mode == 2 || mode == 3) return 0;
                 FluidStack toFill = resource.copy();
-                toFill.setAmount(Math.min(toFill.getAmount(), MAX_TRANSFER_RATE));
+                toFill.setAmount(Math.min(toFill.getAmount(), getMaxTransferRate()));
                 return fluidTank.fill(toFill, action);
             }
             @Override public @NotNull FluidStack drain(FluidStack resource, FluidAction action) {
                 if (mode == 1 || mode == 3) return FluidStack.EMPTY;
-                int maxDrain = Math.min(resource.getAmount(), MAX_TRANSFER_RATE);
+                int maxDrain = Math.min(resource.getAmount(), getMaxTransferRate());
                 FluidStack toDrain = resource.copy(); toDrain.setAmount(maxDrain);
                 return fluidTank.drain(toDrain, action);
             }
             @Override public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
                 if (mode == 1 || mode == 3) return FluidStack.EMPTY;
-                return fluidTank.drain(Math.min(maxDrain, MAX_TRANSFER_RATE), action);
+                return fluidTank.drain(Math.min(maxDrain, getMaxTransferRate()), action);
             }
         };
     }
@@ -189,7 +197,7 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         be.checkDamage();
     }
 
-    private void processLeaking() {
+    protected void processLeaking() {
         if (!getTier().isLeaking() || fluidTank.isEmpty()) return;
         if (level.getGameTime() % 20 != 0) return;
         int rate = getTier().getLeakRate();
@@ -288,7 +296,7 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         }
     }
 
-    private void processBuckets() {
+    protected void processBuckets() {
         ItemStack drainIn = itemHandler.getStackInSlot(DRAIN_IN_SLOT);
         if (!drainIn.isEmpty()) {
             if (drainIn.getItem() instanceof com.trd.item.tools.InfiniteFluidBarrelItem) {
@@ -320,7 +328,7 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         }
     }
 
-    private boolean insertOrMerge(int slot, ItemStack stack) {
+    protected boolean insertOrMerge(int slot, ItemStack stack) {
         if (stack.isEmpty()) return true;
         ItemStack existing = itemHandler.getStackInSlot(slot);
         if (existing.isEmpty()) {
@@ -367,7 +375,7 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         lazyItemHandler.invalidate();
     }
 
-    private int getFluidTemperatureCelsius(FluidStack stack) {
+    protected int getFluidTemperatureCelsius(FluidStack stack) {
         int nbtTemp = FluidPropertyHelper.getTemperature(stack);
         Fluid fluid = stack.getFluid();
         int defaultTemp = fluid.getFluidType().getTemperature();
@@ -378,7 +386,7 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         return defaultTemp - 273;
     }
 
-    private int getFluidCorrosivity(FluidStack stack) {
+    protected int getFluidCorrosivity(FluidStack stack) {
         int nbt = FluidPropertyHelper.getCorrosivity(stack);
         if (nbt > 0) return nbt;
         if (stack.getFluid().getFluidType() instanceof BaseFluidType base) return base.getCorrosivity();
@@ -397,8 +405,9 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         itemHandler.deserializeNBT(tag.getCompound("Inventory"));
         mode = tag.getInt("Mode");
         if (tag.contains("FluidFilter")) this.fluidFilter = tag.getString("FluidFilter");
-        if (fluidTank.getFluidAmount() > getTier().getCapacity()) {
-            fluidTank.getFluid().setAmount(getTier().getCapacity());
+        int cap = getTankCapacity();
+        if (fluidTank.getFluidAmount() > cap) {
+            fluidTank.getFluid().setAmount(cap);
         }
     }
 
