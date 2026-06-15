@@ -103,7 +103,7 @@ public class ClientModEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.SHAFT_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.BEARING_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TACHOMETER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
-        event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.ber.FuelTankRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.STATOR_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
 
 //        event.registerBlockEntityRenderer(ModBlockEntities.WIND_GEN_FLUGER_BE.get(), WindGenFlugerRenderer::new);
@@ -258,7 +258,7 @@ public class ClientModEvents {
 
                     @Override
                     public boolean skipVanillaRender(FuelTankBlockEntity be) {
-                        return true; // Отключаем ванильный рендер полностью
+                        return false; // Позволяем BER рендерить текст
                     }
                 });
 
