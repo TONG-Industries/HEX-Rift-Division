@@ -269,7 +269,7 @@ public class ModBlocks {
                     .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()
                     .noOcclusion()));
-    public static final RegistryObject<Block> SMELTER = registerBlock("smelter",
+    public static final RegistryObject<Block> SMELTER = BLOCKS.register("smelter",
             () -> new SmelterBlock(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
     public static final RegistryObject<Block> CONCRETE_RED = registerBlock("concrete_red",

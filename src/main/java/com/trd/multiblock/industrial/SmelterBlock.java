@@ -94,20 +94,16 @@ public class SmelterBlock extends BaseEntityBlock implements IMultiblockControll
     }
 
     @Override
+    public net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        Direction facing = state.getValue(FACING);
+        return getStructureHelper().generateShapeFromParts(facing);
+    }
+
+    @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
         if (!level.isClientSide) {
             Direction facing = state.getValue(FACING);
-
-            Player player = placer instanceof Player ? (Player) placer : null;
-            if (!getStructureHelper().checkPlacement(level, pos, facing, player)) {
-                level.removeBlock(pos, false);
-                if (player != null && !player.getAbilities().instabuild) {
-                    popResource(level, pos, new ItemStack(this));
-                }
-                return;
-            }
-
             getStructureHelper().placeStructure(level, pos, facing, this);
         }
     }

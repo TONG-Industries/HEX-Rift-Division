@@ -97,33 +97,33 @@ public class FuelTankBlock extends BaseEntityBlock implements IMultiblockControl
             Map<Character, Supplier<BlockState>> symbols = Map.of(
                     '#', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
                     '@', () -> this.defaultBlockState(),
-                    '$', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState()
+                    '$', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
+                    'L', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState()
             );
 
             Map<Character, PartRole> roles = Map.of(
                     '#', PartRole.DEFAULT,
                     '@', PartRole.CONTROLLER,
-                    '$', PartRole.FLUID_CONNECTOR
+                    '$', PartRole.FLUID_CONNECTOR,
+                    'L', PartRole.LADDER
             );
 
             String[][] layers = {
                     {
-                            "##$#$##",
+                            "##$L$##",
                             "###@###",
-                            "##$#$##"
+                            "##$L$##"
                     },
                     {
+                            "###L###",
                             "#######",
-                            "#######",
-                            "#######"
+                            "###L###"
                     },
                     {
+                            "###L###",
                             "#######",
-                            "#######",
-                            "#######"
-                    }
-            };
-
+                            "###L###"
+                    }};
             helper = MultiblockStructureHelper.createFromLayersWithRoles(
                     layers,
                     symbols,

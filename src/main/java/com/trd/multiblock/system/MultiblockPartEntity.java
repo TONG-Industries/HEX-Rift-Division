@@ -112,6 +112,12 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
         super.saveAdditional(tag);
         if (controllerPos != null) tag.putLong("ControllerPos", controllerPos.asLong());
         tag.putString("Role", role.getSerializedName());
+        
+        byte climbMask = 0;
+        for (Direction d : allowedClimbSides) {
+            climbMask |= (1 << d.ordinal());
+        }
+        tag.putByte("ClimbSides", climbMask);
     }
 
     @NotNull
@@ -142,6 +148,16 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
         for (PartRole r : PartRole.values()) {
             if (r.getSerializedName().equals(roleName)) {
                 this.role = r; break;
+            }
+        }
+        
+        if (tag.contains("ClimbSides")) {
+            byte mask = tag.getByte("ClimbSides");
+            allowedClimbSides.clear();
+            for (Direction d : Direction.values()) {
+                if ((mask & (1 << d.ordinal())) != 0) {
+                    allowedClimbSides.add(d);
+                }
             }
         }
     }
