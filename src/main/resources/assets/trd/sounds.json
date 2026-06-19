@@ -63,9 +63,11 @@
     "category": "block",
     "subtitle": "sounds.trd.turret_fire",
     "sounds": [
-      "trd:turret_fire"
+      "trd:fire1",
+      "trd:fire2",
+      "trd:fire3"
     ]
-  },
+},
   "turret_lock": {
     "category": "block",
     "subtitle": "sounds.trd.turret_lock",
