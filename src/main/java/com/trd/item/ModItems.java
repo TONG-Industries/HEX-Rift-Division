@@ -295,6 +295,14 @@ public class ModItems {
 
     public static final RegistryObject<Item> HEATER_ITEM = ITEMS.register("heater",
             () -> new MultiblockBlockItem(ModBlocks.HEATER.get(), new Item.Properties()));
+    public static final RegistryObject<Item> BOILER_ITEM = ITEMS.register("boiler",
+            () -> new MultiblockBlockItem(ModBlocks.BOILER.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> SMELTER_ITEM = ITEMS.register("smelter",
+            () -> new MultiblockBlockItem(ModBlocks.SMELTER.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> FUEL_TANK_BIG_ITEM = ITEMS.register("fuel_tank_big",
+            () -> new MultiblockBlockItem(ModBlocks.FUEL_TANK_BIG.get(), new Item.Properties()));
 
     public static final RegistryObject<Item> SMELTER_ITEM = ITEMS.register("smelter",
             () -> new MultiblockBlockItem(ModBlocks.SMELTER.get(), new Item.Properties()));

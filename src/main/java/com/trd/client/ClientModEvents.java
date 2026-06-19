@@ -105,6 +105,7 @@ public class ClientModEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.BEARING_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TACHOMETER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.ber.FuelTankRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.BOILER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.STATOR_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
 
 //        event.registerBlockEntityRenderer(ModBlockEntities.WIND_GEN_FLUGER_BE.get(), WindGenFlugerRenderer::new);
@@ -263,6 +264,18 @@ public class ClientModEvents {
                     }
                 });
 
+        VisualizerRegistry.setVisualizer(ModBlockEntities.BOILER_BE.get(),
+                new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.trd.multiblock.industrial.BoilerBlockEntity>() {
+                    @Override
+                    public BlockEntityVisual<? super com.trd.multiblock.industrial.BoilerBlockEntity> createVisual(
+                            VisualizationContext ctx, com.trd.multiblock.industrial.BoilerBlockEntity be, float partialTick) {
+                        return new com.trd.client.render.flywheel.BoilerVisual(ctx, be, partialTick);
+                    }
+                    @Override
+                    public boolean skipVanillaRender(com.trd.multiblock.industrial.BoilerBlockEntity be) {
+                        return true;
+                    }
+                });
     }
     //================================================================================================
     //================================================================================================
@@ -287,6 +300,7 @@ public class ClientModEvents {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "ammo_hud", OverlayAmmoHud.HUD_AMMO);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "tachometer_hud", TachometerOverlay.HUD_TACHOMETER);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "stator_hud", StatorOverlay.HUD_STATOR);
+        event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "boiler_hud", com.trd.client.overlay.hud.BoilerOverlay.INSTANCE);
     }
 
 

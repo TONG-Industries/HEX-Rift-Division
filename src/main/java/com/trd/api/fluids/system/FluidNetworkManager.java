@@ -44,6 +44,50 @@ public class FluidNetworkManager extends SavedData {
         );
     }
 
+    public void rebuildAllNetworks() {
+        networks.clear();
+        for (FluidNode node : allNodes.values()) {
+            node.setNetwork(null);
+        }
+
+        allNodes.values().removeIf(node -> !node.isValid(level));
+
+        Set<FluidNode> processedNodes = new java.util.HashSet<>();
+
+        for (FluidNode startNode : allNodes.values()) {
+            if (processedNodes.contains(startNode)) {
+                continue;
+            }
+
+            FluidNetwork newNetwork = new FluidNetwork(this);
+            networks.add(newNetwork);
+
+            java.util.Queue<FluidNode> queue = new java.util.LinkedList<>();
+            queue.add(startNode);
+            processedNodes.add(startNode);
+
+            while (!queue.isEmpty()) {
+                FluidNode currentNode = queue.poll();
+                newNetwork.addNode(currentNode);
+
+                for (Direction dir : Direction.values()) {
+                    BlockPos neighborPos = currentNode.getPos().relative(dir);
+                    if (!canConnectLogically(currentNode.getPos(), neighborPos)) {
+                        continue;
+                    }
+
+                    FluidNode neighbor = allNodes.get(neighborPos.asLong());
+
+                    if (neighbor != null && !processedNodes.contains(neighbor)) {
+                        processedNodes.add(neighbor);
+                        queue.add(neighbor);
+                    }
+                }
+            }
+        }
+        setDirty();
+    }
+
     public void tick() {
         // 1. Делаем копию списка сетей (new HashSet) и тикаем каждую из них.
         // Переменную в лямбде назовем 'net', чтобы точно ничего не конфликтовало.
@@ -103,6 +147,11 @@ public class FluidNetworkManager extends SavedData {
 
     // ==================== ПРОВЕРКА ФИЛЬТРОВ И МАШИН ====================
     private boolean canConnectLogically(BlockPos pos1, BlockPos pos2) {
+        if (!level.isLoaded(pos1) || !level.isLoaded(pos2)) {
+            // Разрешаем соединение условно, чтобы не разорвать выгруженную сеть.
+            return true;
+        }
+
         BlockEntity be1 = level.getBlockEntity(pos1);
         BlockEntity be2 = level.getBlockEntity(pos2);
 
@@ -116,6 +165,22 @@ public class FluidNetworkManager extends SavedData {
             return f1 == f2;
         }
 
+        // --- ФИКС ДЛЯ МУЛЬТИБЛОКОВ ---
+        // Если чанк контроллера выгружен, getCapability() вернет empty.
+        // Поэтому мы жестко проверяем роль части мультиблока, чтобы не разрывать сеть!
+        if (isPipe1 && be2 instanceof com.trd.multiblock.system.MultiblockPartEntity part2) {
+            com.trd.multiblock.system.PartRole role = part2.getPartRole();
+            if (role == com.trd.multiblock.system.PartRole.FLUID_CONNECTOR || role == com.trd.multiblock.system.PartRole.UNIVERSAL_CONNECTOR || role == com.trd.multiblock.system.PartRole.FLUID_INPUT || role == com.trd.multiblock.system.PartRole.FLUID_OUTPUT) {
+                return true;
+            }
+        }
+        if (isPipe2 && be1 instanceof com.trd.multiblock.system.MultiblockPartEntity part1) {
+            com.trd.multiblock.system.PartRole role = part1.getPartRole();
+            if (role == com.trd.multiblock.system.PartRole.FLUID_CONNECTOR || role == com.trd.multiblock.system.PartRole.UNIVERSAL_CONNECTOR || role == com.trd.multiblock.system.PartRole.FLUID_INPUT || role == com.trd.multiblock.system.PartRole.FLUID_OUTPUT) {
+                return true;
+            }
+        }
+
         // 2. Если Труба соединяется с Бочкой (или любой другой машиной с баком)
         if (isPipe1 && be2 != null) {
             return be2.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.FLUID_HANDLER).isPresent();
@@ -126,6 +191,7 @@ public class FluidNetworkManager extends SavedData {
 
         // 3. Если две бочки/машины стоят впритык друг к другу
         if (!isPipe1 && !isPipe2 && be1 != null && be2 != null) {
+            if (be1 instanceof com.trd.multiblock.system.MultiblockPartEntity || be2 instanceof com.trd.multiblock.system.MultiblockPartEntity) return true;
             return be1.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.FLUID_HANDLER).isPresent() &&
                     be2.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.FLUID_HANDLER).isPresent();
         }
