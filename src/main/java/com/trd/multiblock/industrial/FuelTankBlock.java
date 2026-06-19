@@ -1,6 +1,5 @@
 package com.trd.multiblock.industrial;
 
-import com.trd.api.fluids.system.FluidNetworkManager;
 import com.trd.block.basic.ModBlocks;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.item.tools.FluidIdentifierItem;
@@ -9,7 +8,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
@@ -37,6 +35,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.phys.shapes.CollisionContext;
 
 import java.util.List;
 import java.util.Map;
@@ -84,8 +83,13 @@ public class FuelTankBlock extends BaseEntityBlock implements IMultiblockControl
         return Shapes.empty();
     }
 
-    // УБРАНЫ кастомные getShape / getCollisionShape — оставляем стандартные 1×1×1.
-    // Коллизии всего мультиблока обеспечивают MultiblockPartBlock'и.
+    // Возвращаем объединённый shape всего мультиблока — так любая часть структуры
+    // выделяется целиком чёрной обводкой (как у Heater).
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        Direction facing = state.getValue(FACING);
+        return getStructureHelper().generateShapeFromParts(facing);
+    }
 
     @Override
     public MultiblockStructureHelper getStructureHelper() {
@@ -93,33 +97,33 @@ public class FuelTankBlock extends BaseEntityBlock implements IMultiblockControl
             Map<Character, Supplier<BlockState>> symbols = Map.of(
                     '#', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
                     '@', () -> this.defaultBlockState(),
-                    '$', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState()
+                    '$', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
+                    'L', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState()
             );
 
             Map<Character, PartRole> roles = Map.of(
                     '#', PartRole.DEFAULT,
                     '@', PartRole.CONTROLLER,
-                    '$', PartRole.FLUID_CONNECTOR
+                    '$', PartRole.FLUID_CONNECTOR,
+                    'L', PartRole.LADDER
             );
 
             String[][] layers = {
                     {
-                            "##$#$##",
+                            "##$L$##",
                             "###@###",
-                            "##$#$##"
+                            "##$L$##"
                     },
                     {
+                            "###L###",
                             "#######",
-                            "#######",
-                            "#######"
+                            "###L###"
                     },
                     {
+                            "###L###",
                             "#######",
-                            "#######",
-                            "#######"
-                    }
-            };
-
+                            "###L###"
+                    }};
             helper = MultiblockStructureHelper.createFromLayersWithRoles(
                     layers,
                     symbols,
@@ -140,14 +144,6 @@ public class FuelTankBlock extends BaseEntityBlock implements IMultiblockControl
         super.setPlacedBy(level, pos, state, placer, stack);
         if (!level.isClientSide) {
             Direction facing = state.getValue(FACING);
-            Player player = placer instanceof Player ? (Player) placer : null;
-            if (!getStructureHelper().checkPlacement(level, pos, facing, player)) {
-                level.removeBlock(pos, false);
-                if (player != null && !player.getAbilities().instabuild) {
-                    popResource(level, pos, new ItemStack(this));
-                }
-                return;
-            }
             getStructureHelper().placeStructure(level, pos, facing, this);
         }
     }
