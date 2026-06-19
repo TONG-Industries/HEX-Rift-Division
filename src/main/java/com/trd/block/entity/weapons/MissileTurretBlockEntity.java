@@ -8,6 +8,7 @@ import com.trd.block.entity.industrial.energy.EnergyNodeBlockEntity;
 import com.trd.capability.ModCapabilities;
 import com.trd.item.energy.ModBatteryItem;
 import com.trd.item.energy.EnergyCellItem;
+import com.trd.item.weapons.missiles.MissileItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -56,10 +57,12 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
     private int scanTimer = 0;
     private static final int SCAN_INTERVAL = 5;
 
-    // === ЭНЕРГОСИСТЕМА (1:1 с TurretLightPlacerBlockEntity) ===
+    // === ЭНЕРГОСИСТЕМА ===
     private final long MAX_RECEIVE = 10000;
-    private final TurretAmmoContainer ammoContainer = new TurretAmmoContainer();
-    private final LazyOptional<ItemStackHandler> itemHandlerOptional = LazyOptional.of(() -> ammoContainer);
+
+    // === БОЕПРИПАСЫ ===
+    private final MissileAmmoContainer missileContainer = new MissileAmmoContainer();
+    private final LazyOptional<ItemStackHandler> itemHandlerOptional = LazyOptional.of(() -> missileContainer);
 
     // GUI-related поля
     private boolean isSwitchedOn = false;
@@ -77,13 +80,16 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
     private boolean extraButton1 = true;
     private boolean extraButton2 = true;
 
-    // Кэш здоровья для GUI (0-100) — для ракетницы используем как "готовность"
+    // Кэш статуса для GUI
     private int cachedStatus = 0;
+
+    // Тип ракеты для текущего залпа (берётся при начале залпа)
+    private String currentMissileType = "standard";
 
     public MissileTurretBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MISSILE_TURRET_BE.get(), pos, state);
         this.capacity = 100000; // MAX_ENERGY
-        this.ammoContainer.setOnContentsChanged(this::setChanged);
+        this.missileContainer.setOnContentsChanged(this::setChanged);
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, MissileTurretBlockEntity turret) {
@@ -93,8 +99,8 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
     }
 
     private void tickServer(ServerLevel level, BlockPos pos, BlockState state) {
-        // === ЗАРЯДКА ОТ БАТАРЕЙКИ В СЛОТЕ 10 (1:1 с TurretLightPlacerBlockEntity) ===
-        ItemStack batteryStack = this.ammoContainer.getStackInSlot(10);
+        // === ЗАРЯДКА ОТ БАТАРЕЙКИ В СЛОТЕ 4 (battery slot) ===
+        ItemStack batteryStack = this.missileContainer.getStackInSlot(MissileAmmoContainer.BATTERY_SLOT_INDEX);
         if (!batteryStack.isEmpty() && this.energy < this.capacity) {
             // 1. Пробуем Forge Energy (FE)
             batteryStack.getCapability(ForgeCapabilities.ENERGY).ifPresent(energyStorage -> {
@@ -127,7 +133,6 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
 
         // === ЛОГИКА ВЫКЛЮЧАТЕЛЯ ===
         if (!this.isSwitchedOn) {
-            // Выключено — замираем, не тратим энергию
             return;
         }
 
@@ -147,8 +152,8 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         if (isSalvoActive) {
             salvoTimer--;
             if (salvoTimer <= 0) {
-                // Проверяем энергию перед выстрелом
-                if (this.energy >= drainPerShot) {
+                // Проверяем энергию и боеприпасы перед выстрелом
+                if (this.energy >= drainPerShot && this.missileContainer.hasMissiles()) {
                     this.energy -= drainPerShot;
                     this.setChanged();
                     fireMissile(level, pos, state);
@@ -161,7 +166,7 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
                         salvoTimer = SALVO_INTERVAL;
                     }
                 } else {
-                    // Не хватает энергии — прерываем залп
+                    // Не хватает энергии или ракет — прерываем залп
                     isSalvoActive = false;
                     salvoCounter = 0;
                 }
@@ -175,9 +180,14 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
                 scanTimer = SCAN_INTERVAL;
                 currentTarget = findBestTarget(level, pos);
                 if (currentTarget != null) {
-                    // Проверяем энергию перед началом залпа
-                    if (this.energy >= drainPerShot * SALVO_SIZE) {
-                        startSalvo();
+                    // Проверяем энергию и наличие ракет перед началом залпа
+                    if (this.energy >= drainPerShot * SALVO_SIZE && this.missileContainer.hasMissiles()) {
+                        // Определяем тип ракеты для залпа (берём первую найденную)
+                        String missileType = this.missileContainer.peekMissileType();
+                        if (missileType != null) {
+                            this.currentMissileType = missileType;
+                            startSalvo();
+                        }
                     }
                 }
             }
@@ -286,42 +296,61 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         salvoTimer = 0;
     }
 
+    /**
+     * === НОВАЯ СИСТЕМА ПОЗИЦИЙ ПУСКА ===
+     * Координаты из Blockbench (пиксели) конвертируем в блоки (делим на 16).
+     * Позиции относительно центра блока:
+     * Ракета 1: (+3.5px, +3.5px) = (+0.21875, +0.21875)
+     * Ракета 2: (-3.5px, +3.5px) = (-0.21875, +0.21875)
+     * Ракета 3: (-3.5px, -3.5px) = (-0.21875, -0.21875)
+     *
+     * Y = LAUNCH_HEIGHT (1.0) над блоком
+     */
     private void fireMissile(ServerLevel level, BlockPos pos, BlockState state) {
         if (currentTarget == null || !currentTarget.isAlive()) {
             isSalvoActive = false;
             return;
         }
 
+        // Забираем ракету из контейнера и получаем её тип
+        String missileType = this.missileContainer.takeMissileAndGetType();
+        if (missileType == null) {
+            // Нет ракет — прерываем залп
+            isSalvoActive = false;
+            salvoCounter = 0;
+            return;
+        }
+
         level.playSound(null, pos, SoundEvents.FIREWORK_ROCKET_LAUNCH,
                 SoundSource.BLOCKS, 2.0F, 0.8F + level.random.nextFloat() * 0.4F);
 
-        net.minecraft.core.Direction facing = state.getValue(
-                com.trd.block.basic.weapons.MissileTurretBlock.FACING);
-
+        // Базовая позиция — центр блока + высота пуска
         Vec3 basePos = Vec3.atCenterOf(pos).add(0, LAUNCH_HEIGHT, 0);
-        Vec3 launchPos;
 
-        Vec3 right = new Vec3(-facing.getStepZ(), 0, facing.getStepX());
-        Vec3 up = new Vec3(0, 1, 0);
+        // Позиции пуска в локальных координатах (относительно центра блока)
+        // Конвертация из пикселей Blockbench в блоки: / 16.0
+        double pixelToBlock = 1.0 / 16.0;
+        double offset = 3.5 * pixelToBlock; // = 0.21875
 
+        Vec3 launchOffset;
         switch (salvoCounter) {
-            case 0 -> launchPos = basePos.add(right.scale(0.25)).add(up.scale(0.15));
-            case 1 -> launchPos = basePos.add(right.scale(-0.25)).add(up.scale(0.15));
-            case 2 -> launchPos = basePos.add(right.scale(-0.25)).add(up.scale(-0.15));
-            default -> launchPos = basePos;
+            case 0 -> launchOffset = new Vec3(offset, 0, offset);      // +X, +Z
+            case 1 -> launchOffset = new Vec3(-offset, 0, offset);     // -X, +Z
+            case 2 -> launchOffset = new Vec3(-offset, 0, -offset);  // -X, -Z
+            default -> launchOffset = Vec3.ZERO;
         }
 
+        Vec3 launchPos = basePos.add(launchOffset);
+
+        // Небольшой разброс
         double spreadX = (level.random.nextDouble() - 0.5) * 0.1;
         double spreadZ = (level.random.nextDouble() - 0.5) * 0.1;
         launchPos = launchPos.add(spreadX, 0, spreadZ);
 
         com.trd.entity.weapons.missiles.MissileLightEntity missile =
                 new com.trd.entity.weapons.missiles.MissileLightEntity(
-                        level, launchPos, currentTarget, null);
+                        level, launchPos, currentTarget, null, missileType);
         level.addFreshEntity(missile);
-
-        // Увеличиваем счётчик убийств (для статистики)
-        // incrementKills(); // Раскомментируй, если нужно считать только попадания
     }
 
     public int getCooldownProgress() {
@@ -336,7 +365,7 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
 
     public void onRemove() {}
 
-    // === МЕТОДЫ GUI (1:1 с TurretLightPlacerBlockEntity) ===
+    // === МЕТОДЫ GUI ===
 
     public void togglePower() {
         this.isSwitchedOn = !this.isSwitchedOn;
@@ -417,7 +446,7 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         tag.putInt("Cooldown", cooldownTimer);
         tag.putBoolean("SalvoActive", isSalvoActive);
         tag.putInt("SalvoCounter", salvoCounter);
-        tag.put("AmmoContainer", ammoContainer.serializeNBT());
+        tag.put("MissileContainer", missileContainer.serializeNBT());
 
         // GUI-данные
         tag.putBoolean("SwitchedOn", isSwitchedOn);
@@ -429,6 +458,7 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         tag.putLong("Lifetime", lifetimeTicks);
         tag.putBoolean("ExtraButton1", extraButton1);
         tag.putBoolean("ExtraButton2", extraButton2);
+        tag.putString("CurrentMissileType", currentMissileType);
     }
 
     @Override
@@ -437,7 +467,7 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         cooldownTimer = tag.getInt("Cooldown");
         isSalvoActive = tag.getBoolean("SalvoActive");
         salvoCounter = tag.getInt("SalvoCounter");
-        if (tag.contains("AmmoContainer")) ammoContainer.deserializeNBT(tag.getCompound("AmmoContainer"));
+        if (tag.contains("MissileContainer")) missileContainer.deserializeNBT(tag.getCompound("MissileContainer"));
 
         // GUI-данные
         isSwitchedOn = tag.getBoolean("SwitchedOn");
@@ -449,9 +479,12 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         lifetimeTicks = tag.getLong("Lifetime");
         extraButton1 = tag.getBoolean("ExtraButton1");
         extraButton2 = tag.getBoolean("ExtraButton2");
+        if (tag.contains("CurrentMissileType")) {
+            currentMissileType = tag.getString("CurrentMissileType");
+        }
     }
 
-    // === ContainerData (1:1 с TurretLightPlacerBlockEntity) ===
+    // === ContainerData ===
 
     public int getEnergyStoredInt() { return (int) Math.min(energy, Integer.MAX_VALUE); }
     public int getMaxEnergyStoredInt() { return (int) Math.min(capacity, Integer.MAX_VALUE); }
@@ -460,8 +493,9 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         if (!isSwitchedOn) return 0; // OFFLINE
         if (bootTimer > 0) return 200 + (int)((1.0 - (double)bootTimer / BOOT_DURATION) * 100); // BOOTING
         if (isSalvoActive) return 1; // ONLINE (стрельба)
-        if (cooldownTimer > 0) return 1000 + cooldownTimer; // COOLDOWN/RESPAWN
-        if (energy < 10000) return 0; // Недостаточно энергии для работы
+        if (cooldownTimer > 0) return 1000 + cooldownTimer; // COOLDOWN
+        if (energy < 10000) return 0; // Недостаточно энергии
+        if (!missileContainer.hasMissiles()) return 3000; // NO AMMO
         return 1; // ONLINE (готов)
     }
 
@@ -481,6 +515,11 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
                 case 9 -> (int)(lifetimeTicks / 20);
                 case 10 -> extraButton1 ? 1 : 0;
                 case 11 -> extraButton2 ? 1 : 0;
+                // Новые данные о ракетах
+                case 12 -> missileContainer.countMissiles(); // Общее кол-во ракет
+                case 13 -> missileContainer.countMissilesByType("standard");
+                case 14 -> missileContainer.countMissilesByType("he");
+                case 15 -> missileContainer.countMissilesByType("fire");
                 default -> 0;
             };
         }
@@ -498,12 +537,12 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
 
         @Override
         public int getCount() {
-            return 12;
+            return 16; // Увеличили с 12 до 16
         }
     };
 
     public ContainerData getDataAccess() { return this.data; }
-    public TurretAmmoContainer getAmmoContainer() { return ammoContainer; }
+    public MissileAmmoContainer getMissileContainer() { return missileContainer; }
 
     private record TargetScore(Monster entity, double score) {}
 }

@@ -1,6 +1,7 @@
 package com.trd.entity.weapons.missiles;
 
 import com.trd.explosion.logic.ExplosionHE;
+import com.trd.explosion.logic.ExplosionFire;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -31,6 +32,8 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
             SynchedEntityData.defineId(MissileLightEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> BOOST_PHASE =
             SynchedEntityData.defineId(MissileLightEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<String> MISSILE_TYPE =
+            SynchedEntityData.defineId(MissileLightEntity.class, EntityDataSerializers.STRING);
 
     // === КОНФИГ ===
     public static final float SPEED = 1.67f;
@@ -49,17 +52,22 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
     private int targetCacheTimer = 0;
     private int lostTargetTimer = 0;
 
+    // Тип ракеты: "standard", "he", "fire"
+    private String missileType = "standard";
+
     public MissileLightEntity(EntityType<? extends MissileLightEntity> type, Level level) {
         super(type, level);
         this.noPhysics = false;
     }
 
-    public MissileLightEntity(Level level, Vec3 startPos, LivingEntity target, Entity owner) {
+    public MissileLightEntity(Level level, Vec3 startPos, LivingEntity target, Entity owner, String missileType) {
         this(com.trd.entity.ModEntities.MISSILE_LIGHT.get(), level);
         this.setPos(startPos.x, startPos.y, startPos.z);
         this.launchPos = startPos;
         this.setTarget(target);
         this.setOwner(owner);
+        this.missileType = missileType != null ? missileType : "standard";
+        this.entityData.set(MISSILE_TYPE, this.missileType);
         this.entityData.set(BOOST_PHASE, true); // Начинаем с фазы набора высоты
 
         // Начальная скорость ВВЕРХ
@@ -71,6 +79,7 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
         this.entityData.define(TARGET_ID, -1);
         this.entityData.define(ARMED, false);
         this.entityData.define(BOOST_PHASE, true);
+        this.entityData.define(MISSILE_TYPE, "standard");
     }
 
     public void setTarget(LivingEntity target) {
@@ -106,6 +115,15 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
 
     public boolean isBoostPhase() {
         return this.entityData.get(BOOST_PHASE);
+    }
+
+    public String getMissileType() {
+        return this.entityData.get(MISSILE_TYPE);
+    }
+
+    public void setMissileType(String type) {
+        this.missileType = type != null ? type : "standard";
+        this.entityData.set(MISSILE_TYPE, this.missileType);
     }
 
     // === TICK ===
@@ -174,7 +192,6 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
 
         // Наведение
         if (isArmed()) {
-            // === ФИКС: при потере цели ракета летит по инерции, не взрывается ===
             LivingEntity target = getTarget();
 
             if (target != null && target.isAlive()) {
@@ -205,34 +222,7 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
                 this.setDeltaMovement(newDir.scale(SPEED));
             } else {
                 // Цель потеряна — просто продолжаем лететь по текущему направлению
-                // Не трогаем deltaMovement, сохраняем инерцию
-                lostTargetTimer = 0; // Сбрасываем, больше не нужен
-            }
-
-            if (target != null && target.isAlive()) {
-                Vec3 targetPos = target.getBoundingBox().getCenter();
-                Vec3 toTarget = targetPos.subtract(currentPos).normalize();
-                Vec3 currentDir = currentVel.normalize();
-
-                // Плавный поворот
-                double dot = currentDir.dot(toTarget);
-                double angle = Math.acos(Math.max(-1.0, Math.min(1.0, dot)));
-                double maxAngle = MAX_TURN_RATE;
-
-                Vec3 newDir;
-                if (angle <= maxAngle) {
-                    newDir = toTarget;
-                } else {
-                    Vec3 cross = currentDir.cross(toTarget);
-                    if (cross.lengthSqr() < 0.0001) {
-                        newDir = toTarget;
-                    } else {
-                        cross = cross.normalize();
-                        newDir = rotateVector(currentDir, cross, maxAngle);
-                    }
-                }
-
-                this.setDeltaMovement(newDir.scale(SPEED));
+                lostTargetTimer = 0;
             }
         }
 
@@ -355,13 +345,31 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
         exploded = true;
 
         if (!this.level().isClientSide) {
-            ExplosionHE.explode(
-                    this.level(),
-                    this.position(),
-                    this.getOwner(),
-                    DETONATION_RADIUS,
-                    DETONATION_DAMAGE
-            );
+            String type = getMissileType();
+            Vec3 pos = this.position();
+            Entity owner = this.getOwner();
+            ServerLevel serverLevel = (ServerLevel) this.level();
+
+            switch (type) {
+                case "he" -> {
+                    // Фугасная ракета — мощный взрыв ExplosionHE
+                    ExplosionHE.explode(serverLevel, pos, owner, DETONATION_RADIUS * 1.5f, DETONATION_DAMAGE * 1.5f);
+                }
+                case "fire" -> {
+                    // Огненная ракета — ExplosionFire
+                    ExplosionFire.explode(serverLevel, pos, owner, DETONATION_RADIUS);
+                }
+                default -> {
+                    // Обычная ракета — как динамит (стандартный взрыв)
+                    serverLevel.explode(
+                            owner,
+                            pos.x, pos.y, pos.z,
+                            DETONATION_RADIUS,
+                            false,
+                            Level.ExplosionInteraction.TNT
+                    );
+                }
+            }
         }
         this.discard();
     }
@@ -385,6 +393,7 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
         buffer.writeInt(this.entityData.get(TARGET_ID));
         buffer.writeBoolean(this.entityData.get(ARMED));
         buffer.writeBoolean(this.entityData.get(BOOST_PHASE));
+        buffer.writeUtf(this.entityData.get(MISSILE_TYPE));
     }
 
     @Override
@@ -400,6 +409,7 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
         int targetId = buffer.readInt();
         boolean armed = buffer.readBoolean();
         boolean boost = buffer.readBoolean();
+        String missileType = buffer.readUtf();
 
         this.setDeltaMovement(vx, vy, vz);
         this.setPos(x, y, z);
@@ -410,6 +420,7 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
         this.entityData.set(TARGET_ID, targetId);
         this.entityData.set(ARMED, armed);
         this.entityData.set(BOOST_PHASE, boost);
+        this.entityData.set(MISSILE_TYPE, missileType);
     }
 
     @Override
@@ -419,6 +430,7 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
         tag.putBoolean("Exploded", exploded);
         tag.putBoolean("Armed", isArmed());
         tag.putBoolean("BoostPhase", isBoostPhase());
+        tag.putString("MissileType", getMissileType());
         if (launchPos != null) {
             tag.putDouble("LaunchX", launchPos.x);
             tag.putDouble("LaunchY", launchPos.y);
@@ -433,6 +445,9 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
         exploded = tag.getBoolean("Exploded");
         this.entityData.set(ARMED, tag.getBoolean("Armed"));
         this.entityData.set(BOOST_PHASE, tag.getBoolean("BoostPhase"));
+        if (tag.contains("MissileType")) {
+            this.entityData.set(MISSILE_TYPE, tag.getString("MissileType"));
+        }
         if (tag.contains("LaunchX")) {
             launchPos = new Vec3(
                     tag.getDouble("LaunchX"),

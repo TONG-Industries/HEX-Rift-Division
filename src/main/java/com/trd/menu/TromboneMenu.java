@@ -11,21 +11,22 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.SlotItemHandler;
-import com.trd.block.entity.weapons.TurretAmmoContainer;
+import com.trd.block.entity.weapons.MissileAmmoContainer;
 import com.trd.item.energy.EnergyCellItem;
 import com.trd.item.energy.ModBatteryItem;
+import com.trd.item.weapons.missiles.MissileItem;
 import com.trd.item.weapons.turrets.TurretChipItem;
 
 public class TromboneMenu extends AbstractContainerMenu {
 
-    private final TurretAmmoContainer ammoContainer;
+    private final MissileAmmoContainer missileContainer;
     private final ContainerData data;
     private final BlockPos pos;
 
-    public static final int AMMO_SLOT_COUNT = 9;
-    public static final int CHIP_SLOT_INDEX = 9;
-    public static final int BATTERY_SLOT_INDEX = 10;
-    public static final int TOTAL_TURRET_SLOTS = 11;
+    public static final int MISSILE_SLOT_COUNT = 3;     // Слоты 0-2 — ракеты
+    public static final int CHIP_SLOT_INDEX = 3;        // Слот 3 — чип
+    public static final int BATTERY_SLOT_INDEX = 4;     // Слот 4 — батарейка
+    public static final int TOTAL_TURRET_SLOTS = 5;
 
     // --- КОНСТАНТЫ ДАННЫХ ---
     public static final int DATA_ENERGY = 0;
@@ -40,43 +41,67 @@ public class TromboneMenu extends AbstractContainerMenu {
     public static final int DATA_LIFETIME = 9;
     public static final int DATA_EXTRA_1 = 10;
     public static final int DATA_EXTRA_2 = 11;
-    private static final int DATA_COUNT = 12;
+    // Новые данные о ракетах
+    public static final int DATA_MISSILE_COUNT = 12;
+    public static final int DATA_MISSILE_STANDARD = 13;
+    public static final int DATA_MISSILE_HE = 14;
+    public static final int DATA_MISSILE_FIRE = 15;
 
-    public TromboneMenu(int containerId, Inventory playerInventory, TurretAmmoContainer ammoContainer, ContainerData data, BlockPos pos) {
+    private static final int DATA_COUNT = 16;
+
+    public TromboneMenu(int containerId, Inventory playerInventory, MissileAmmoContainer missileContainer, ContainerData data, BlockPos pos) {
         super(ModMenuTypes.TROMBONE_MENU.get(), containerId);
         checkContainerDataCount(data, DATA_COUNT);
 
-        this.ammoContainer = ammoContainer;
+        this.missileContainer = missileContainer;
         this.data = data;
         this.pos = pos;
         this.addDataSlots(data);
 
-        // Слоты патронов 0-8
-        int ammoStartX = 115;
-        int ammoStartY = 44;
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 3; col++) {
-                this.addSlot(new SlotItemHandler(ammoContainer, row * 3 + col, ammoStartX + col * 18, ammoStartY + row * 18) {
-                    @Override public void setChanged() { super.setChanged(); ammoContainer.onContentsChanged(this.getSlotIndex()); }
-                });
-            }
+        // === СЛОТЫ РАКЕТ 0-2 ===
+        // Располагаем горизонтально под экраном
+        int missileStartX = 115;
+        int missileStartY = 44;
+        for (int i = 0; i < MISSILE_SLOT_COUNT; i++) {
+            this.addSlot(new SlotItemHandler(missileContainer, i, missileStartX + i * 18, missileStartY) {
+                @Override
+                public boolean mayPlace(ItemStack stack) {
+                    return stack.getItem() instanceof MissileItem;
+                }
+                @Override
+                public void setChanged() {
+                    super.setChanged();
+                    missileContainer.onContentsChanged(this.getSlotIndex());
+                }
+            });
         }
 
-        // Слот ЧИПА (9) — 91, 80
-        this.addSlot(new SlotItemHandler(ammoContainer, CHIP_SLOT_INDEX, 90, 79) {
-            @Override public boolean mayPlace(ItemStack stack) { return stack.getItem() instanceof TurretChipItem; }
-            @Override public void setChanged() { super.setChanged(); ammoContainer.onContentsChanged(this.getSlotIndex()); }
+        // Слот ЧИПА (3) — 90, 79
+        this.addSlot(new SlotItemHandler(missileContainer, CHIP_SLOT_INDEX, 90, 79) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return stack.getItem() instanceof TurretChipItem;
+            }
+            @Override
+            public void setChanged() {
+                super.setChanged();
+                missileContainer.onContentsChanged(this.getSlotIndex());
+            }
         });
 
-        // Слот БАТАРЕИ (10) — 180, 81
-        this.addSlot(new SlotItemHandler(ammoContainer, BATTERY_SLOT_INDEX, 180, 81) {
+        // Слот БАТАРЕИ (4) — 180, 81
+        this.addSlot(new SlotItemHandler(missileContainer, BATTERY_SLOT_INDEX, 180, 81) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return stack.getCapability(ForgeCapabilities.ENERGY).isPresent()
                         || stack.getItem() instanceof ModBatteryItem
                         || stack.getItem() instanceof EnergyCellItem;
             }
-            @Override public void setChanged() { super.setChanged(); ammoContainer.onContentsChanged(this.getSlotIndex()); }
+            @Override
+            public void setChanged() {
+                super.setChanged();
+                missileContainer.onContentsChanged(this.getSlotIndex());
+            }
         });
 
         // Инвентарь игрока
@@ -93,12 +118,12 @@ public class TromboneMenu extends AbstractContainerMenu {
     }
 
     public TromboneMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        this(containerId, playerInventory, new TurretAmmoContainer(), new SimpleContainerData(DATA_COUNT), extraData.readBlockPos());
+        this(containerId, playerInventory, new MissileAmmoContainer(), new SimpleContainerData(DATA_COUNT), extraData.readBlockPos());
     }
 
     public BlockPos getPos() { return pos; }
     public int getDataSlot(int index) { return this.data.get(index); }
-    public TurretAmmoContainer getAmmoContainer() { return ammoContainer; }
+    public MissileAmmoContainer getMissileContainer() { return missileContainer; }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
@@ -115,10 +140,12 @@ public class TromboneMenu extends AbstractContainerMenu {
             int hotbarEnd = hotbarStart + 9;
 
             if (index < totalSlots) {
+                // Из слотов турели → в инвентарь игрока
                 if (!this.moveItemStackTo(stack, playerInvStart, hotbarEnd, true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
+                // Из инвентаря игрока → в слоты турели
                 if (stack.getItem() instanceof TurretChipItem) {
                     if (!this.moveItemStackTo(stack, CHIP_SLOT_INDEX, CHIP_SLOT_INDEX + 1, false)) {
                         return ItemStack.EMPTY;
@@ -129,8 +156,9 @@ public class TromboneMenu extends AbstractContainerMenu {
                     if (!this.moveItemStackTo(stack, BATTERY_SLOT_INDEX, BATTERY_SLOT_INDEX + 1, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else {
-                    if (!this.moveItemStackTo(stack, 0, AMMO_SLOT_COUNT, false)) {
+                } else if (stack.getItem() instanceof MissileItem) {
+                    // Ракеты → слоты 0-2
+                    if (!this.moveItemStackTo(stack, 0, MISSILE_SLOT_COUNT, false)) {
                         return ItemStack.EMPTY;
                     }
                 }

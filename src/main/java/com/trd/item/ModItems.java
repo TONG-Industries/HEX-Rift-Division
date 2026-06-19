@@ -23,6 +23,7 @@ import com.trd.item.weapons.grenades.GravityGrenadeItem;
 import com.trd.item.weapons.grenades.GrenadeIfItem;
 import com.trd.item.weapons.grenades.GrenadeItem;
 import com.trd.item.weapons.grenades.GrenadeNucItem;
+import com.trd.item.weapons.missiles.MissileItem;
 import com.trd.multiblock.system.MultiblockBlockItem;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ArmorItem;
@@ -105,13 +106,13 @@ public class ModItems {
             () -> new GravityGrenadeItem(new Item.Properties().stacksTo(16), ModEntities.GRAVITY_GRENADE_PROJECTILE));
 
     public static final RegistryObject<Item> MISSILE_100MM = ITEMS.register("missile_100mm",
-            () -> new Item(new Item.Properties()));
+            () -> new MissileItem(new Item.Properties(), "standard", 25.0f, 1.67f));
+
     public static final RegistryObject<Item> MISSILE_100MM_HE = ITEMS.register("missile_100mm_he",
-            () -> new Item(new Item.Properties()));
+            () -> new MissileItem(new Item.Properties(), "he", 40.0f, 1.67f));
+
     public static final RegistryObject<Item> MISSILE_100MM_FIRE = ITEMS.register("missile_100mm_fire",
-            () -> new Item(new Item.Properties()));
-
-
+            () -> new MissileItem(new Item.Properties(), "fire", 20.0f, 1.67f));
     public static final RegistryObject<Item> DEPTH_WORM_BRUTAL_SPAWN_EGG = ITEMS.register("depth_worm_brutal_spawn_egg",
             () -> new DepthWormBrutalSpawnEggItem(new Item.Properties()));
 
