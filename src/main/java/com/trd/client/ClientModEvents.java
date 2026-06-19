@@ -98,6 +98,7 @@ public class ClientModEvents {
         MenuScreens.register(ModMenuTypes.HEATER_MENU.get(), GUIHeater::new);
         MenuScreens.register(ModMenuTypes.SMELTER_MENU.get(), GUISmelter::new);
         MenuScreens.register(ModMenuTypes.FUEL_TANK_MENU.get(), GUIFuelTank::new);
+        MenuScreens.register(ModMenuTypes.TROMBONE_MENU.get(), GUITrombone::new);
         
         event.registerBlockEntityRenderer(ModBlockEntities.MOTOR_ELECTRO_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SHAFT_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);

@@ -48,7 +48,7 @@ public class PacketModifyTurretChip {
                 if (player.containerMenu instanceof TurretLightMenu menu) {
                     stack = menu.getAmmoContainer().getStackInSlot(9);
                 } else if (player.containerMenu instanceof TromboneMenu menu) {
-                    stack = menu.getAmmoContainer().getStackInSlot(9);
+                    stack = menu.getMissileContainer().getStackInSlot(9);
                 }
 
                 if (stack.getItem() instanceof TurretChipItem) {
