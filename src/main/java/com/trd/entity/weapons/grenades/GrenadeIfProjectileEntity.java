@@ -1,6 +1,6 @@
 package com.trd.entity.weapons.grenades;
 
-import com.trd.explosion.logic.ExplosionFireRaycast;
+import com.trd.explosion.logic.ExplosionFire;
 import com.trd.explosion.logic.ExplosionHE;
 import com.trd.explosion.logic.ExplosionStandard;
 import com.trd.sound.ModSounds;
@@ -212,7 +212,7 @@ public class GrenadeIfProjectileEntity extends ThrowableItemProjectile {
         switch (grenadeType) {
             case GRENADE_IF -> ExplosionStandard.explode(level, center, this.getOwner(), 5.0f, 45.0f);
             case GRENADE_IF_HE -> ExplosionHE.explode(level, center, this.getOwner(), 8.0f, 80.0f);
-            case GRENADE_IF_FIRE -> ExplosionFireRaycast.explode((ServerLevel) level, center, this.getOwner(), 3.0f);
+            case GRENADE_IF_FIRE -> ExplosionFire.explode((ServerLevel) level, center, this.getOwner(), 3.0f);
             case GRENADE_IF_SLIME -> ExplosionStandard.explode(level, center, this.getOwner(), 6.0f, 60.0f);
         }
         this.discard();

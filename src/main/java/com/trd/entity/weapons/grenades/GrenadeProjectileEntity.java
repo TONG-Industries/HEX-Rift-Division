@@ -1,7 +1,7 @@
 package com.trd.entity.weapons.grenades;
 
 import com.trd.sound.ModSounds;
-import com.trd.explosion.logic.ExplosionFireRaycast;
+import com.trd.explosion.logic.ExplosionFire;
 import com.trd.explosion.logic.ExplosionHE;
 import com.trd.explosion.logic.ExplosionStandard;
 import net.minecraft.core.BlockPos;
@@ -213,11 +213,11 @@ public class GrenadeProjectileEntity extends ThrowableItemProjectile {
         switch (grenadeType) {
             case STANDARD -> ExplosionStandard.explode(level, pos, this.getOwner(), 3.5f, grenadeType.getCustomDamage());
             case HE -> ExplosionHE.explode(level, pos, this.getOwner(), 7.0f, grenadeType.getCustomDamage());
-            case FIRE -> ExplosionFireRaycast.explode((ServerLevel) level, pos, this.getOwner(), 3.0f);
+            case FIRE -> ExplosionFire.explode((ServerLevel) level, pos, this.getOwner(), 3.0f);
             case SMART -> {
                 if (smartEntityHit) {
                     ExplosionHE.explode(level, pos, this.getOwner(), 7.0f, 40.0f);
-                    ExplosionFireRaycast.explode((ServerLevel) level, pos, this.getOwner(), 2.0f);
+                    ExplosionFire.explode((ServerLevel) level, pos, this.getOwner(), 2.0f);
                 } else {
                     ExplosionStandard.explode(level, pos, this.getOwner(), 3.5f, 20.0f);
                 }

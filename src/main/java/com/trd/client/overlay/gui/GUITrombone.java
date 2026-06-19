@@ -33,6 +33,7 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
     private static final int STATE_RESULT_MSG = 4;
     private static final int STATE_ATTACK_MODE = 5;
     private static final int STATE_STATS = 6;
+    private static final int STATE_MISSILES = 7;
 
     // --- ПАЛИТРА (Pastel Terminal) ---
     private static final int COLOR_TEXT    = 0xE0E0E0;
@@ -41,6 +42,8 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
     private static final int COLOR_WARN    = 0xFDFD96;
     private static final int COLOR_INFO    = 0xAEC6CF;
     private static final int COLOR_OFF     = 0x949494;
+    private static final int COLOR_FIRE    = 0xFF8C42;
+    private static final int COLOR_HE      = 0xFF4444;
 
     private int uiState = STATE_NORMAL;
     private int selectedIndex = 0;
@@ -91,7 +94,6 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
         boolean isExtra2On = this.menu.getDataSlot(TromboneMenu.DATA_EXTRA_2) == 1;
 
         // === АНИМАЦИЯ КНОПКИ ВКЛЮЧЕНИЯ ===
-        // [ИСПРАВЛЕНО] Кнопка включения — зелёная полоса когда ВКЛЮЧЕНО
         if (isSwitchedOn) {
             guiGraphics.blit(TEXTURE, x + 10, y + 62, 204, 103, 10, 32);
         }
@@ -114,16 +116,14 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
         // Светодиод чипа
         if (hasChip()) { guiGraphics.blit(TEXTURE, x + 12, y + 52, 221, 113, 6, 6); }
 
-        // === ПОЛОСКА ЭНЕРГИИ (1:1 с TurretLightPlacerBlockEntity) ===
+        // === ПОЛОСКА ЭНЕРГИИ ===
         if (maxEnergy > 0) {
             int barHeight = 52;
             int filledHeight = (int) ((long) energy * barHeight / maxEnergy);
-            // Рисуем снизу вверх
             guiGraphics.blit(TEXTURE, x + 180, y + 27 + (barHeight - filledHeight), 204, 27 + (barHeight - filledHeight), 16, filledHeight);
         }
 
         // === ЭКРАН ===
-        // [ИСПРАВЛЕНО] Условие включения экрана: энергия > 10000 И включено
         if (energy > 10000 && isSwitchedOn) {
             guiGraphics.blit(TEXTURE, x + 10, y + 32, 0, 196, 95, 16);
 
@@ -140,6 +140,9 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
                         break;
                     case STATE_STATS:
                         drawStats(guiGraphics, x + 10, y + 32, 95, 16);
+                        break;
+                    case STATE_MISSILES:
+                        drawMissiles(guiGraphics, x + 10, y + 32, 95, 16);
                         break;
                     case STATE_CHIP_LIST:
                         if (!hasChip()) { uiState = STATE_MAIN_MENU; break; }
@@ -166,27 +169,30 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
                 }
             }
         } else {
-            // [ИСПРАВЛЕНО] Если нет энергии или выключено — сбрасываем UI
             uiState = STATE_NORMAL;
         }
     }
 
-    // ... остальные методы draw* без изменений ...
-
     private void drawMainMenu(GuiGraphics guiGraphics, int x, int y, int w, int h) {
-        if (selectedIndex < 0) selectedIndex = 2;
-        if (selectedIndex > 2) selectedIndex = 0;
+        if (selectedIndex < 0) selectedIndex = 3;
+        if (selectedIndex > 3) selectedIndex = 0;
 
         String text = "";
         int color = COLOR_TEXT;
 
-        if (selectedIndex == 0) {
-            text = "CHIP CONTROL";
-            if (!hasChip()) color = COLOR_OFF;
-        } else if (selectedIndex == 1) {
-            text = "ATTACK MODE";
-        } else {
-            text = "TURRET STATS";
+        switch (selectedIndex) {
+            case 0 -> {
+                text = "CHIP CONTROL";
+                if (!hasChip()) color = COLOR_OFF;
+            }
+            case 1 -> text = "ATTACK MODE";
+            case 2 -> text = "TURRET STATS";
+            case 3 -> {
+                text = "MISSILES";
+                int missileCount = this.menu.getDataSlot(TromboneMenu.DATA_MISSILE_COUNT);
+                if (missileCount == 0) color = COLOR_BAD;
+                else color = COLOR_GOOD;
+            }
         }
 
         text = "< " + text + " >";
@@ -224,22 +230,59 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
         int color = COLOR_TEXT;
 
         switch (selectedIndex) {
-            case 0:
+            case 0 -> {
                 int kills = this.menu.getDataSlot(TromboneMenu.DATA_KILLS);
                 text = "KILLS: " + kills;
                 color = COLOR_BAD;
-                break;
-            case 1:
+            }
+            case 1 -> {
                 int secondsTotal = this.menu.getDataSlot(TromboneMenu.DATA_LIFETIME);
                 int hours = secondsTotal / 3600;
                 int minutes = (secondsTotal % 3600) / 60;
                 text = String.format("TIME: %dh %dm", hours, minutes);
                 color = COLOR_INFO;
-                break;
-            case 2:
+            }
+            case 2 -> {
                 text = "OWNER: [DATA]";
                 color = COLOR_WARN;
-                break;
+            }
+        }
+
+        text = "< " + text + " >";
+        drawCenteredText(guiGraphics, text, color, x, y, w, h);
+    }
+
+    private void drawMissiles(GuiGraphics guiGraphics, int x, int y, int w, int h) {
+        int stdCount = this.menu.getDataSlot(TromboneMenu.DATA_MISSILE_STANDARD);
+        int heCount = this.menu.getDataSlot(TromboneMenu.DATA_MISSILE_HE);
+        int fireCount = this.menu.getDataSlot(TromboneMenu.DATA_MISSILE_FIRE);
+        int total = stdCount + heCount + fireCount;
+
+        String text;
+        int color;
+
+        if (total == 0) {
+            text = "NO MISSILES!";
+            color = COLOR_BAD;
+        } else {
+            switch (selectedIndex) {
+                case 0 -> {
+                    text = "STD: " + stdCount;
+                    color = COLOR_TEXT;
+                }
+                case 1 -> {
+                    text = "HE: " + heCount;
+                    color = COLOR_HE;
+                }
+                case 2 -> {
+                    text = "FIRE: " + fireCount;
+                    color = COLOR_FIRE;
+                }
+                default -> {
+                    text = "TTL: " + total;
+                    color = COLOR_GOOD;
+                }
+            }
         }
 
         text = "< " + text + " >";
@@ -319,6 +362,8 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
                             uiState = STATE_ATTACK_MODE; selectedIndex = 0;
                         } else if (selectedIndex == 2) {
                             uiState = STATE_STATS; selectedIndex = 0;
+                        } else if (selectedIndex == 3) {
+                            uiState = STATE_MISSILES; selectedIndex = 0;
                         }
                     } else if (uiState == STATE_ADD_INPUT) {
                         if (!inputString.isEmpty()) {
@@ -333,7 +378,7 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
                 if (hitLeft || hitRight) {
                     if (uiState == STATE_MAIN_MENU) {
                         if (hitLeft) selectedIndex--; else selectedIndex++;
-                    } else if (uiState == STATE_CHIP_LIST || uiState == STATE_ATTACK_MODE || uiState == STATE_STATS) {
+                    } else if (uiState == STATE_CHIP_LIST || uiState == STATE_ATTACK_MODE || uiState == STATE_STATS || uiState == STATE_MISSILES) {
                         if (hitLeft) selectedIndex--; else selectedIndex++;
                     }
                     return true;
@@ -406,12 +451,12 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
     }
 
     private boolean hasChip() {
-        ItemStack stack = this.menu.getAmmoContainer().getStackInSlot(9);
+        ItemStack stack = this.menu.getMissileContainer().getStackInSlot(9);
         return !stack.isEmpty() && stack.getItem() instanceof TurretChipItem;
     }
 
     private void drawChipUserList(GuiGraphics guiGraphics, int screenX, int screenY, int w, int h) {
-        ItemStack stack = this.menu.getAmmoContainer().getStackInSlot(9);
+        ItemStack stack = this.menu.getMissileContainer().getStackInSlot(9);
         List<String> names = new ArrayList<>();
         if (stack.hasTag() && stack.getTag().contains("TurretOwners")) {
             ListTag list = stack.getTag().getList("TurretOwners", Tag.TAG_STRING);
@@ -455,12 +500,15 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
         int color;
         if (status == 1) { msg = "SYSTEM ONLINE"; color = COLOR_GOOD; }
         else if (status >= 200 && status <= 300) { msg = "REPAIRING: " + (status - 200) + "%"; color = COLOR_WARN; }
-        else if (status >= 1000) { msg = "RESPAWN: " + ((status - 1000) / 20) + "s"; color = COLOR_BAD; }
+        else if (status >= 1000) { msg = "RELOADING: " + ((status - 1000) / 20) + "s"; color = COLOR_BAD; }
+        else if (status == 3000) { msg = "NO MISSILES"; color = COLOR_BAD; }
         else {
             if (energy < maxEnergy) { msg = "CHARGING..."; color = COLOR_WARN; }
             else { msg = "STANDBY MODE"; color = COLOR_OFF; }
         }
-        drawCenteredText(guiGraphics, msg, color, x, y, w, h);
+        if (!msg.isEmpty()) {
+            drawCenteredText(guiGraphics, msg, color, x, y, w, h);
+        }
     }
 
     private void playClickSound() {

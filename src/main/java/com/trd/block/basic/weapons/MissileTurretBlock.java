@@ -1,6 +1,7 @@
 package com.trd.block.basic.weapons;
 
 import com.trd.block.entity.ModBlockEntities;
+import com.trd.block.entity.weapons.MissileAmmoContainer;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
 import com.trd.menu.TromboneMenu;
 import com.trd.api.energy.EnergyNetworkManager;
@@ -11,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -95,15 +97,16 @@ public class MissileTurretBlock extends BaseEntityBlock {
                 // Выбрасываем содержимое инвентаря
                 BlockEntity be = level.getBlockEntity(pos);
                 if (be instanceof MissileTurretBlockEntity turretBE) {
-                    com.trd.block.entity.weapons.TurretAmmoContainer container = turretBE.getAmmoContainer();
+                    MissileAmmoContainer container = turretBE.getMissileContainer();
                     for (int i = 0; i < container.getSlots(); i++) {
-                        net.minecraft.world.item.ItemStack stack = container.getStackInSlot(i);
+                        ItemStack stack = container.getStackInSlot(i);
                         if (!stack.isEmpty()) {
                             net.minecraft.world.Containers.dropItemStack(
                                     level, pos.getX(), pos.getY(), pos.getZ(), stack);
                         }
                     }
                 }
+
                 EnergyNetworkManager.get((ServerLevel) level).removeNode(pos);
             }
             super.onRemove(state, level, pos, newState, isMoving);
@@ -119,7 +122,7 @@ public class MissileTurretBlock extends BaseEntityBlock {
                         new net.minecraft.world.SimpleMenuProvider(
                                 (windowId, playerInventory, playerEntity) ->
                                         new TromboneMenu(windowId, playerInventory,
-                                                turret.getAmmoContainer(),
+                                                turret.getMissileContainer(),
                                                 turret.getDataAccess(),
                                                 pos),
                                 net.minecraft.network.chat.Component.literal("Trombone")

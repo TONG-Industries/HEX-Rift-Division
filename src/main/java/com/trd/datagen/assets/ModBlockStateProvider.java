@@ -161,6 +161,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 modLoc("block/deco_beam_top"),
                 modLoc("block/deco_beam_top")
         );
+        columnBlockWithItem(ModBlocks.NUCLEAR_CHARGE,
+                modLoc("block/nuclear_charge"),
+                modLoc("block/nuclear_charge_top"),
+                modLoc("block/nuclear_charge")
+        );
 
         fluidPipeBlock(ModBlocks.BRONZE_FLUID_PIPE, "bronze");
         fluidPipeBlock(ModBlocks.STEEL_FLUID_PIPE, "steel");
