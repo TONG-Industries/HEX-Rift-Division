@@ -23,10 +23,10 @@ public class TromboneMenu extends AbstractContainerMenu {
     private final ContainerData data;
     private final BlockPos pos;
 
-    public static final int MISSILE_SLOT_COUNT = 3;     // Слоты 0-2 — ракеты
-    public static final int CHIP_SLOT_INDEX = 3;        // Слот 3 — чип
-    public static final int BATTERY_SLOT_INDEX = 4;     // Слот 4 — батарейка
-    public static final int TOTAL_TURRET_SLOTS = 5;
+    public static final int MISSILE_SLOT_COUNT = 9;   // Слоты 0-8 — ракеты (3x3)
+    public static final int CHIP_SLOT_INDEX = 9;        // Слот 9 — чип
+    public static final int BATTERY_SLOT_INDEX = 10;    // Слот 10 — батарейка
+    public static final int TOTAL_TURRET_SLOTS = 11;
 
     // --- КОНСТАНТЫ ДАННЫХ ---
     public static final int DATA_ENERGY = 0;
@@ -41,7 +41,7 @@ public class TromboneMenu extends AbstractContainerMenu {
     public static final int DATA_LIFETIME = 9;
     public static final int DATA_EXTRA_1 = 10;
     public static final int DATA_EXTRA_2 = 11;
-    // Новые данные о ракетах
+    // Данные о ракетах
     public static final int DATA_MISSILE_COUNT = 12;
     public static final int DATA_MISSILE_STANDARD = 13;
     public static final int DATA_MISSILE_HE = 14;
@@ -58,25 +58,27 @@ public class TromboneMenu extends AbstractContainerMenu {
         this.pos = pos;
         this.addDataSlots(data);
 
-        // === СЛОТЫ РАКЕТ 0-2 ===
-        // Располагаем горизонтально под экраном
-        int missileStartX = 115;
-        int missileStartY = 44;
-        for (int i = 0; i < MISSILE_SLOT_COUNT; i++) {
-            this.addSlot(new SlotItemHandler(missileContainer, i, missileStartX + i * 18, missileStartY) {
-                @Override
-                public boolean mayPlace(ItemStack stack) {
-                    return stack.getItem() instanceof MissileItem;
-                }
-                @Override
-                public void setChanged() {
-                    super.setChanged();
-                    missileContainer.onContentsChanged(this.getSlotIndex());
-                }
-            });
+        // === СЛОТЫ РАКЕТ 0-8 (3x3 сетка) ===
+        // Расположение как у пулемётной турели
+        int ammoStartX = 115;
+        int ammoStartY = 44;
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                this.addSlot(new SlotItemHandler(missileContainer, row * 3 + col, ammoStartX + col * 18, ammoStartY + row * 18) {
+                    @Override
+                    public boolean mayPlace(ItemStack stack) {
+                        return stack.getItem() instanceof MissileItem;
+                    }
+                    @Override
+                    public void setChanged() {
+                        super.setChanged();
+                        missileContainer.onContentsChanged(this.getSlotIndex());
+                    }
+                });
+            }
         }
 
-        // Слот ЧИПА (3) — 90, 79
+        // Слот ЧИПА (9) — 90, 79
         this.addSlot(new SlotItemHandler(missileContainer, CHIP_SLOT_INDEX, 90, 79) {
             @Override
             public boolean mayPlace(ItemStack stack) {
@@ -89,7 +91,7 @@ public class TromboneMenu extends AbstractContainerMenu {
             }
         });
 
-        // Слот БАТАРЕИ (4) — 180, 81
+        // Слот БАТАРЕИ (10) — 180, 81
         this.addSlot(new SlotItemHandler(missileContainer, BATTERY_SLOT_INDEX, 180, 81) {
             @Override
             public boolean mayPlace(ItemStack stack) {
@@ -157,7 +159,7 @@ public class TromboneMenu extends AbstractContainerMenu {
                         return ItemStack.EMPTY;
                     }
                 } else if (stack.getItem() instanceof MissileItem) {
-                    // Ракеты → слоты 0-2
+                    // Ракеты → слоты 0-8
                     if (!this.moveItemStackTo(stack, 0, MISSILE_SLOT_COUNT, false)) {
                         return ItemStack.EMPTY;
                     }

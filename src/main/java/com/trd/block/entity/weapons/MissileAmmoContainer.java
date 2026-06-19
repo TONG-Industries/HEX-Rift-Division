@@ -15,16 +15,16 @@ import com.trd.item.weapons.turrets.TurretChipItem;
 /**
  * Контейнер боеприпасов для ракетницы Тромбон.
  * Слоты:
- * 0-2 — ракеты (только IMissileItem)
- * 3 — чип доступа (TurretChipItem)
- * 4 — батарейка (предметы с энергией)
+ * 0-8 — ракеты (только IMissileItem)
+ * 9 — чип доступа (TurretChipItem)
+ * 10 — батарейка (предметы с энергией)
  */
 public class MissileAmmoContainer extends ItemStackHandler {
 
-    private static final int SLOT_COUNT = 5;
-    private static final int MISSILE_SLOTS = 3; // Слоты 0-2
-    public static final int CHIP_SLOT_INDEX = 3;
-    public static final int BATTERY_SLOT_INDEX = 4;
+    private static final int SLOT_COUNT = 11;
+    private static final int MISSILE_SLOTS = 9; // Слоты 0-8
+    public static final int CHIP_SLOT_INDEX = 9;
+    public static final int BATTERY_SLOT_INDEX = 10;
 
     private Runnable onContentsChanged;
 
@@ -34,15 +34,15 @@ public class MissileAmmoContainer extends ItemStackHandler {
 
     @Override
     public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-        // Слоты 0-2 — только ракеты
+        // Слоты 0-8 — только ракеты
         if (slot >= 0 && slot < MISSILE_SLOTS) {
             return stack.getItem() instanceof IMissileItem;
         }
-        // Слот 3 — чип
+        // Слот 9 — чип
         if (slot == CHIP_SLOT_INDEX) {
             return stack.getItem() instanceof TurretChipItem;
         }
-        // Слот 4 — батарейки / предметы с энергией
+        // Слот 10 — батарейки / предметы с энергией
         if (slot == BATTERY_SLOT_INDEX) {
             return stack.getCapability(ForgeCapabilities.ENERGY).isPresent()
                     || stack.getItem() instanceof ModBatteryItem

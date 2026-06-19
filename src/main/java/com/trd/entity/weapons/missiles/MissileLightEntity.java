@@ -2,6 +2,7 @@ package com.trd.entity.weapons.missiles;
 
 import com.trd.explosion.logic.ExplosionHE;
 import com.trd.explosion.logic.ExplosionFire;
+import com.trd.explosion.logic.ExplosionHENonDestructive;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -352,7 +353,7 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
 
             switch (type) {
                 case "he" -> {
-                    // Фугасная ракета — мощный взрыв ExplosionHE
+                    // Фугасная ракета — мощный взрыв ExplosionHE (с разрушением блоков)
                     ExplosionHE.explode(serverLevel, pos, owner, DETONATION_RADIUS * 1.5f, DETONATION_DAMAGE * 1.5f);
                 }
                 case "fire" -> {
@@ -360,14 +361,8 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
                     ExplosionFire.explode(serverLevel, pos, owner, DETONATION_RADIUS);
                 }
                 default -> {
-                    // Обычная ракета — как динамит (стандартный взрыв)
-                    serverLevel.explode(
-                            owner,
-                            pos.x, pos.y, pos.z,
-                            DETONATION_RADIUS,
-                            false,
-                            Level.ExplosionInteraction.TNT
-                    );
+                    // Обычная ракета — фугасный взрыв БЕЗ разрушения блоков
+                    ExplosionHENonDestructive.explode(serverLevel, pos, owner, DETONATION_RADIUS, DETONATION_DAMAGE);
                 }
             }
         }
