@@ -10,7 +10,9 @@ public enum PartRole implements StringRepresentable {
     ITEM_OUTPUT("item_output"),
     UNIVERSAL_CONNECTOR("universal_connector"),
     LADDER("ladder"),
-    CONTROLLER("controller");
+    CONTROLLER("controller"),
+    FLUID_INPUT("fluid_input"),
+    FLUID_OUTPUT("fluid_output");
 
     private final String name;
 

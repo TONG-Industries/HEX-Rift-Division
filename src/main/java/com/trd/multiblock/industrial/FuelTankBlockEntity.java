@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 public class FuelTankBlockEntity extends FluidBarrelBlockEntity implements IFluidTankProvider {
 
     public static final int CAPACITY = 768_000;
-    public static final int FUEL_TANK_MAX_TRANSFER_RATE = 400;
+    public static final int FUEL_TANK_MAX_TRANSFER_RATE = Integer.MAX_VALUE;
 
     public FuelTankBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.FUEL_TANK_BE.get(), pos, state);

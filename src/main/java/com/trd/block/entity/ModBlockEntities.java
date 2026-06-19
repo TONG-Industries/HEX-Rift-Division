@@ -14,6 +14,7 @@ import com.trd.block.entity.industrial.rotation.ShaftBlockEntity;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
 import com.trd.multiblock.industrial.FuelTankBlockEntity;
 import com.trd.multiblock.industrial.HeaterBlockEntity;
+import com.trd.multiblock.industrial.BoilerBlockEntity;
 
 import com.trd.block.entity.industrial.casting.CastingDescentBlockEntity;
 import com.trd.block.entity.industrial.casting.CastingPotBlockEntity;
@@ -108,6 +109,8 @@ public class ModBlockEntities {
     // 2. BlockEntity для Нагревателя
     public static final RegistryObject<BlockEntityType<HeaterBlockEntity>> HEATER_BE = BLOCK_ENTITIES.register("heater_be",
             () -> BlockEntityType.Builder.of(HeaterBlockEntity::new, ModBlocks.HEATER.get()).build(null));
+    public static final RegistryObject<BlockEntityType<BoilerBlockEntity>> BOILER_BE = BLOCK_ENTITIES.register("boiler_be",
+            () -> BlockEntityType.Builder.of(BoilerBlockEntity::new, ModBlocks.BOILER.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<SmelterBlockEntity>> SMELTER_BE = BLOCK_ENTITIES.register("smelter_be",
             () -> BlockEntityType.Builder.of(SmelterBlockEntity::new, ModBlocks.SMELTER.get()).build(null));

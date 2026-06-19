@@ -25,6 +25,7 @@ public class ServerLifecycleHandler {
         for (ServerLevel level : event.getServer().getAllLevels()) {
             // Мы "будим" менеджер и запускаем перестройку
             EnergyNetworkManager.get(level).rebuildAllNetworks();
+            com.trd.api.fluids.system.FluidNetworkManager.get(level).rebuildAllNetworks();
         }
 
         LOGGER.info("[HBM-NETWORK] Energy network rebuild complete.");

@@ -28,6 +28,7 @@ public class ModModels {
 
 
     public static final PartialModel FUEL_TANK_BIG = PartialModel.of(new ResourceLocation("trd", "block/fuel_tank_big"));
+    public static final PartialModel BOILER = PartialModel.of(new ResourceLocation("trd", "block/boiler"));
 
     // Статический блок вызывается самым первым, как только Java видит этот класс!
     // Flywheel 100% получит эти модели вовремя.
