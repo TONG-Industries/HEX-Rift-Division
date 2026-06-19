@@ -103,6 +103,14 @@ public class ModItems {
     public static final RegistryObject<Item> GRAVITY_GRENADE = ITEMS.register("gravity_grenade",
             () -> new GravityGrenadeItem(new Item.Properties().stacksTo(16), ModEntities.GRAVITY_GRENADE_PROJECTILE));
 
+    public static final RegistryObject<Item> MISSILE_100MM = ITEMS.register("missile_100mm",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> MISSILE_100MM_HE = ITEMS.register("missile_100mm_he",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> MISSILE_100MM_FIRE = ITEMS.register("missile_100mm_fire",
+            () -> new Item(new Item.Properties()));
+
+
     public static final RegistryObject<Item> DEPTH_WORM_BRUTAL_SPAWN_EGG = ITEMS.register("depth_worm_brutal_spawn_egg",
             () -> new DepthWormBrutalSpawnEggItem(new Item.Properties()));
 

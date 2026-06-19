@@ -341,7 +341,9 @@ public class MainRegistry {
             event.accept(ModItems.AMMO_TURRET_PIERCING);
             event.accept(ModItems.AMMO_TURRET_FIRE);
             event.accept(ModItems.AMMO_TURRET_RADIO);
-            event.accept(ModBlocks.MISSILE_LIGHT);
+            event.accept(ModItems.MISSILE_100MM);
+            event.accept(ModItems.MISSILE_100MM_HE);
+            event.accept(ModItems.MISSILE_100MM_FIRE);
 
         }
 
