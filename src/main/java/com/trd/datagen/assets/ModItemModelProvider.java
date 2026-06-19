@@ -76,6 +76,9 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG);
         simpleItem(ModItems.DETONATOR);
         simpleItem(ModItems.MULTI_DETONATOR);
+        simpleItem(ModItems.MISSILE_100MM);
+        simpleItem(ModItems.MISSILE_100MM_HE);
+        simpleItem(ModItems.MISSILE_100MM_FIRE);
         simpleItem(ModItems.HARD_ROCK);
         simpleItem(ModItems.CONGLOMERATE_CHUNK);
         simpleItem(ModItems.CREATIVE_BATTERY);
