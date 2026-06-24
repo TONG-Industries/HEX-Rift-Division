@@ -289,6 +289,8 @@ public class MainRegistry {
             event.accept(ModBlocks.LEAD_FLUID_PIPE);
             event.accept(ModBlocks.TUNGSTEN_FLUID_PIPE);
 
+            event.accept(ModItems.BOILER_ITEM);
+
             // Капли жидкостей
             for (var entry : com.trd.api.fluids.ModFluids.getAllFluidDrops().values()) {
                 event.accept(entry.get());
@@ -298,7 +300,6 @@ public class MainRegistry {
             event.accept(ModBlocks.SMALL_SMELTER);
 
             event.accept(ModItems.HEATER_ITEM);
-            event.accept(ModItems.BOILER_ITEM);
             event.accept(ModBlocks.SMELTER);
             event.accept(ModBlocks.CASTING_POT);
             event.accept(ModBlocks.CASTING_DESCENT);
