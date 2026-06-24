@@ -308,7 +308,8 @@ public class ModItems {
     public static final RegistryObject<Item> STATOR_ITEM = ITEMS.register("stator",
             () -> new com.trd.item.StatorMultiblockItem(ModBlocks.STATOR_BLOCK.get(), new Item.Properties()));
 
-
+    public static final RegistryObject<Item> TROMBONE_ITEM = ITEMS.register("trombone",
+            () -> new MultiblockBlockItem(ModBlocks.TROMBONE.get(), new Item.Properties()));
 
 
     //ПАТРОНЫ

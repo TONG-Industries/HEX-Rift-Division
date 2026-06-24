@@ -30,6 +30,7 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> LEVER1 = registerSoundEvents("lever1");
     public static final RegistryObject<SoundEvent> LEVER2 = registerSoundEvents("lever2");
 
+    public static final RegistryObject<SoundEvent> MISSILE_LAUNCH2 = registerSoundEvents("missile_launch2");
     public static final RegistryObject<SoundEvent> TOOL_TECH_BLEEP = registerSoundEvents("techbleep");
     public static final RegistryObject<SoundEvent> TOOL_TECH_BOOP = registerSoundEvents("techboop");
     public static final RegistryObject<SoundEvent> PICKAXE_HIT = registerSoundEvents("pickaxe_hit");
