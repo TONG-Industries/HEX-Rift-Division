@@ -9,6 +9,7 @@ import com.trd.capability.ModCapabilities;
 import com.trd.item.energy.ModBatteryItem;
 import com.trd.item.energy.EnergyCellItem;
 import com.trd.item.weapons.missiles.MissileItem;
+import com.trd.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -46,8 +47,8 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
     public static final double SEARCH_RADIUS_SQR = SEARCH_RADIUS * SEARCH_RADIUS;
     public static final int COOLDOWN_TICKS = 200;
     public static final int SALVO_SIZE = 3;
-    public static final int SALVO_INTERVAL = 20;
-    public static final float LAUNCH_HEIGHT = 1.0f;
+    public static final int SALVO_INTERVAL = 10;
+    public static final float LAUNCH_HEIGHT = 2f;
 
     private int cooldownTimer = 0;
     private int salvoCounter = 0;
@@ -313,7 +314,7 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
             return;
         }
 
-        level.playSound(null, pos, SoundEvents.FIREWORK_ROCKET_LAUNCH,
+        level.playSound(null, pos, ModSounds.MISSILE_LAUNCH2.get(),
                 SoundSource.BLOCKS, 2.0F, 0.8F + level.random.nextFloat() * 0.4F);
 
         // Базовая позиция — центр блока + высота пуска

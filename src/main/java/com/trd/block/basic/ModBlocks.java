@@ -531,9 +531,7 @@ public class ModBlocks {
             () -> new BeamBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                     .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
 
-    public static final RegistryObject<Block> TROMBONE = registerBlock("trombone",
-            () -> new MissileTurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
-                    .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
+
 
     public static final RegistryObject<Block> MISSILE_LIGHT = registerBlock("missile_light",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE)
@@ -607,7 +605,9 @@ public class ModBlocks {
     public static final RegistryObject<Block> HEATER = BLOCKS.register("heater",
             () -> new HeaterBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
 
-
+    public static final RegistryObject<Block> TROMBONE = BLOCKS.register("trombone",
+            () -> new MissileTurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
+                    .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
 
     // Вспомогательный метод регистрации без предмета
     private static <T extends Block> RegistryObject<T> registerBlockOnly(String name, Supplier<T> block) {
