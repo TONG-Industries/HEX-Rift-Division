@@ -178,10 +178,6 @@ public class MillstoneBlockEntity extends BlockEntity {
         isGrinding = true;
         currentGrinds++;
 
-        if (currentGrinds >= requiredGrinds) {
-            finishGrind();
-        }
-
         setChanged();
         level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         return true;
@@ -262,6 +258,10 @@ public class MillstoneBlockEntity extends BlockEntity {
             }
             if (be.cooldownTicks <= 0) {
                 be.isGrinding = false;
+                if (!level.isClientSide && be.isProcessing && be.currentGrinds >= be.requiredGrinds && be.requiredGrinds > 0) {
+                    be.finishGrind();
+                    level.sendBlockUpdated(pos, state, state, 3);
+                }
             }
             be.setChanged();
         }
