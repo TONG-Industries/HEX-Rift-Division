@@ -107,6 +107,7 @@ public class ClientModEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.ber.FuelTankRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.BOILER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.STATOR_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.MILLSTONE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
 
 //        event.registerBlockEntityRenderer(ModBlockEntities.WIND_GEN_FLUGER_BE.get(), WindGenFlugerRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TURRET_LIGHT_PLACER_BE.get(), TurretLightPlacerRenderer::new);
@@ -157,6 +158,8 @@ public class ClientModEvents {
         event.register(new ResourceLocation("trd", "block/flywheel_light"));
         event.register(new ResourceLocation("trd", "block/stator"));
         event.register(new ResourceLocation("trd", "block/stator_coil_copper"));
+        event.register(new ResourceLocation("trd", "block/jernova_1"));
+        event.register(new ResourceLocation("trd", "block/jernova_2"));
 
         // 3. Динамические модели
         for (String name : ModModels.GEAR_MODELS.keySet()) {
@@ -242,6 +245,17 @@ public class ClientModEvents {
 
                 @Override
                 public boolean skipVanillaRender(com.trd.block.entity.industrial.rotation.StatorBlockEntity be) {
+                    return true;
+                }
+            });
+
+            VisualizerRegistry.setVisualizer(ModBlockEntities.MILLSTONE.get(), new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.trd.block.entity.industrial.MillstoneBlockEntity>() {
+                @Override
+                public dev.engine_room.flywheel.api.visual.BlockEntityVisual<? super com.trd.block.entity.industrial.MillstoneBlockEntity> createVisual(dev.engine_room.flywheel.api.visualization.VisualizationContext ctx, com.trd.block.entity.industrial.MillstoneBlockEntity be, float partialTick) {
+                    return new com.trd.client.render.flywheel.MillstoneVisual(ctx, be, partialTick);
+                }
+                @Override
+                public boolean skipVanillaRender(com.trd.block.entity.industrial.MillstoneBlockEntity be) {
                     return true;
                 }
             });

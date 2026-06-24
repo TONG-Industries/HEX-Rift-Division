@@ -68,7 +68,7 @@ public class MillstoneBlock extends BaseEntityBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+        return RenderShape.ENTITYBLOCK_ANIMATED;
     }
 
     @Nullable
@@ -80,7 +80,7 @@ public class MillstoneBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide ? null : createTickerHelper(type, ModBlockEntities.MILLSTONE.get(), MillstoneBlockEntity::tick);
+        return createTickerHelper(type, ModBlockEntities.MILLSTONE.get(), MillstoneBlockEntity::tick);
     }
 
     @Override

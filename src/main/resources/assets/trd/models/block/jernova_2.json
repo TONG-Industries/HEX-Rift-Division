@@ -1,0 +1,14 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/jernova2.obj",
+  "flip_v": true,
+  "textures": {
+    "motor_texture": "trd:block/jernova",
+    "particle": "trd:block/jernova"
+  },
+  "transform": {
+    "translation": [0.5, 0.0, 0.5],
+    "rotation": [0, 0, 0],
+    "scale": 1.0
+  }
+}
