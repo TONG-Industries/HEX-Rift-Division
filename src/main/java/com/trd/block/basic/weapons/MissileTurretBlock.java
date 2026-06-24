@@ -127,11 +127,12 @@ public class MissileTurretBlock extends BaseEntityBlock implements IMultiblockCo
         super.setPlacedBy(level, pos, state, placer, stack);
         if (!level.isClientSide) {
             Direction facing = state.getValue(FACING);
-            // Защита: если блок поставили не через MultiblockBlockItem (командой / другим модом)
             if (getStructureHelper().checkPlacement(level, pos, facing, placer instanceof Player ? (Player) placer : null)) {
                 getStructureHelper().placeStructure(level, pos, facing, this);
+                if (placer instanceof Player player && level.getBlockEntity(pos) instanceof MissileTurretBlockEntity be) {
+                    be.setOwner(player.getUUID());
+                }
             } else {
-                // Место занято — откатываем установку контроллера и дропаем предмет
                 level.destroyBlock(pos, true);
             }
         }

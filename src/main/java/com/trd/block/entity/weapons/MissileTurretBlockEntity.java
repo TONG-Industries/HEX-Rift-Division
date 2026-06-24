@@ -9,15 +9,21 @@ import com.trd.capability.ModCapabilities;
 import com.trd.item.energy.ModBatteryItem;
 import com.trd.item.energy.EnergyCellItem;
 import com.trd.item.weapons.missiles.MissileItem;
+import com.trd.item.weapons.turrets.TurretChipItem;
 import com.trd.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
@@ -40,6 +46,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
 
@@ -86,6 +93,9 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
 
     // Тип ракеты для текущего залпа
     private String currentMissileType = "standard";
+
+    // === ВЛАДЕЛЕЦ ===
+    private UUID ownerUUID;
 
     public MissileTurretBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MISSILE_TURRET_BE.get(), pos, state);
@@ -187,6 +197,50 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         }
     }
 
+    // === ПРОВЕРКА СОЮЗНИКОВ (как у TurretLightLinkedEntity) ===
+
+    public boolean isAllied(Entity entity) {
+        if (entity == null) return false;
+
+        // 1. Проверка владельца
+        if (ownerUUID != null && entity.getUUID().equals(ownerUUID)) return true;
+
+        // 2. Проверка чипа
+        ItemStack chipStack = this.missileContainer.getStackInSlot(MissileAmmoContainer.CHIP_SLOT_INDEX);
+        if (!chipStack.isEmpty() && chipStack.getItem() instanceof TurretChipItem) {
+            CompoundTag tag = chipStack.getTag();
+            if (tag != null && tag.contains("TurretOwners")) {
+                ListTag owners = tag.getList("TurretOwners", Tag.TAG_STRING);
+                for (Tag t : owners) {
+                    String s = t.getAsString();
+                    String uuidStr = s.contains("|") ? s.split("\\|")[0] : s;
+                    try {
+                        if (entity.getUUID().equals(UUID.fromString(uuidStr))) return true;
+                    } catch (IllegalArgumentException ignored) {}
+                }
+            }
+        }
+
+        // 3. Проверка команд
+        if (this.level != null) {
+            net.minecraft.world.scores.PlayerTeam myTeam = this.level.getScoreboard().getPlayersTeam(ownerUUID != null ? ownerUUID.toString() : "");
+            if (myTeam != null && entity instanceof Player player) {
+                net.minecraft.world.scores.PlayerTeam theirTeam = this.level.getScoreboard().getPlayersTeam(player.getStringUUID());
+                if (theirTeam != null && myTeam.isAlliedTo(theirTeam)) return true;
+            }
+        }
+
+        // 4. Союзные турели
+        if (entity instanceof com.trd.entity.weapons.turrets.TurretLightEntity turret) {
+            return ownerUUID != null && ownerUUID.equals(turret.getOwnerUUID());
+        }
+        if (entity instanceof com.trd.entity.weapons.turrets.TurretLightLinkedEntity linked) {
+            return ownerUUID != null && ownerUUID.equals(linked.getOwnerUUID());
+        }
+
+        return false;
+    }
+
     private boolean hasOpenSky(ServerLevel level, Vec3 mobPos) {
         Vec3 from = mobPos.add(0, 1.5, 0);
         Vec3 to = new Vec3(from.x, level.getMaxBuildHeight(), from.z);
@@ -229,32 +283,58 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         return hitDist < 4.0;
     }
 
+    // === НОВЫЙ findBestTarget С УЧЁТОМ НАСТРОЕК И СОЮЗНИКОВ ===
     private LivingEntity findBestTarget(ServerLevel level, BlockPos pos) {
         AABB searchBox = new AABB(pos).inflate(SEARCH_RADIUS);
+        List<LivingEntity> candidates = new ArrayList<>();
 
-        List<Monster> monsters = level.getEntitiesOfClass(
-                Monster.class,
-                searchBox,
-                entity -> {
-                    if (!entity.isAlive() || entity.isRemoved()) return false;
-                    double dx = entity.getX() - pos.getX();
-                    double dz = entity.getZ() - pos.getZ();
-                    return (dx * dx + dz * dz) <= SEARCH_RADIUS_SQR;
-                }
-        );
+        // 1. HOSTILES (Monster)
+        if (targetHostile) {
+            candidates.addAll(level.getEntitiesOfClass(Monster.class, searchBox,
+                    entity -> entity.isAlive() && !entity.isRemoved() && !isAllied(entity)
+            ));
+        }
 
-        if (monsters.isEmpty()) return null;
+        // 2. PLAYERS
+        if (targetPlayers) {
+            candidates.addAll(level.getEntitiesOfClass(Player.class, searchBox,
+                    entity -> {
+                        if (!entity.isAlive() || entity.isRemoved()) return false;
+                        if (entity.isCreative() || entity.isSpectator()) return false;
+                        if (isAllied(entity)) return false;
+                        double dx = entity.getX() - pos.getX();
+                        double dz = entity.getZ() - pos.getZ();
+                        return (dx * dx + dz * dz) <= SEARCH_RADIUS_SQR;
+                    }
+            ));
+        }
+
+        // 3. NEUTRALS (животные, жители и т.д.)
+        if (targetNeutral) {
+            candidates.addAll(level.getEntitiesOfClass(LivingEntity.class, searchBox,
+                    entity -> {
+                        if (!entity.isAlive() || entity.isRemoved()) return false;
+                        if (entity instanceof Monster) return false; // Уже в hostiles
+                        if (entity instanceof Player) return false;  // Уже в players
+                        if (isAllied(entity)) return false;
+                        double dx = entity.getX() - pos.getX();
+                        double dz = entity.getZ() - pos.getZ();
+                        return (dx * dx + dz * dz) <= SEARCH_RADIUS_SQR;
+                    }
+            ));
+        }
+
+        if (candidates.isEmpty()) return null;
 
         List<TargetScore> scoredTargets = new ArrayList<>();
 
-        for (Monster monster : monsters) {
-            Vec3 targetCenter = monster.getBoundingBox().getCenter();
-
+        for (LivingEntity entity : candidates) {
+            Vec3 targetCenter = entity.getBoundingBox().getCenter();
             if (!hasOpenSky(level, targetCenter)) continue;
 
-            double distSqr = monster.distanceToSqr(pos.getX(), pos.getY(), pos.getZ());
-            double score = calculateTargetScore(monster, distSqr, Vec3.atCenterOf(pos));
-            scoredTargets.add(new TargetScore(monster, score));
+            double distSqr = entity.distanceToSqr(pos.getX(), pos.getY(), pos.getZ());
+            double score = calculateTargetScore(entity, distSqr, Vec3.atCenterOf(pos));
+            scoredTargets.add(new TargetScore(entity, score));
         }
 
         if (scoredTargets.isEmpty()) return null;
@@ -263,22 +343,36 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         return scoredTargets.get(0).entity;
     }
 
-    private double calculateTargetScore(Monster monster, double distSqr, Vec3 turretPos) {
+    private double calculateTargetScore(LivingEntity entity, double distSqr, Vec3 turretPos) {
         double score = Math.sqrt(distSqr);
 
-        if (monster.getTarget() instanceof net.minecraft.world.entity.player.Player) {
-            score *= 0.3;
+        // Приоритет целям, атакующим владельца
+        if (ownerUUID != null) {
+            Player owner = this.level != null ? this.level.getPlayerByUUID(ownerUUID) : null;
+            if (owner != null) {
+                if (entity instanceof Mob mob && mob.getTarget() == owner) {
+                    score *= 0.3;
+                }
+                if (owner.getLastHurtByMob() == entity) {
+                    score *= 0.3;
+                }
+            }
         }
 
-        if (monster.getLastHurtByMob() != null) {
+        // Приоритет целям, атакующим турель
+        if (entity instanceof Mob mob && mob.getTarget() instanceof com.trd.entity.weapons.turrets.TurretLightLinkedEntity) {
+            score *= 0.5;
+        }
+
+        if (entity.getLastHurtByMob() != null) {
             score *= 0.6;
         }
 
-        if (!monster.onGround()) {
+        if (!entity.onGround()) {
             score *= 1.3;
         }
 
-        score *= (1.0 + monster.getHealth() / monster.getMaxHealth());
+        score *= (1.0 + entity.getHealth() / entity.getMaxHealth());
 
         return score;
     }
@@ -289,24 +383,12 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         salvoTimer = 0;
     }
 
-    /**
-     * === НОВАЯ СИСТЕМА ПОЗИЦИЙ ПУСКА С УЧЁТОМ FACING ===
-     * Координаты из Blockbench (пиксели) конвертируем в блоки.
-     * Позиции относительно центра блока (локальные координаты):
-     * Ракета 1: (+3.5px, 0, +3.5px) = (+0.21875, 0, +0.21875)
-     * Ракета 2: (+3.5px, 0, -3.5px) = (-0.21875, 0, +0.21875)
-     * Ракета 3: (-3.5px, 0, -3.5px) = (-0.21875, 0, -0.21875)
-     *
-     * Затем поворачиваем в зависимости от FACING блока.
-     * Y = LAUNCH_HEIGHT (1.0) над блоком
-     */
     private void fireMissile(ServerLevel level, BlockPos pos, BlockState state) {
         if (currentTarget == null || !currentTarget.isAlive()) {
             isSalvoActive = false;
             return;
         }
 
-        // Забираем ракету из контейнера
         String missileType = this.missileContainer.takeMissileAndGetType();
         if (missileType == null) {
             isSalvoActive = false;
@@ -315,45 +397,39 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         }
 
         level.playSound(null, pos, ModSounds.MISSILE_LAUNCH2.get(),
-                SoundSource.BLOCKS, 2.0F, 0.8F + level.random.nextFloat() * 0.4F);
+                SoundSource.BLOCKS, 0.5F, 0.8F + level.random.nextFloat() * 0.4F);
 
-        // Базовая позиция — центр блока + высота пуска
         Vec3 basePos = Vec3.atCenterOf(pos).add(0, LAUNCH_HEIGHT, 0);
 
-        // Позиции пуска в локальных координатах (Blockbench → блоки)
         double pixelToBlock = 1.0 / 16.0;
-        double offset = 3.5 * pixelToBlock; // = 0.21875
+        double offset = 3.5 * pixelToBlock;
 
         Vec3 localOffset;
         switch (salvoCounter) {
-            case 0 -> localOffset = new Vec3(offset, 0, offset);      // +X, +Z
-            case 1 -> localOffset = new Vec3(offset, 0, -offset);     // +X, -Z  (🔥 ИЗМЕНЕНО: противоположный угол)
-            case 2 -> localOffset = new Vec3(-offset, 0, -offset);    // -X, -Z
+            case 0 -> localOffset = new Vec3(offset, 0, offset);
+            case 1 -> localOffset = new Vec3(offset, 0, -offset);
+            case 2 -> localOffset = new Vec3(-offset, 0, -offset);
             default -> localOffset = Vec3.ZERO;
         }
 
-        // === ПОВОРОТ В ЗАВИСИМОСТИ ОТ FACING ===
         Direction facing = state.getValue(com.trd.block.basic.weapons.MissileTurretBlock.FACING);
         Vec3 worldOffset = rotateOffsetByFacing(localOffset, facing);
 
         Vec3 launchPos = basePos.add(worldOffset);
 
+        // === ПЕРЕДАЁМ ССЫЛКУ НА ЭТОТ BlockEntity ДЛЯ ПОДСЧЁТА КИЛЛОВ ===
         com.trd.entity.weapons.missiles.MissileLightEntity missile =
                 new com.trd.entity.weapons.missiles.MissileLightEntity(
-                        level, launchPos, currentTarget, null, missileType);
+                        level, launchPos, currentTarget, null, missileType, this);
         level.addFreshEntity(missile);
     }
 
-    /**
-     * Поворачивает локальное смещение в зависимости от направления блока.
-     * Локальные координаты: +Z = "вперёд" (к лицу блока), +X = "вправо"
-     */
     private Vec3 rotateOffsetByFacing(Vec3 offset, Direction facing) {
         return switch (facing) {
-            case NORTH -> new Vec3(-offset.x, offset.y, -offset.z); // 180°
-            case SOUTH -> new Vec3(offset.x, offset.y, offset.z);  // 0° (default)
-            case WEST -> new Vec3(-offset.z, offset.y, offset.x);  // 90°
-            case EAST -> new Vec3(offset.z, offset.y, -offset.x);  // -90°
+            case NORTH -> new Vec3(-offset.x, offset.y, -offset.z);
+            case SOUTH -> new Vec3(offset.x, offset.y, offset.z);
+            case WEST -> new Vec3(-offset.z, offset.y, offset.x);
+            case EAST -> new Vec3(offset.z, offset.y, -offset.x);
             default -> offset;
         };
     }
@@ -403,6 +479,15 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
     public void incrementKills() {
         this.killCount++;
         setChanged();
+    }
+
+    public void setOwner(UUID owner) {
+        this.ownerUUID = owner;
+        setChanged();
+    }
+
+    public UUID getOwnerUUID() {
+        return ownerUUID;
     }
 
     // === EnergyNodeBlockEntity overrides ===
@@ -463,6 +548,7 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         tag.putBoolean("ExtraButton1", extraButton1);
         tag.putBoolean("ExtraButton2", extraButton2);
         tag.putString("CurrentMissileType", currentMissileType);
+        if (ownerUUID != null) tag.putUUID("OwnerUUID", ownerUUID);
     }
 
     @Override
@@ -485,6 +571,7 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
         if (tag.contains("CurrentMissileType")) {
             currentMissileType = tag.getString("CurrentMissileType");
         }
+        if (tag.hasUUID("OwnerUUID")) ownerUUID = tag.getUUID("OwnerUUID");
     }
 
     // === ContainerData ===
@@ -493,11 +580,11 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
     public int getMaxEnergyStoredInt() { return (int) Math.min(capacity, Integer.MAX_VALUE); }
 
     private int getStatusInt() {
-        if (!isSwitchedOn) return 0; // OFFLINE
+        if (!isSwitchedOn) return 4000; // OFFLINE
         if (bootTimer > 0) return 200 + (int)((1.0 - (double)bootTimer / BOOT_DURATION) * 100); // BOOTING
         if (isSalvoActive) return 1; // ONLINE (стрельба)
         if (cooldownTimer > 0) return 1000 + cooldownTimer; // COOLDOWN
-        if (energy < 10000) return 0; // Недостаточно энергии
+        if (energy < 10000) return 5000; // LOW ENERGY
         if (!missileContainer.hasMissiles()) return 3000; // NO AMMO
         return 1; // ONLINE (готов)
     }
@@ -546,5 +633,5 @@ public class MissileTurretBlockEntity extends EnergyNodeBlockEntity {
     public ContainerData getDataAccess() { return this.data; }
     public MissileAmmoContainer getMissileContainer() { return missileContainer; }
 
-    private record TargetScore(Monster entity, double score) {}
+    private record TargetScore(LivingEntity entity, double score) {}
 }
