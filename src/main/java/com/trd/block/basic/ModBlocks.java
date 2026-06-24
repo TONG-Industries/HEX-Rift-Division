@@ -546,6 +546,8 @@ public class ModBlocks {
                     .noOcclusion()
                     .noLootTable()));
 
+    public static final RegistryObject<Block> NUCLEAR_CHARGE = registerBlock("nuclear_charge",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE)));
 
     //СЕКВОЯ
     public static final RegistryObject<Block> SEQUOIA_BARK = registerBlock("sequoia_bark",

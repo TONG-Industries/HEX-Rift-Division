@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 import com.trd.client.overlay.gui.GUITurretAmmo;
+import com.trd.client.overlay.gui.GUITrombone;
 
 import java.util.function.Supplier;
 
@@ -25,9 +26,10 @@ public class PacketChipFeedback {
     public void handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
-            // Выполняем на клиенте
             net.minecraft.client.gui.screens.Screen currentScreen = Minecraft.getInstance().screen;
             if (currentScreen instanceof GUITurretAmmo gui) {
+                gui.handleFeedback(success);
+            } else if (currentScreen instanceof GUITrombone gui) {
                 gui.handleFeedback(success);
             }
         });
