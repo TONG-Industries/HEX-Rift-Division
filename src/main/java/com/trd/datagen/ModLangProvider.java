@@ -104,6 +104,7 @@ public class ModLangProvider extends LanguageProvider {
             addFluidTranslations("sulfuric_acid", "Серная кислота", null, "Sulfuric Acid");
             addFluidTranslations("natural_gas", "Природный газ", null, "Natural Gas");
             addFluidTranslations("steam", "Пар", null, "Steam");
+            addFluidTranslations("low_pressure_steam", "Пар низкого давления", null, "Low Pressure Steam");
 // Для ванильных жидкостей можно тоже добавить (если нужно переопределить):
             addFluidTranslations("water", "Вода", "Вода", "Water");
             addFluidTranslations("lava", "Лава", "Лава", "Lava");

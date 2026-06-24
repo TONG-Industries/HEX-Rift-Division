@@ -90,6 +90,20 @@ public class ModFluids {
     private static final ForgeFlowingFluid.Properties STEAM_PROPS = new ForgeFlowingFluid.Properties(
             STEAM_TYPE, STEAM_SOURCE, STEAM_FLOWING);
 
+
+    public static final RegistryObject<FluidType> LOW_PRESSURE_STEAM_TYPE = FLUID_TYPES.register("low_pressure_steam",
+            () -> new BaseFluidType(FluidType.Properties.create().density(-1000).viscosity(200).temperature(300),
+                    WATER_STILL, WATER_FLOW,
+                    new ResourceLocation("trd", "textures/gui/fluid/low_pressure_steam.png"),
+                    0x636a7c, 20, 0));
+
+    public static final RegistryObject<FlowingFluid> LOW_PRESSURE_STEAM_SOURCE = FLUIDS.register("low_pressure_steam",
+            () -> new ForgeFlowingFluid.Source(ModFluids.LOW_PRESSURE_STEAM_PROPS));
+    public static final RegistryObject<FlowingFluid> LOW_PRESSURE_STEAM_FLOWING = FLUIDS.register("flowing_low_pressure_steam",
+            () -> new ForgeFlowingFluid.Flowing(ModFluids.LOW_PRESSURE_STEAM_PROPS));
+    private static final ForgeFlowingFluid.Properties LOW_PRESSURE_STEAM_PROPS = new ForgeFlowingFluid.Properties(
+            LOW_PRESSURE_STEAM_TYPE, LOW_PRESSURE_STEAM_SOURCE, LOW_PRESSURE_STEAM_FLOWING);
+
     public static final RegistryObject<Item> FLUID_DROP_NONE = FLUID_DROP_ITEMS.register("fluid_drop_none", () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> FLUID_DROP_WATER = FLUID_DROP_ITEMS.register("fluid_drop_water",
             () -> new FluidDropItem(() -> ForgeRegistries.FLUID_TYPES.get().getValue(new ResourceLocation("water")), new Item.Properties()));
@@ -111,6 +125,7 @@ public class ModFluids {
         registerDrop("sulfuric_acid", SULFURIC_ACID_TYPE);
         registerDrop("natural_gas", NATURAL_GAS_TYPE);
         registerDrop("steam", STEAM_TYPE);
+        registerDrop("low_pressure_steam", LOW_PRESSURE_STEAM_TYPE);
     }
 
     private static void registerDrop(String name, RegistryObject<FluidType> fluidTypeObj) {
