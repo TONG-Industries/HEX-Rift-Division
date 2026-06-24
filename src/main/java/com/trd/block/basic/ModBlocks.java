@@ -19,6 +19,7 @@ import com.trd.block.basic.industrial.casting.CastingPotBlock;
 import com.trd.block.basic.industrial.casting.SmallSmelterBlock;
 import com.trd.block.basic.industrial.energy.*;
 
+import com.trd.block.basic.industrial.fluids.LowPressureSteamCondenserBlock;
 import com.trd.block.basic.industrial.rotation.BearingBlock;
 import com.trd.block.basic.industrial.rotation.MotorElectroBlock;
 import com.trd.block.basic.industrial.rotation.ShaftBlock;
@@ -609,6 +610,11 @@ public class ModBlocks {
             () -> new HeaterBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
     public static final RegistryObject<Block> BOILER = BLOCKS.register("boiler",
             () -> new BoilerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
+   //ZAMAZ
+   public static final RegistryObject<Block> LOW_PRESSURE_STEAM_CONDENSER = registerBlock("low_pressure_steam_condenser",
+           () -> new LowPressureSteamCondenserBlock(BlockBehaviour.Properties.of()
+                   .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
 
 
