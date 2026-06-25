@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/low_pressure_steam_condenser", "y": 0 },
+    "facing=south": { "model": "trd:block/low_pressure_steam_condenser", "y": 180 },
+    "facing=west":  { "model": "trd:block/low_pressure_steam_condenser", "y": 270 },
+    "facing=east":  { "model": "trd:block/low_pressure_steam_condenser", "y": 90 }
+  }
+}
