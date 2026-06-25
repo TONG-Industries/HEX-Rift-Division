@@ -33,8 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Простой полнокубический блок-конденсатор (по аналогии с бочкой).
- * Порты со всех сторон. FACING оставлен только для ориентации модели (можно убрать).
+ * Простой полнокубический блок-конденсатор. Порты со всех сторон.
  */
 public class LowPressureSteamCondenserBlock extends BaseEntityBlock {
 
@@ -79,12 +78,12 @@ public class LowPressureSteamCondenserBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide ? null
-                : createTickerHelper(type, ModBlockEntities.LOW_PRESSURE_STEAM_CONDENSER_BE.get(),
-                        LowPressureSteamCondenserBlockEntity::serverTick);
+        if (level.isClientSide) return null;
+        return createTickerHelper(type, ModBlockEntities.LOW_PRESSURE_STEAM_CONDENSER_BE.get(),
+                (lvl, pos, st, be) -> LowPressureSteamCondenserBlockEntity.serverTick(lvl, pos, st, be));
     }
 
-    // ===== Сохраняем содержимое в предмет при ломке (как у бочки) =====
+    // ===== Сохраняем содержимое в предмет при ломке =====
     @Override
     @SuppressWarnings("deprecation")
     public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
@@ -111,28 +110,23 @@ public class LowPressureSteamCondenserBlock extends BaseEntityBlock {
         }
     }
 
-    // ===== Тултип предмета: 🟢 пар (вход) / 🔴 вода (выход), формат 1032/10k =====
+    // ===== Тултип предмета (в инвентаре/руке). Живой тултип на блоке — в Overlay. =====
     @Override
     public void appendHoverText(ItemStack stack, @Nullable BlockGetter level, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
 
         int steam = 0, water = 0;
-        long energy = 0;
         CompoundTag nbt = stack.getTag();
         if (nbt != null && nbt.contains("BlockEntityTag")) {
             CompoundTag be = nbt.getCompound("BlockEntityTag");
-            steam  = be.getCompound("SteamTank").getInt("Amount");
-            water  = be.getCompound("WaterTank").getInt("Amount");
-            energy = be.getLong("Energy");
+            steam = be.getCompound("SteamTank").getInt("Amount");
+            water = be.getCompound("WaterTank").getInt("Amount");
         }
-
         int cap = LowPressureSteamCondenserBlockEntity.TANK_CAPACITY;
         tooltip.add(Component.literal("⬇ Пар (вход): ").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(fmt(steam) + "/" + fmt(cap) + " mB").withStyle(ChatFormatting.WHITE)));
         tooltip.add(Component.literal("⬆ Вода (выход): ").withStyle(ChatFormatting.RED)
                 .append(Component.literal(fmt(water) + "/" + fmt(cap) + " mB").withStyle(ChatFormatting.WHITE)));
-        tooltip.add(Component.literal("⚡ Энергия: ").withStyle(ChatFormatting.GRAY)
-                .append(Component.literal(energy + "/" + LowPressureSteamCondenserBlockEntity.ENERGY_CAPACITY + " FE").withStyle(ChatFormatting.YELLOW)));
     }
 
     /** 1032 -> "1032", 10000 -> "10k". */

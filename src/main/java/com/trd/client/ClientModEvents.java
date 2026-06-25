@@ -315,6 +315,7 @@ public class ClientModEvents {
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "tachometer_hud", TachometerOverlay.HUD_TACHOMETER);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "stator_hud", StatorOverlay.HUD_STATOR);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "boiler_hud", com.trd.client.overlay.hud.BoilerOverlay.INSTANCE);
+        event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "low_pressure_steam_condenser_hud", com.trd.client.overlay.hud.LowPressureSteamCondenserOverlay.INSTANCE);
     }
 
 
