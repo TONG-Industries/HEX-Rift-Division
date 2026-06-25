@@ -1,7 +1,8 @@
-package com.trd.menu;
+package com.trd.menu.rotation;
 
 import com.trd.block.basic.industrial.rotation.MotorElectroBlock;
 import com.trd.block.entity.industrial.rotation.MotorElectroBlockEntity;
+import com.trd.menu.ModMenuTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;

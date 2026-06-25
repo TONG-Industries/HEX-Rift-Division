@@ -284,10 +284,14 @@ public class MainRegistry {
             event.accept(ModItems.STEEL_BARREL_ITEM);
             event.accept(ModItems.LEAD_BARREL_ITEM);
             event.accept(ModBlocks.FUEL_TANK_BIG);
+          event.accept(ModItems.BOILER_ITEM);
+          event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
             event.accept(ModBlocks.BRONZE_FLUID_PIPE);
             event.accept(ModBlocks.STEEL_FLUID_PIPE);
             event.accept(ModBlocks.LEAD_FLUID_PIPE);
             event.accept(ModBlocks.TUNGSTEN_FLUID_PIPE);
+
+       
 
             // Капли жидкостей
             for (var entry : com.trd.api.fluids.ModFluids.getAllFluidDrops().values()) {
@@ -298,8 +302,6 @@ public class MainRegistry {
             event.accept(ModBlocks.SMALL_SMELTER);
 
             event.accept(ModItems.HEATER_ITEM);
-            event.accept(ModItems.BOILER_ITEM);
-            event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
             event.accept(ModBlocks.SMELTER);
             event.accept(ModBlocks.CASTING_POT);
             event.accept(ModBlocks.CASTING_DESCENT);

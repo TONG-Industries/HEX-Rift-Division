@@ -36,6 +36,13 @@
       "trd:mukeexplosion"
     ]
   },
+  "missile_launch2": {
+    "category": "block",
+    "subtitle": "sounds.trd.missile_launch2",
+    "sounds": [
+      "trd:missile_launch2"
+    ]
+  },
   "pickaxe_hit": {
     "category": "block",
     "subtitle": "sounds.trd.pickaxe_hit",

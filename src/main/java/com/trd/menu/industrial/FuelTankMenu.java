@@ -1,5 +1,6 @@
-package com.trd.menu;
+package com.trd.menu.industrial;
 
+import com.trd.menu.ModMenuTypes;
 import com.trd.multiblock.industrial.FuelTankBlock;
 import com.trd.multiblock.industrial.FuelTankBlockEntity;
 import net.minecraft.network.FriendlyByteBuf;

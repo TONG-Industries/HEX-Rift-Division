@@ -16,6 +16,7 @@ import com.trd.item.mobs.MoryLahItem;
 import com.trd.item.energy.StatorCoilItem;
 import com.trd.item.energy.WireCoilItem;
 import com.trd.item.rotation.GearItem;
+import com.trd.item.rotation.StatorMultiblockItem;
 import com.trd.item.tools.*;
 import com.trd.item.tools.cast_pickaxes.materials.CastPickaxeIronItem;
 import com.trd.item.tools.cast_pickaxes.materials.CastPickaxeSteelItem;
@@ -303,11 +304,13 @@ public class ModItems {
 
     public static final RegistryObject<Item> FUEL_TANK_BIG_ITEM = ITEMS.register("fuel_tank_big",
             () -> new MultiblockBlockItem(ModBlocks.FUEL_TANK_BIG.get(), new Item.Properties()));
+    
 
     public static final RegistryObject<Item> STATOR_ITEM = ITEMS.register("stator",
-            () -> new com.trd.item.StatorMultiblockItem(ModBlocks.STATOR_BLOCK.get(), new Item.Properties()));
+            () -> new StatorMultiblockItem(ModBlocks.STATOR_BLOCK.get(), new Item.Properties()));
 
-
+    public static final RegistryObject<Item> TROMBONE_ITEM = ITEMS.register("trombone",
+            () -> new MultiblockBlockItem(ModBlocks.TROMBONE.get(), new Item.Properties()));
 
 
     //ПАТРОНЫ

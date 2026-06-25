@@ -34,7 +34,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import com.trd.client.config.ModKeyBindings;
 import com.trd.client.gecko.item.guns.MachineGunRenderer;
 import com.trd.entity.weapons.bullets.TurretBulletEntity;
-import com.trd.item.tags.AmmoRegistry;
+import com.trd.item.weapons.ammo.AmmoRegistry;
 import com.trd.network.ModPacketHandler;
 import com.trd.network.packet.guns.PacketReloadGun;
 import com.trd.network.packet.guns.PacketShoot;

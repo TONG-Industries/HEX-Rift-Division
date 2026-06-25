@@ -1,6 +1,5 @@
 package com.trd.item.weapons.missiles;
 
-import com.trd.item.tags.IMissileItem;
 import net.minecraft.world.item.Item;
 
 /**

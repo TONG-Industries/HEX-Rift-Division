@@ -6,7 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import com.trd.api.energy.ILongEnergyMenu;
-import com.trd.menu.MachineBatteryMenu;
+import com.trd.menu.industrial.MachineBatteryMenu;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientEnergySyncHandler {
