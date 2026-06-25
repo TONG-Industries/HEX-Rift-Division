@@ -37,6 +37,11 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         registerOreWithMultipleDrops(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE, ModItems.SEQUESTRUM);
         registerOreWithMultipleDrops(ModBlocks.FLUORITE_ORE, ModItems.FLUORITE);
         registerOreWithMultipleDrops(ModBlocks.FLUORITE_ORE_DEEPSLATE, ModItems.FLUORITE);
+        registerOreWithMultipleDrops(ModBlocks.BAUXITE, ModItems.BAUXITE_CHUNK);
+        registerOreWithMultipleDrops(ModBlocks.LIMESTONE, ModItems.LIMESTONE_CHUNK);
+        registerOreWithMultipleDrops(ModBlocks.DOLOMITE, ModItems.DOLOMITE_CHUNK);
+        registerOreWithMultipleDrops(ModBlocks.SULFUR_CLUSTER, ModItems.SULFUR);
+        registerOreWithMultipleDrops(ModBlocks.ASBESOTS_ORE, ModItems.ASBESTOS);
 
 
         // --- ДЕФОЛТ ДЛЯ ВСЕХ ОСТАЛЬНЫХ БЛОКОВ ---
