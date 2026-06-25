@@ -103,6 +103,9 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> FLUORITE = ITEMS.register("fluorite",
             () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ASBESTOS = ITEMS.register("asbestos",
+            () -> new Item(new Item.Properties()));
+
     public static final RegistryObject<Item> GRAVITY_GRENADE = ITEMS.register("gravity_grenade",
             () -> new GravityGrenadeItem(new Item.Properties().stacksTo(16), ModEntities.GRAVITY_GRENADE_PROJECTILE));
 

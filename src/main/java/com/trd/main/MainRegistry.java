@@ -202,15 +202,11 @@ public class MainRegistry {
             event.accept(ModBlocks.DECO_BEAM.get());
             event.accept(ModBlocks.BEAM_BLOCK.get());
             event.accept(ModBlocks.STEEL_PROPS.get());
-            // Другие строительные блоки
-            event.accept(ModBlocks.CRATE.get());
-            event.accept(ModBlocks.CRATE_AMMO.get());
 
         }
 
         if (event.getTab() == ModCreativeTabs.trd_TECH_TAB.get()) {
 
-            event.accept(ModItems.CROWBAR.get());
             event.accept(ModItems.BEAM_PLACER.get());
             event.accept(ModItems.SCREWDRIVER.get());
             event.accept(ModItems.POKER.get());
@@ -382,6 +378,7 @@ public class MainRegistry {
             event.accept(ModItems.DOLOMITE_CHUNK);
             event.accept(ModItems.LIMESTONE_CHUNK);
             event.accept(ModItems.BAUXITE_CHUNK);
+            event.accept(ModItems.ASBESTOS);
             event.accept(ModItems.CINNABAR);
             event.accept(ModItems.LIGNITE);
             event.accept(ModItems.FLUORITE);
@@ -404,8 +401,6 @@ public class MainRegistry {
             event.accept(ModBlocks.CINNABAR_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.FLUORITE_ORE.get());
             event.accept(ModBlocks.FLUORITE_ORE_DEEPSLATE.get());
-            event.accept(ModBlocks.RAREGROUND_ORE.get());
-            event.accept(ModBlocks.RAREGROUND_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.SEQUESTRUM_ORE.get());
             event.accept(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.SULFUR_ORE.get());
@@ -424,21 +419,12 @@ public class MainRegistry {
             event.accept(ModBlocks.SEQUOIA_HEARTWOOD.get());
             event.accept(ModBlocks.SEQUOIA_LEAVES.get());
             event.accept(ModBlocks.SEQUOIA_BIOME_MOSS.get());
-            event.accept(ModBlocks.WASTE_LOG.get());
-            event.accept(ModBlocks.NECROSIS_PORTAL.get());
-            event.accept(ModBlocks.NECROSIS_TEST.get());
-            event.accept(ModBlocks.NECROSIS_TEST2.get());
-            event.accept(ModBlocks.NECROSIS_TEST3.get());
-            event.accept(ModBlocks.NECROSIS_TEST4.get());
-            event.accept(ModBlocks.DIRT_ROUGH.get());
             event.accept(ModBlocks.BASALT_ROUGH.get());
             event.accept(ModItems.DEPTH_WORM_SPAWN_EGG);
             event.accept(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG);
             event.accept(ModBlocks.DEPTH_WORM_NEST);
             event.accept(ModBlocks.HIVE_SOIL);
             event.accept(ModBlocks.HIVE_ROOTS.get()); // Обычная версия
-            event.accept(ModBlocks.DEPTH_WORM_NEST_DEAD);
-            event.accept(ModBlocks.HIVE_SOIL_DEAD);
             event.accept(ModItems.GRENADIER_ZOMBIE_SPAWN_EGG.get());
         }
 

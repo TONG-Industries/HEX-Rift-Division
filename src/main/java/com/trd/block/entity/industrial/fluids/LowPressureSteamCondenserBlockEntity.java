@@ -39,7 +39,7 @@ public class LowPressureSteamCondenserBlockEntity extends BlockEntity {
     public static final int CONVERT_RATE  = 10; // базовая скорость, mB/тик
 
     private static final int WATER_CHECK_INTERVAL = 60; // тиков между проверками
-    private static final int WATER_RADIUS         = 10; // радиус сканирования
+    private static final int WATER_RADIUS         = 5; // радиус сканирования
     private static final int WATER_MAX_COUNT      = 100; // при 100 блоках воды = 2.00×
 
     private final FluidTank steamTank = new FluidTank(TANK_CAPACITY) {
@@ -132,7 +132,7 @@ public class LowPressureSteamCondenserBlockEntity extends BlockEntity {
             be.steamTank.drain(effectiveRate, IFluidHandler.FluidAction.EXECUTE);
             be.waterTank.fill(new FluidStack(Fluids.WATER, effectiveRate), IFluidHandler.FluidAction.EXECUTE);
             be.setChanged();
-            
+
         }
     }
 
