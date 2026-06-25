@@ -56,7 +56,7 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
             com.trd.api.energy.EnergyNetworkManager energyManager = com.trd.api.energy.EnergyNetworkManager.get((ServerLevel) this.level);
             
             if (!wasNetworked && isNetworked) {
-                if (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT) {
+                if (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT || role == PartRole.FLUID_LADDER) {
                     if (!fluidManager.hasNode(this.getBlockPos())) fluidManager.addNode(this.getBlockPos());
                 }
                 if (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR) {
@@ -83,7 +83,7 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
     public void onLoad() {
         super.onLoad();
         if (this.level != null && !this.level.isClientSide && isNetworkedRole(this.role)) {
-            if (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT) {
+            if (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT || role == PartRole.FLUID_LADDER) {
                 FluidNetworkManager fluidManager = FluidNetworkManager.get((ServerLevel) this.level);
                 if (!fluidManager.hasNode(this.getBlockPos())) fluidManager.addNode(this.getBlockPos());
             }
@@ -104,7 +104,7 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
     }
 
     private static boolean isNetworkedRole(PartRole role) {
-        return role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.ENERGY_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT;
+        return role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.ENERGY_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT || role == PartRole.FLUID_LADDER;
     }
 
     @Override
@@ -124,10 +124,12 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
     @Override
     public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (controllerPos != null && level != null) {
-            if (cap == ForgeCapabilities.FLUID_HANDLER && (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT)) {
+            if (cap == ForgeCapabilities.FLUID_HANDLER && (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT || role == PartRole.FLUID_LADDER)) {
                 BlockEntity be = level.getBlockEntity(controllerPos);
                 if (be instanceof com.trd.multiblock.industrial.BoilerBlockEntity boiler) {
                     return boiler.getCapabilityForPart(cap, side, role);
+                } else if (be instanceof com.trd.multiblock.industrial.FuelTankSmallBlockEntity smallTank) {
+                    return smallTank.getCapabilityForPart(cap, side, role);
                 } else if (be instanceof IFluidTankProvider provider) {
                     return provider.getFluidHandlerCapability().cast();
                 }

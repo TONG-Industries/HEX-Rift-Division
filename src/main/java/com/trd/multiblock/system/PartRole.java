@@ -12,7 +12,8 @@ public enum PartRole implements StringRepresentable {
     LADDER("ladder"),
     CONTROLLER("controller"),
     FLUID_INPUT("fluid_input"),
-    FLUID_OUTPUT("fluid_output");
+    FLUID_OUTPUT("fluid_output"),
+    FLUID_LADDER("fluid_ladder");
 
     private final String name;
 
@@ -38,7 +39,7 @@ public enum PartRole implements StringRepresentable {
     }
 
     public boolean isLadder() {
-        return this == LADDER;
+        return this == LADDER || this == FLUID_LADDER;
     }
 
     public boolean isController() {

@@ -1,7 +1,6 @@
 package com.trd.menu;
 
-import com.trd.multiblock.industrial.FuelTankBlock;
-import com.trd.multiblock.industrial.FuelTankBlockEntity;
+import com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -15,10 +14,10 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.SlotItemHandler;
 
 public class FuelTankMenu extends AbstractContainerMenu {
-    public final FuelTankBlockEntity blockEntity;
+    public final FluidBarrelBlockEntity blockEntity;
     private final ContainerData data;
 
-    public FuelTankMenu(int pContainerId, Inventory inv, FuelTankBlockEntity entity, ContainerData data) {
+    public FuelTankMenu(int pContainerId, Inventory inv, FluidBarrelBlockEntity entity, ContainerData data) {
         super(ModMenuTypes.FUEL_TANK_MENU.get(), pContainerId);
         this.blockEntity = entity;
         this.data = data;
@@ -38,22 +37,21 @@ public class FuelTankMenu extends AbstractContainerMenu {
 
     public FuelTankMenu(int pContainerId, Inventory inv, FriendlyByteBuf extraData) {
         this(pContainerId, inv,
-                (FuelTankBlockEntity) inv.player.level().getBlockEntity(extraData.readBlockPos()),
+                (FluidBarrelBlockEntity) inv.player.level().getBlockEntity(extraData.readBlockPos()),
                 new SimpleContainerData(1));
     }
 
-    public FluidStack getFluid() { return blockEntity.getFluid(); }
-    public int getCapacity() { return blockEntity.getCapacity(); }
+    public FluidStack getFluid() { return blockEntity.fluidTank.getFluid(); }
+    public int getCapacity() { return blockEntity.fluidTank.getCapacity(); }
     public int getMode() { return data.get(0); }
 
-    public FuelTankBlockEntity getBlockEntity() {
+    public FluidBarrelBlockEntity getBlockEntity() {
         return this.blockEntity;
     }
 
     @Override
     public boolean stillValid(Player player) {
         return blockEntity.getLevel() != null &&
-                blockEntity.getLevel().getBlockState(blockEntity.getBlockPos()).getBlock() instanceof FuelTankBlock &&
                 player.distanceToSqr(blockEntity.getBlockPos().getCenter()) < 64.0;
     }
 

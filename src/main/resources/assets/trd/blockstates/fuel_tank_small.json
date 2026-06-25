@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/fuel_tank_small" },
+    "facing=south": { "model": "trd:block/fuel_tank_small", "y": 180 },
+    "facing=west": { "model": "trd:block/fuel_tank_small", "y": 270 },
+    "facing=east": { "model": "trd:block/fuel_tank_small", "y": 90 }
+  }
+}
