@@ -2,79 +2,115 @@ package com.trd.client.overlay.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.trd.api.fluids.ModFluids;
+import com.trd.block.basic.industrial.fluids.LowPressureSteamCondenserBlock;
 import com.trd.block.entity.industrial.fluids.LowPressureSteamCondenserBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import com.trd.main.MainRegistry;
 
-/**
- * HUD-оверлей конденсатора (по образцу BoilerOverlay).
- * Показывается у прицела, когда игрок смотрит на блок.
- * 🟢 Пар (вход, ->)  🔴 Вода (выход, <-).
- */
-public class LowPressureSteamCondenserOverlay implements IGuiOverlay {
+@Mod.EventBusSubscriber(modid = MainRegistry.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+public class LowPressureSteamCondenserOverlay {
 
-    public static final LowPressureSteamCondenserOverlay INSTANCE = new LowPressureSteamCondenserOverlay();
+    @SubscribeEvent
+    public static void onRenderHud(RenderGuiOverlayEvent.Post event) {
+        if (event.getOverlay() != VanillaGuiOverlay.CROSSHAIR.type()) return;
 
-    @Override
-    public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int width, int height) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null || mc.player == null) return;
+        if (mc.player == null || mc.level == null) return;
 
         HitResult hit = mc.hitResult;
-        if (hit == null || hit.getType() != HitResult.Type.BLOCK) return;
+        if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK) return;
 
-        BlockPos pos = ((BlockHitResult) hit).getBlockPos();
+        BlockPos pos = blockHit.getBlockPos();
         BlockEntity be = mc.level.getBlockEntity(pos);
         if (!(be instanceof LowPressureSteamCondenserBlockEntity condenser)) return;
 
-        renderHUD(guiGraphics, condenser, width, height, mc.font);
+        BlockState state = mc.level.getBlockState(pos);
+        renderHUD(event.getGuiGraphics(), condenser, state, event.getWindow().getGuiScaledWidth(),
+                event.getWindow().getGuiScaledHeight(), mc.font);
     }
 
-    private void renderHUD(GuiGraphics guiGraphics, LowPressureSteamCondenserBlockEntity be, int width, int height, Font font) {
-        int x = width / 2;
-        int y = height / 2 + 15; // чуть ниже прицела
+    private static void renderHUD(GuiGraphics guiGraphics, LowPressureSteamCondenserBlockEntity be,
+                                  BlockState state, int screenWidth, int screenHeight, Font font) {
+        int x = screenWidth / 2 + 12;
+        int y = screenHeight / 2 + 4;
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        // Пар — вход (зелёная ->)
         int steamAmount = be.getSteamTank().getFluidAmount();
         int steamCapacity = be.getSteamTank().getCapacity();
-        String steamPrefix = "Пар ";
-        String steamSuffix = "§a-> §7" + steamAmount + "/" + steamCapacity + " mB";
-
-        // Вода — выход (красная <-)
         int waterAmount = be.getWaterTank().getFluidAmount();
         int waterCapacity = be.getWaterTank().getCapacity();
-        String waterPrefix = "Вода ";
-        String waterSuffix = "§c<- §7" + waterAmount + "/" + waterCapacity + " mB";
 
+        // Цвета названий жидкостей (только названия, цифры белые)
         int steamColor = IClientFluidTypeExtensions.of(ModFluids.LOW_PRESSURE_STEAM_SOURCE.get()).getTintColor() | 0xFF000000;
         int waterColor = IClientFluidTypeExtensions.of(Fluids.WATER).getTintColor() | 0xFF000000;
 
-        int steamPrefixWidth = font.width(steamPrefix);
-        int steamTextWidth = steamPrefixWidth + font.width(steamSuffix);
+        // Строка пара: цветное название + зелёная стрелка + белые цифры
+        String steamPrefix = "Пар Н.Д. ";
+        String steamArrow  = "§a-> ";
+        String steamNums   = "§7" + steamAmount + "/" + steamCapacity + " mB";
+        int steamPrefixW = font.width(steamPrefix);
+        int steamArrowW  = font.width(steamArrow);
+        int steamNumsW   = font.width(steamNums);
+        int steamTotalW  = steamPrefixW + steamArrowW + steamNumsW;
 
-        int waterPrefixWidth = font.width(waterPrefix);
-        int waterTextWidth = waterPrefixWidth + font.width(waterSuffix);
+        // Строка воды: цветное название + красная стрелка + белые цифры
+        String waterPrefix = "Вода ";
+        String waterArrow  = "§c<- ";
+        String waterNums   = "§7" + waterAmount + "/" + waterCapacity + " mB";
+        int waterPrefixW = font.width(waterPrefix);
+        int waterArrowW  = font.width(waterArrow);
+        int waterNumsW   = font.width(waterNums);
+        int waterTotalW  = waterPrefixW + waterArrowW + waterNumsW;
 
-        int maxWidth = Math.max(steamTextWidth, waterTextWidth);
-        guiGraphics.fill(x - maxWidth / 2 - 4, y - 2, x + maxWidth / 2 + 4, y + 22, 0x90000000);
+        // Третья строка — статус (без воды / коэффициент)
+        boolean isWaterlogged = state.getValue(LowPressureSteamCondenserBlock.WATERLOGGED);
+        String statusText;
+        if (!isWaterlogged) {
+            statusText = "§cТребуется залить водой!";
+        } else {
+            statusText = String.format("§7Охлаждение: §b%.2fx", be.getCoolingMultiplier());
+        }
+        int statusW = font.width(statusText);
 
-        int steamX = x - steamTextWidth / 2;
-        guiGraphics.drawString(font, steamPrefix, steamX, y, steamColor, true);
-        guiGraphics.drawString(font, steamSuffix, steamX + steamPrefixWidth, y, 0xFFFFFF, true);
+        int maxWidth = Math.max(steamTotalW, Math.max(waterTotalW, statusW));
 
-        int waterX = x - waterTextWidth / 2;
-        guiGraphics.drawString(font, waterPrefix, waterX, y + 10, waterColor, true);
-        guiGraphics.drawString(font, waterSuffix, waterX + waterPrefixWidth, y + 10, 0xFFFFFF, true);
+        // Авто-сдвиг влево, если текст вылезает за экран
+        if (x + maxWidth + 4 > screenWidth) {
+            x = screenWidth / 2 - maxWidth - 12;
+        }
+
+        int lineHeight = font.lineHeight + 2;
+        int totalHeight = lineHeight * 3;
+        guiGraphics.fill(x - 3, y - 2, x + maxWidth + 3, y + totalHeight + 2, 0x90000000);
+
+        // --- Пар (вход) ---
+        int cx = x;
+        guiGraphics.drawString(font, steamPrefix, cx, y, steamColor, true);
+        guiGraphics.drawString(font, steamArrow,  cx + steamPrefixW, y, 0xFFFFFF, true);
+        guiGraphics.drawString(font, steamNums,   cx + steamPrefixW + steamArrowW, y, 0xFFFFFF, true);
+
+        // --- Вода (выход) ---
+        cx = x;
+        guiGraphics.drawString(font, waterPrefix, cx, y + lineHeight, waterColor, true);
+        guiGraphics.drawString(font, waterArrow,  cx + waterPrefixW, y + lineHeight, 0xFFFFFF, true);
+        guiGraphics.drawString(font, waterNums,   cx + waterPrefixW + waterArrowW, y + lineHeight, 0xFFFFFF, true);
+
+        // --- Статус (только коэффициент голубой, остальное серое/красное через цветовые коды в строке) ---
+        guiGraphics.drawString(font, statusText, x, y + lineHeight * 2, 0xFFFFFF, true);
     }
 }

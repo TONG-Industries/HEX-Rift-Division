@@ -616,7 +616,7 @@ public class ModBlocks {
    //ZAMAZ
    public static final RegistryObject<Block> LOW_PRESSURE_STEAM_CONDENSER = registerBlock("low_pressure_steam_condenser",
            () -> new LowPressureSteamCondenserBlock(BlockBehaviour.Properties.of()
-                   .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+                   .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
 
     public static final RegistryObject<Block> TROMBONE = BLOCKS.register("trombone",

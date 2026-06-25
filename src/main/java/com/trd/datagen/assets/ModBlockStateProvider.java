@@ -51,7 +51,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
         cubeAllWithItem(ModBlocks.MORY_BLOCK);
         cubeAllWithItem(ModBlocks.ANTON_CHIGUR);
-        cubeAllWithItem(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER);
 
         cubeAllWithItem(ModBlocks.SEQUOIA_ROOTS);
         cubeAllWithItem(ModBlocks.SEQUOIA_ROOTS_MOSSY);
