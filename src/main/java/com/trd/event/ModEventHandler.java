@@ -6,7 +6,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import com.trd.item.ModItems;
-import com.trd.item.tags.AmmoRegistry;
+import com.trd.item.weapons.ammo.AmmoRegistry;
 import com.trd.item.weapons.ammo.AmmoTurretItem;
 import com.trd.main.MainRegistry;
 import com.trd.network.ModPacketHandler;

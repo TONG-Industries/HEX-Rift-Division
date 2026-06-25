@@ -2,7 +2,7 @@ package com.trd.client.overlay.gui;
 
 import com.trd.api.metallurgy.system.MetalUnits2;
 import com.trd.main.MainRegistry;
-import com.trd.menu.SmelterMenu;
+import com.trd.menu.industrial.SmelterMenu;
 import com.trd.multiblock.industrial.SmelterBlockEntity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;

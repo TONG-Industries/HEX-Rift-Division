@@ -2,7 +2,7 @@ package com.trd.multiblock.industrial;
 
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity;
-import com.trd.menu.FuelTankMenu;
+import com.trd.menu.industrial.FuelTankMenu;
 import com.trd.multiblock.system.IFluidTankProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;

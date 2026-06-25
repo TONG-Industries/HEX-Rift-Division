@@ -26,7 +26,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.registries.ForgeRegistries;
 import com.trd.entity.weapons.bullets.TurretBulletEntity;
 import com.trd.entity.weapons.turrets.logic.TurretLightComputer;
-import com.trd.item.tags.AmmoRegistry;
+import com.trd.item.weapons.ammo.AmmoRegistry;
 import com.trd.sound.ModSounds;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;

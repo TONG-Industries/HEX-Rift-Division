@@ -1,7 +1,10 @@
 package com.trd.menu;
 
 import com.trd.main.MainRegistry;
-import net.minecraft.core.BlockPos;
+import com.trd.menu.industrial.*;
+import com.trd.menu.rotation.MotorElectroMenu;
+import com.trd.menu.turrets.TromboneMenu;
+import com.trd.menu.turrets.TurretLightMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.eventbus.api.IEventBus;
