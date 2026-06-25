@@ -1,4 +1,4 @@
-package com.trd.item.tags;
+package com.trd.item.weapons.missiles;
 
 /**
  * Интерфейс для предметов-ракет, используемых в ракетнице Тромбон.

@@ -9,7 +9,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import com.trd.item.energy.EnergyCellItem;
 import com.trd.item.energy.ModBatteryItem;
-import com.trd.item.tags.IAmmoItem;
+import com.trd.item.weapons.ammo.IAmmoItem;
 import com.trd.item.weapons.turrets.TurretChipItem;
 
 public class TurretAmmoContainer extends ItemStackHandler {

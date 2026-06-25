@@ -1,6 +1,6 @@
 package com.trd.block.entity.weapons;
 
-import com.trd.item.tags.IMissileItem;
+import com.trd.item.weapons.missiles.IMissileItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;

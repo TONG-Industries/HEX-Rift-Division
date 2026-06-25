@@ -2,7 +2,7 @@ package com.trd.client.overlay.gui;
 
 import com.trd.item.ModItems;
 import com.trd.main.MainRegistry;
-import com.trd.menu.HeaterMenu;
+import com.trd.menu.industrial.HeaterMenu;
 import com.trd.multiblock.industrial.HeaterBlockEntity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;

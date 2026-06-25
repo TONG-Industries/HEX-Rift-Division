@@ -1,4 +1,4 @@
-package com.trd.item;
+package com.trd.item.rotation;
 
 import com.trd.block.basic.industrial.rotation.StatorBlock;
 import com.trd.multiblock.system.IMultiblockController;

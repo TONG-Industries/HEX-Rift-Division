@@ -26,7 +26,7 @@ import com.trd.api.energy.EnergyNetworkManager;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.weapons.TurretLightPlacerBlockEntity;
 import com.trd.entity.weapons.turrets.TurretLightLinkedEntity;
-import com.trd.menu.TurretLightMenu;
+import com.trd.menu.turrets.TurretLightMenu;
 
 public class TurretLightPlacerBlock extends BaseEntityBlock {
 

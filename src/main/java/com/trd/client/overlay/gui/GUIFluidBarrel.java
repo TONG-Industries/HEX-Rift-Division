@@ -3,7 +3,7 @@ package com.trd.client.overlay.gui;
 import com.trd.api.fluids.ModFluids;
 import com.trd.item.ModItems;
 import com.trd.main.MainRegistry;
-import com.trd.menu.FluidBarrelMenu;
+import com.trd.menu.industrial.FluidBarrelMenu;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;

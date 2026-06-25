@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
-import com.trd.menu.MachineBatteryMenu;
+import com.trd.menu.industrial.MachineBatteryMenu;
 import com.trd.network.ModPacketHandler;
 import com.trd.network.packet.energy.UpdateBatteryC2SPacket;
 import com.trd.util.EnergyFormatter;

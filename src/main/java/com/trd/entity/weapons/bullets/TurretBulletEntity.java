@@ -25,7 +25,7 @@ import net.minecraftforge.registries.RegistryObject;
 import com.trd.block.entity.weapons.TurretLightPlacerBlockEntity;
 import com.trd.entity.ModEntities;
 import com.trd.entity.weapons.turrets.TurretLightLinkedEntity;
-import com.trd.item.tags.AmmoRegistry;
+import com.trd.item.weapons.ammo.AmmoRegistry;
 import com.trd.sound.ModSounds;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;

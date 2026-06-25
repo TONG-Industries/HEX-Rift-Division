@@ -1,8 +1,9 @@
-package com.trd.menu;
+package com.trd.menu.industrial;
 
 import com.trd.block.basic.ModBlocks;
 import com.trd.block.entity.industrial.casting.SmallSmelterBlockEntity;
 import com.trd.event.SlagItem;
+import com.trd.menu.ModMenuTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;

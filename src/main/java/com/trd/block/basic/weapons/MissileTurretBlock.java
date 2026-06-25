@@ -4,7 +4,7 @@ import com.trd.block.basic.ModBlocks;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.weapons.MissileAmmoContainer;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
-import com.trd.menu.TromboneMenu;
+import com.trd.menu.turrets.TromboneMenu;
 import com.trd.api.energy.EnergyNetworkManager;
 import com.trd.multiblock.system.IMultiblockController;
 import com.trd.multiblock.system.MultiblockStructureHelper;
