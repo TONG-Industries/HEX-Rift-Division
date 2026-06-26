@@ -17,6 +17,8 @@ public class CastPickaxeStats {
     private final float veinMinerDurabilityCost;
     private final Predicate<BlockState> veinMinerPredicate;
     private final int veinMinerRange;
+    private final int tunnelLength;      // ← НОВОЕ
+    private final float tunnelDecay;     // ← НОВОЕ
     private final List<PerkTooltip> perks;
 
     public static class PerkTooltip {
@@ -38,7 +40,8 @@ public class CastPickaxeStats {
     public CastPickaxeStats(Tier tier, int chargeTicks, float maxDamage, float reach,
                             float maxHardnessMultiplier, int veinMinerLimit,
                             float veinMinerDurabilityCost, Predicate<BlockState> veinMinerPredicate,
-                            int veinMinerRange, List<PerkTooltip> perks) {
+                            int veinMinerRange, int tunnelLength, float tunnelDecay,
+                            List<PerkTooltip> perks) {
         this.tier = tier;
         this.chargeTicks = chargeTicks;
         this.maxDamage = maxDamage;
@@ -48,24 +51,15 @@ public class CastPickaxeStats {
         this.veinMinerDurabilityCost = veinMinerDurabilityCost;
         this.veinMinerPredicate = veinMinerPredicate;
         this.veinMinerRange = veinMinerRange;
+        this.tunnelLength = tunnelLength;
+        this.tunnelDecay = tunnelDecay;
         this.perks = perks;
     }
 
     public static CastPickaxeStats iron() {
         List<PerkTooltip> perks = new ArrayList<>();
 
-        return new CastPickaxeStats(
-                net.minecraft.world.item.Tiers.IRON,
-                40,
-                12.0f,
-                5.0f,
-                120.0f,
-                0, 0, s -> false, 0, perks
-        );
-    }
-
-    public static CastPickaxeStats steel() {
-        List<PerkTooltip> perks = new ArrayList<>();
+        // Железная: VeinMiner для руд (малый, 3 блока)
         Predicate<BlockState> veinMinerPredicate = state -> {
             return !state.is(net.minecraft.world.level.block.Blocks.STONE) &&
                     !state.is(net.minecraft.world.level.block.Blocks.COBBLESTONE) &&
@@ -85,15 +79,32 @@ public class CastPickaxeStats {
         };
 
         return new CastPickaxeStats(
+                net.minecraft.world.item.Tiers.IRON,
+                40,
+                12.0f,
+                5.0f,
+                120.0f,
+                3,              // veinMinerLimit = 3 (меньше, чем у стальной было)
+                0.25f,          // veinMinerDurabilityCost = 25% (дороже из-за меньшей прочности)
+                veinMinerPredicate,
+                2,              // veinMinerRange
+                0, 0.0f,        // tunnelLength=0, нет туннеля
+                perks
+        );
+    }
+
+    public static CastPickaxeStats steel() {
+        List<PerkTooltip> perks = new ArrayList<>();
+
+        // Стальная: TunnelMiner (длинный туннель, 7 блоков)
+        return new CastPickaxeStats(
                 net.minecraft.world.item.Tiers.DIAMOND,
                 50,
                 15.6f,
                 5.0f,
                 200.0f,
-                4,
-                0.3f,
-                veinMinerPredicate,
-                2,
+                0, 0, s -> false, 0,  // нет VeinMiner
+                5, 0.25f,
                 perks
         );
     }
@@ -118,6 +129,9 @@ public class CastPickaxeStats {
     public boolean canVeinMine(BlockState state) { return veinMinerPredicate.test(state); }
     public int getVeinMinerRange() { return veinMinerRange; }
     public List<PerkTooltip> getPerks() { return perks; }
+
+    public int getTunnelLength() { return tunnelLength; }
+    public float getTunnelDecay() { return tunnelDecay; }
 
     public int getConglomerateTierLevel() {
         if (tier == net.minecraft.world.item.Tiers.IRON) return 0;

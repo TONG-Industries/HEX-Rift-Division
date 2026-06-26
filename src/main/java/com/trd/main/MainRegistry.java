@@ -8,6 +8,7 @@ import com.trd.api.metallurgy.system.MetalUnits2;
 import com.trd.api.metallurgy.system.MetallurgyRegistry;
 import com.trd.api.vein.VeinManager;
 import com.trd.block.entity.conglomerate.ConglomerateBlockEntity;
+import com.trd.datagen.stats.ModBlockLootTableProvider;
 import com.trd.entity.mobs.depth_worm.DepthWormBrutalEntity;
 import com.trd.entity.mobs.grenadier.GrenadierZombieEntity;
 import com.trd.event.SlagItem;
@@ -22,7 +23,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,6 +36,7 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -533,4 +538,29 @@ public class MainRegistry {
                     false);
         }
     }
+
+    // ═══════════════════════════════════════════════════════
+    // ОПЫТ ПРИ ДОБЫЧЕ РУД
+    // ═══════════════════════════════════════════════════════
+
+    @SubscribeEvent
+    public void onBlockBreak(BlockEvent.BreakEvent event) {
+        Block block = event.getState().getBlock();
+
+        // Проверяем, есть ли этот блок в списке руд с опытом
+        for (ModBlockLootTableProvider.OreXpConfig config : ModBlockLootTableProvider.ORES_WITH_EXPERIENCE) {
+            if (config.block().get() == block) {
+                // Проверяем отсутствие Silk Touch
+                ItemStack tool = event.getPlayer().getMainHandItem();
+                if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, tool) == 0) {
+                    // Добавляем опыт к событию
+                    int xp = event.getLevel().getRandom().nextIntBetweenInclusive(config.minXp(), config.maxXp());
+                    event.setExpToDrop(event.getExpToDrop() + xp);
+                }
+                break; // нашли, дальше не ищем
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
 }
