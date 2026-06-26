@@ -21,6 +21,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -30,6 +31,7 @@ import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class DepthWormEntity extends Monster implements GeoEntity {
@@ -39,8 +41,12 @@ public class DepthWormEntity extends Monster implements GeoEntity {
     private static final EntityDataAccessor<Boolean> IS_FLYING = SynchedEntityData.defineId(DepthWormEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> KILLS = SynchedEntityData.defineId(DepthWormEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> RAW_KILLS = SynchedEntityData.defineId(DepthWormEntity.class, EntityDataSerializers.INT);
-
     private static final EntityDataAccessor<String> BOUND_NEST_ID = SynchedEntityData.defineId(DepthWormEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Boolean> IS_RETREATING = SynchedEntityData.defineId(DepthWormEntity.class, EntityDataSerializers.BOOLEAN);
+
+    // ⭐ НОВОЕ: последняя точка выхода из гнезда (маршрутизатор)
+    private static final EntityDataAccessor<String> LAST_EXIT_POS = SynchedEntityData.defineId(DepthWormEntity.class, EntityDataSerializers.STRING);
+
     private int meleeCooldown = 0;
     public int ignoreFallDamageTicks = 0;
     public BlockPos nestPos;
@@ -111,6 +117,11 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         if (boundNest != null) {
             tag.putLong("BoundNest", boundNest.asLong());
         }
+        tag.putBoolean("Retreating", this.isRetreating());
+        BlockPos lastExit = getLastExitPos();
+        if (lastExit != null) {
+            tag.putLong("LastExitPos", lastExit.asLong());
+        }
     }
 
     @Override
@@ -127,10 +138,17 @@ public class DepthWormEntity extends Monster implements GeoEntity {
             BlockPos bound = BlockPos.of(tag.getLong("BoundNest"));
             bindToNest(bound);
         }
+        if (tag.contains("Retreating")) {
+            this.setRetreating(tag.getBoolean("Retreating"));
+        }
+        if (tag.contains("LastExitPos")) {
+            setLastExitPos(BlockPos.of(tag.getLong("LastExitPos")));
+        }
     }
 
     public DepthWormEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
+        this.setPathfindingMalus(BlockPathTypes.DAMAGE_OTHER, -1.0F);
     }
 
     private static final EntityDataAccessor<Boolean> IS_ANGRY =
@@ -157,6 +175,8 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         this.entityData.define(KILLS, 0);
         this.entityData.define(RAW_KILLS, 0);
         this.entityData.define(BOUND_NEST_ID, "");
+        this.entityData.define(IS_RETREATING, false);
+        this.entityData.define(LAST_EXIT_POS, "");
     }
 
     public void setAttacking(boolean attacking) {
@@ -179,7 +199,6 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         this.entityData.set(KILLS, this.getKills() + 1);
     }
 
-    // === RAW KILLS (чистые убийства, не сбрасываются в улье) ===
     public int getRawKills() {
         return this.entityData.get(RAW_KILLS);
     }
@@ -190,6 +209,46 @@ public class DepthWormEntity extends Monster implements GeoEntity {
 
     public void addRawKill() {
         this.entityData.set(RAW_KILLS, getRawKills() + 1);
+    }
+
+    public boolean isRetreating() {
+        return this.entityData.get(IS_RETREATING);
+    }
+
+    public void setRetreating(boolean v) {
+        this.entityData.set(IS_RETREATING, v);
+    }
+
+    public int getRetreatKillThreshold() {
+        return 10;
+    }
+
+    public void setKills(int kills) {
+        this.entityData.set(KILLS, kills);
+    }
+
+    // ⭐ НОВОЕ: маршрутизатор — точка последнего выхода
+    public void setLastExitPos(BlockPos pos) {
+        this.entityData.set(LAST_EXIT_POS, pos != null ? pos.asLong() + "" : "");
+    }
+
+    public BlockPos getLastExitPos() {
+        String s = this.entityData.get(LAST_EXIT_POS);
+        if (s == null || s.isEmpty()) return null;
+        try {
+            return BlockPos.of(Long.parseLong(s));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    // ⭐ НОВОЕ: блокируем установку цели во время отступления
+    @Override
+    public void setTarget(@Nullable LivingEntity target) {
+        if (target != null && this.isRetreating()) {
+            return;
+        }
+        super.setTarget(target);
     }
 
     protected void checkBrutalTransformation() {
@@ -204,15 +263,13 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         Level level = this.level();
         Vec3 pos = this.position();
 
-        // ⭐ Эффект трансформации (отсылка к SCP Parasites)
         if (level instanceof ServerLevel serverLevel) {
-            // Мелкий взрыв частиц — дым, кровь, осколки хитина
             serverLevel.sendParticles(
                     net.minecraft.core.particles.ParticleTypes.EXPLOSION,
                     pos.x, pos.y + 0.3, pos.z,
-                    2,  // count — мало, чтобы был мелкий взрыв
-                    0.15, 0.15, 0.15,  // spread
-                    0.02  // speed
+                    2,
+                    0.15, 0.15, 0.15,
+                    0.02
             );
             serverLevel.sendParticles(
                     net.minecraft.core.particles.ParticleTypes.LARGE_SMOKE,
@@ -228,7 +285,6 @@ public class DepthWormEntity extends Monster implements GeoEntity {
                     0.1, 0.1, 0.1,
                     0.05
             );
-            // Тёмные частицы — "паразитарная" субстанция
             serverLevel.sendParticles(
                     net.minecraft.core.particles.ParticleTypes.ASH,
                     pos.x, pos.y + 0.5, pos.z,
@@ -237,7 +293,6 @@ public class DepthWormEntity extends Monster implements GeoEntity {
                     0.03
             );
 
-            // Локальный толчок (не взрыв, просто отталкивание)
             float knockbackRadius = 2.5F;
             float knockbackStrength = 0.4F;
             for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class,
@@ -252,7 +307,6 @@ public class DepthWormEntity extends Monster implements GeoEntity {
             }
         }
 
-        // Спавн брутального червя
         DepthWormBrutalEntity brutal = new DepthWormBrutalEntity(ModEntities.DEPTH_WORM_BRUTAL.get(), level);
         brutal.copyPosition(this);
         brutal.setYRot(this.getYRot());
@@ -264,6 +318,9 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         BlockPos boundNest = this.getBoundNestPos();
         if (boundNest != null) brutal.bindToNest(boundNest);
         if (this.homePos != null) brutal.setHomePos(this.homePos);
+        // ⭐ Передаём маршрутизатор бруталу
+        BlockPos lastExit = this.getLastExitPos();
+        if (lastExit != null) brutal.setLastExitPos(lastExit);
 
         brutal.ignoreFallDamageTicks = this.ignoreFallDamageTicks;
 
@@ -284,6 +341,36 @@ public class DepthWormEntity extends Monster implements GeoEntity {
 
     @Override
     public void aiStep() {
+        if (!this.level().isClientSide) {
+            // ⭐ Вода — всегда отступаем
+            if (this.isInWater()) {
+                this.setDeltaMovement(this.getDeltaMovement().x, 0.35D, this.getDeltaMovement().z);
+                this.setTarget(null);
+                this.setRetreating(true);
+            } else if (this.isRetreating()) {
+                // Уже отступаем — продолжаем, цель сброшена в setTarget()
+            } else {
+                // ⭐ Проверяем условия отступления ТОЛЬКО если есть цель (в бою)
+                LivingEntity currentTarget = this.getTarget();
+                if (currentTarget != null && currentTarget.isAlive()) {
+                    float maxHealth = this.getMaxHealth();
+                    boolean lowHp = this.getHealth() < maxHealth / 3.0f;
+                    boolean tooManyKills = this.getKills() >= this.getRetreatKillThreshold();
+
+                    if (lowHp || tooManyKills) {
+                        this.setRetreating(true);
+                        this.setTarget(null);
+                    }
+                }
+            }
+
+            // ⭐ Цель в воде — сбрасываем (но НЕ начинаем отступление автоматически)
+            LivingEntity target = this.getTarget();
+            if (target != null && target.isInWater()) {
+                this.setTarget(null);
+            }
+        }
+
         super.aiStep();
 
         if (this.onGround()) {
@@ -315,7 +402,6 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         }
         if (this.meleeCooldown > 0) this.meleeCooldown--;
 
-        // ⭐ Эволюция в брутального
         if (!level().isClientSide) {
             checkBrutalTransformation();
         }
@@ -363,8 +449,10 @@ public class DepthWormEntity extends Monster implements GeoEntity {
         return super.hurt(source, amount);
     }
 
+    // ⭐ НОВОЕ: во время отступления нельзя атаковать
     @Override
     public boolean canAttack(LivingEntity target) {
+        if (this.isRetreating()) return false;
         return !(target instanceof DepthWormEntity) && super.canAttack(target);
     }
 
@@ -390,7 +478,7 @@ public class DepthWormEntity extends Monster implements GeoEntity {
     public void awardKillScore(Entity killed, int score, DamageSource damageSource) {
         super.awardKillScore(killed, score, damageSource);
         this.addKillPoints(killed);
-        this.addRawKill(); // ⭐ +1 чистое убийство
+        this.addRawKill();
     }
 
     @Override

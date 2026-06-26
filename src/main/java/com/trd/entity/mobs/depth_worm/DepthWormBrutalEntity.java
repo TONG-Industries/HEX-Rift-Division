@@ -1,4 +1,3 @@
-// DepthWormBrutalEntity.java
 package com.trd.entity.mobs.depth_worm;
 
 import net.minecraft.nbt.CompoundTag;
@@ -37,6 +36,7 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
     private LivingEntity impaledTargetCache = null;
     private int postAttackAnimTimer = 0;
     private int meleeCooldown = 0;
+    private int impaleTimer = 0;
 
     public DepthWormBrutalEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -63,8 +63,6 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new DepthWormBrutalJumpGoal(this, 1.8D, 6.0F, 24.0F));
         this.goalSelector.addGoal(1, new ReturnToHiveGoal(this));
-        // ⭐ ИСПРАВЛЕНО: followingTargetEvenIfNotSeen = false — как у обычного червя,
-        // чтобы брутал мог переключаться между прыжком и ближним боем
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.4D, false));
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
@@ -81,11 +79,15 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
     @Override
     public boolean doHurtTarget(Entity target) {
         if (this.meleeCooldown > 0) return false;
-        this.meleeCooldown = 20; // ⭐ 1 секунда, было 40
+        this.meleeCooldown = 20;
         this.triggerPostAttackAnim();
         return super.doHurtTarget(target);
     }
 
+    @Override
+    public int getRetreatKillThreshold() {
+        return 30;
+    }
 
     @Override
     public void aiStep() {
@@ -100,10 +102,8 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
 
         if (this.level().isClientSide) return;
 
-        // ⭐ Кулдаун рукопашной
         if (this.meleeCooldown > 0) this.meleeCooldown--;
 
-        // ⭐ Таймер пост-атаки (единственный таймер для анимации)
         if (this.postAttackAnimTimer > 0) {
             if (--this.postAttackAnimTimer == 0) {
                 this.setAttacking(false);
@@ -115,7 +115,13 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
         }
 
         if (this.isImpaling()) {
-            this.updateImpaledTargetPosition();
+            if (--this.impaleTimer <= 0) {
+                clearImpaledTarget();
+                Vec3 bounce = this.getLookAngle().scale(-0.5).add(0, 0.3, 0);
+                this.setDeltaMovement(bounce);
+            } else {
+                this.updateImpaledTargetPosition();
+            }
         }
     }
 
@@ -138,24 +144,18 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
             return;
         }
 
-        // ⭐ ИСПРАВЛЕНО: Привязываемся к ЦЕНТРУ хитбокса цели, не к ногам
-        // target.position() — ноги, getBoundingBox().getCenter() — центр
         Vec3 targetCenter = target.getBoundingBox().getCenter();
 
-        // ⭐ ИСПРАВЛЕНО: Сдвигаем на ~5 пикселей (0.3125 блока) назад (в сторону хвоста червя)
-        // Червь "впивается" в центр тела цели, но смещён назад от направления движения цели
         Vec3 targetVel = target.getDeltaMovement();
         Vec3 velDir = targetVel.lengthSqr() > 0.001
                 ? targetVel.normalize()
                 : target.getLookAngle();
 
-        // offsetForward теперь ОТРИЦАТЕЛЬНЫЙ — червь сзади центра (в сторону хвоста)
-        double offsetForward = -0.3125; // ~5 пикселей назад
+        double offsetForward = -0.3125;
         Vec3 attachPos = targetCenter.add(velDir.scale(offsetForward));
 
-        // Плавное прилипание
         Vec3 wormPos = this.position();
-        double lerp = 0.5; // Мягче, чтобы не дергаться
+        double lerp = 0.5;
         double newX = wormPos.x + (attachPos.x - wormPos.x) * lerp;
         double newY = wormPos.y + (attachPos.y - wormPos.y) * lerp;
         double newZ = wormPos.z + (attachPos.z - wormPos.z) * lerp;
@@ -168,7 +168,6 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
         this.yHeadRot = yaw;
         this.yBodyRot = yaw;
 
-        // Урон каждые 10 тиков
         if (this.tickCount % 10 == 0) {
             target.hurt(this.damageSources().mobAttack(this), 2.0F);
         }
@@ -177,6 +176,7 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
             player.hurtMarked = true;
         }
     }
+
     @Override
     protected void checkBrutalTransformation() {
         // Брутальный червь не эволюционирует дальше
@@ -186,6 +186,7 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
     protected void transformToBrutal() {
         // Уже брутальный — игнорируем
     }
+
     @Override
     public boolean causeFallDamage(float distance, float multiplier, DamageSource source) {
         return this.ignoreFallDamageTicks <= 0 && super.causeFallDamage(distance, multiplier * 0.5F, source);
@@ -211,7 +212,6 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
                 return state.setAndContinue(RawAnimation.begin().thenPlayAndHold("prepare"));
             }
 
-            // ⭐ ИЗМЕНЕНО: attack держится и после атаки (postAttackAnimTimer)
             if (this.isAttacking() || this.postAttackAnimTimer > 0) {
                 return state.setAndContinue(RawAnimation.begin().thenPlayAndHold("attack"));
             }
@@ -267,12 +267,16 @@ public class DepthWormBrutalEntity extends DepthWormEntity {
         this.impaledTargetCache = target;
         setImpaledEntityId(target != null ? target.getId() : -1);
         setImpaling(target != null);
+        if (target != null) {
+            this.impaleTimer = 60;
+        }
     }
 
     public void clearImpaledTarget() {
         this.impaledTargetCache = null;
         setImpaledEntityId(-1);
         setImpaling(false);
+        this.impaleTimer = 0;
     }
 
     @Override

@@ -25,14 +25,19 @@ public class DepthWormJumpGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        // ⭐ Не прыгаем во время отступления
+        if (this.worm.isRetreating()) return false;
+
         this.target = this.worm.getTarget();
         if (this.target == null || !this.target.isAlive()) return false;
+        if (this.worm.isInWater() || this.target.isInWater()) return false;
         double dist = this.worm.distanceTo(this.target);
         return dist >= this.jumpRangeMin && dist <= this.jumpRangeMax;
     }
 
     @Override
     public boolean canContinueToUse() {
+        if (this.worm.isRetreating()) return false;
         return !jumpPerformed && jumpTimer > 0;
     }
 
@@ -79,57 +84,41 @@ public class DepthWormJumpGoal extends Goal {
     }
 
     private void doJump() {
-        // === УЛУЧШЕННЫЙ РАСЧЁТ С УЧЁТОМ ВЕРТИКАЛИ ===
-
         Vec3 wormPos = this.worm.position();
         Vec3 targetPos = this.target.position();
 
-        // Целимся в центр тела цели, а не в ноги
         double targetY = targetPos.y + this.target.getBbHeight() * 0.5;
 
-        // Разница по всем осям
         double dx = targetPos.x - wormPos.x;
         double dy = targetY - wormPos.y;
         double dz = targetPos.z - wormPos.z;
 
-        // Горизонтальное расстояние
         double horizontalDist = Math.sqrt(dx * dx + dz * dz);
 
-        // Расчёт скорости: чем дальше, тем быстрее, но с ограничением
         double baseSpeed = 0.9;
         double speed = baseSpeed + (horizontalDist * 0.08);
-        speed = Math.min(speed, 1.8); // Максимальная скорость
+        speed = Math.min(speed, 1.8);
 
-        // Расчёт вертикального импульса с учётом высоты цели
-        // Если цель выше - добавляем больше вертикали
         double verticalBoost;
         if (dy > 2.0) {
-            // Цель значительно выше - сильный вертикальный бросок
             verticalBoost = 0.6 + (dy * 0.15);
         } else if (dy > 0) {
-            // Цель немного выше - умеренный бросок
             verticalBoost = 0.4 + (dy * 0.1);
         } else if (dy > -1.0) {
-            // Цель на той же высоте или чуть ниже - небольшой бросок вверх
             verticalBoost = 0.35;
         } else {
-            // Цель ниже - минимальный бросок вверх (червь упадёт сам)
             verticalBoost = 0.25;
         }
 
-        // Нормализуем горизонтальное направление
         Vec3 horizontalDir = new Vec3(dx, 0, dz).normalize();
 
-        // Итоговая скорость: горизонтальная составляющая + вертикальная
         Vec3 velocity = horizontalDir.scale(speed).add(0, verticalBoost, 0);
 
-        // Поворачиваем червя мордой к цели
         double yaw = Math.atan2(dz, dx) * (180 / Math.PI) - 90;
         this.worm.setYRot((float) yaw);
         this.worm.yHeadRot = (float) yaw;
         this.worm.yBodyRot = (float) yaw;
 
-        // Применяем движение
         this.worm.setDeltaMovement(velocity);
         this.worm.setFlying(true);
         this.worm.ignoreFallDamageTicks = 30;

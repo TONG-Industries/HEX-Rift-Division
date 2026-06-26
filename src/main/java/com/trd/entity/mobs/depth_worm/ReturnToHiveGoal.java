@@ -25,9 +25,14 @@ public class ReturnToHiveGoal extends Goal {
     private BlockPos lastPos = BlockPos.ZERO;
     private static final int STUCK_THRESHOLD = 40;
 
-    // Фазы приближения
     private enum ApproachPhase { NAVIGATING, SLIDING, ENTERING }
     private ApproachPhase phase = ApproachPhase.NAVIGATING;
+
+    // ⭐ НОВОЕ: маршрутизатор
+    private boolean routerActive = false;
+    private BlockPos routerTarget = null;
+    private static final double ROUTER_DISABLE_DISTANCE_SQ = 256.0; // 16 blocks
+    private static final double ROUTER_ARRIVE_DISTANCE_SQ = 4.0;      // 2 blocks
 
     public ReturnToHiveGoal(DepthWormEntity worm) {
         this.worm = worm;
@@ -36,6 +41,26 @@ public class ReturnToHiveGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        if (worm.isRetreating()) {
+            if (worm.getTarget() != null) worm.setTarget(null);
+
+            BlockPos boundNest = worm.getBoundNestPos();
+            if (boundNest != null && isValidEntryPoint(boundNest)) {
+                this.targetPos = boundNest;
+                this.targetIsSoil = isSoil(boundNest);
+                return true;
+            }
+
+            BlockPos entry = findNearestEntryPoint();
+            if (entry != null) {
+                this.targetPos = entry;
+                this.targetIsSoil = isSoil(entry);
+                worm.bindToNest(findNearestNest(entry));
+                return true;
+            }
+            return false;
+        }
+
         LivingEntity target = worm.getTarget();
         if (target != null && target.isAlive()) return false;
         if (worm.tickCount < nextSearchTick) return false;
@@ -145,10 +170,16 @@ public class ReturnToHiveGoal extends Goal {
         this.phase = ApproachPhase.NAVIGATING;
         this.stuckTicks = 0;
         this.lastPos = worm.blockPosition();
+        this.routerActive = false;
+        this.routerTarget = null;
     }
 
     @Override
     public void tick() {
+        if (worm.isRetreating() && worm.getTarget() != null) {
+            worm.setTarget(null);
+        }
+
         if (targetPos == null) return;
 
         double targetX = targetPos.getX() + 0.5;
@@ -159,7 +190,13 @@ public class ReturnToHiveGoal extends Goal {
         double distSq = wormPos.distanceToSqr(targetX, targetY, targetZ);
         BlockPos currentBlockPos = worm.blockPosition();
 
-        // Проверка на застревание
+        // ⭐ Если гнездо в зоне видимости (16 блоков) — отключаем маршрутизатор
+        if (routerActive && distSq < ROUTER_DISABLE_DISTANCE_SQ) {
+            routerActive = false;
+            routerTarget = null;
+            phase = ApproachPhase.NAVIGATING;
+        }
+
         if (currentBlockPos.equals(lastPos)) {
             stuckTicks++;
         } else {
@@ -167,7 +204,6 @@ public class ReturnToHiveGoal extends Goal {
             lastPos = currentBlockPos;
         }
 
-        // Определяем фазу на основе расстояния
         if (distSq < 1.5) {
             phase = ApproachPhase.ENTERING;
         } else if (distSq < 8.0) {
@@ -178,38 +214,55 @@ public class ReturnToHiveGoal extends Goal {
 
         switch (phase) {
             case NAVIGATING -> {
-                // Далеко - используем навигацию
-                worm.getNavigation().moveTo(targetX, targetY, targetZ, 1.2D);
+                boolean pathFound;
+                if (routerActive && routerTarget != null) {
+                    // Идём на точку маршрутизатора
+                    pathFound = worm.getNavigation().moveTo(routerTarget.getX() + 0.5, routerTarget.getY() + 0.5, routerTarget.getZ() + 0.5, 1.2D);
+
+                    // ⭐ Достигли точки маршрутизатора — отключаем и пробуем найти путь до гнезда
+                    double routerDistSq = worm.distanceToSqr(routerTarget.getX() + 0.5, routerTarget.getY() + 0.5, routerTarget.getZ() + 0.5);
+                    if (routerDistSq < ROUTER_ARRIVE_DISTANCE_SQ) {
+                        routerActive = false;
+                        routerTarget = null;
+                        pathFound = worm.getNavigation().moveTo(targetX, targetY, targetZ, 1.2D);
+                    }
+                } else {
+                    pathFound = worm.getNavigation().moveTo(targetX, targetY, targetZ, 1.2D);
+
+                    // ⭐ Путь до гнезда не найден — активируем маршрутизатор
+                    if (!pathFound) {
+                        BlockPos lastExit = worm.getLastExitPos();
+                        if (lastExit != null && !lastExit.equals(targetPos)) {
+                            routerActive = true;
+                            routerTarget = lastExit;
+                            System.out.println("[Worm] Router activated to last exit " + lastExit + " (cannot reach nest at " + targetPos + ")");
+                            worm.getNavigation().moveTo(routerTarget.getX() + 0.5, routerTarget.getY() + 0.5, routerTarget.getZ() + 0.5, 1.2D);
+                        }
+                    }
+                }
                 worm.getLookControl().setLookAt(targetX, targetY + 0.5, targetZ);
             }
 
             case SLIDING -> {
-                // === КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Полностью отключаем навигацию ===
                 worm.getNavigation().stop();
 
-                // Ручное скольжение без "магнита"
                 Vec3 toTarget = new Vec3(targetX - wormPos.x, targetY - wormPos.y, targetZ - wormPos.z);
                 double dist = Math.sqrt(distSq);
 
-                // Скорость зависит от расстояния: чем ближе, тем медленнее
                 double speed = Math.min(0.15, dist * 0.03);
 
-                // Нормализуем и масштабируем
                 Vec3 move = toTarget.normalize().scale(speed);
 
-                // Применяем движение напрямую, без физики (как у слайма)
                 worm.setPos(wormPos.x + move.x, wormPos.y + move.y, wormPos.z + move.z);
-                worm.setDeltaMovement(Vec3.ZERO); // Сбрасываем физику
+                worm.setDeltaMovement(Vec3.ZERO);
 
                 worm.getLookControl().setLookAt(targetX, targetY, targetZ, 30.0F, 30.0F);
             }
 
             case ENTERING -> {
-                // Вход в улей
                 worm.getNavigation().stop();
                 worm.setDeltaMovement(Vec3.ZERO);
 
-                // Если застряли или очень близко - входим
                 if (stuckTicks > 15 || distSq < 0.8) {
                     enterNetwork(targetPos);
                 }
@@ -244,14 +297,14 @@ public class ReturnToHiveGoal extends Goal {
 
         CompoundTag tag = new CompoundTag();
         worm.saveWithoutId(tag);
-        // ⭐ Фикс: явно сохраняем тип сущности (обычный или брутальный)
         tag.putString("id", net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(worm.getType()).toString());
-        tag.putInt("Kills", 0); // Сбрасываем только очки улия
-        // RawKills остаётся в теге — не трогаем!
+        tag.putInt("Kills", 0);
 
         boolean success = manager.addWormToNetwork(netId, tag, entryPos, worm.level());
 
         if (success) {
+            worm.setRetreating(false);
+            worm.setKills(0);
             network.removeActiveWorm();
             worm.discard();
         } else {
@@ -264,7 +317,11 @@ public class ReturnToHiveGoal extends Goal {
     @Override
     public boolean canContinueToUse() {
         if (targetPos == null) return false;
-        if (worm.getTarget() != null && worm.getTarget().isAlive()) return false;
+        if (worm.isRetreating()) {
+            // продолжаем отступление
+        } else if (worm.getTarget() != null && worm.getTarget().isAlive()) {
+            return false;
+        }
         if (stuckTicks > STUCK_THRESHOLD * 3) return false;
 
         return isValidEntryPoint(targetPos);
@@ -277,6 +334,8 @@ public class ReturnToHiveGoal extends Goal {
         this.stuckTicks = 0;
         this.lastPos = BlockPos.ZERO;
         this.phase = ApproachPhase.NAVIGATING;
+        this.routerActive = false;
+        this.routerTarget = null;
         worm.getNavigation().stop();
     }
 }
