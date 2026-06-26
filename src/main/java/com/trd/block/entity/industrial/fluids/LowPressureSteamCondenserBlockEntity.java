@@ -26,6 +26,11 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
+
 /**
  * Конденсатор пара низкого давления.
  * Работает ТОЛЬКО если залит водой (WATERLOGGED).
@@ -136,25 +141,47 @@ public class LowPressureSteamCondenserBlockEntity extends BlockEntity {
         }
     }
 
-    /** Считает блоки воды в кубе 21×21×21 (без самого блока). База 1.0 + бонус до 1.0. */
+    /**
+     * Считает блоки воды, связные с конденсатором через 6-связность.
+     * Только блоки воды (FluidState), не waterlogged-блоки.
+     * Начинаем с 6 соседей конденсатора, идём волной.
+     */
     private static float calculateCoolingMultiplier(Level level, BlockPos pos) {
-        int waterCount = 0;
+        Set<BlockPos> visited = new HashSet<>();
+        Queue<BlockPos> queue = new LinkedList<>();
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
 
-        for (int x = -WATER_RADIUS; x <= WATER_RADIUS; x++) {
-            for (int y = -WATER_RADIUS; y <= WATER_RADIUS; y++) {
-                for (int z = -WATER_RADIUS; z <= WATER_RADIUS; z++) {
-                    if (x == 0 && y == 0 && z == 0) continue; // сам конденсатор не считаем
-                    mutable.set(pos.getX() + x, pos.getY() + y, pos.getZ() + z);
-                    if (level.getFluidState(mutable).getType() == Fluids.WATER) {
-                        waterCount++;
-                        if (waterCount >= WATER_MAX_COUNT) {
-                            return 2.0f;
-                        }
-                    }
+        // Инициализация: проверяем 6 соседей конденсатора
+        for (Direction dir : Direction.values()) {
+            BlockPos neighbor = pos.relative(dir);
+            mutable.set(neighbor.getX(), neighbor.getY(), neighbor.getZ());
+            if (level.getFluidState(mutable).getType() == Fluids.WATER) {
+                queue.add(neighbor);
+                visited.add(neighbor);
+            }
+        }
+
+        int waterCount = 0;
+        int maxDistance = WATER_RADIUS * 2; // Защита от огромных озёр
+
+        while (!queue.isEmpty() && waterCount < WATER_MAX_COUNT) {
+            BlockPos current = queue.poll();
+            waterCount++;
+
+            // 6-связность: только прямые соседи (без диагоналей)
+            for (Direction dir : Direction.values()) {
+                BlockPos next = current.relative(dir);
+                if (visited.contains(next)) continue;
+                if (next.distManhattan(pos) > maxDistance) continue;
+
+                mutable.set(next.getX(), next.getY(), next.getZ());
+                if (level.getFluidState(mutable).getType() == Fluids.WATER) {
+                    visited.add(next);
+                    queue.add(next);
                 }
             }
         }
+
         return 1.0f + (waterCount / (float) WATER_MAX_COUNT);
     }
 
