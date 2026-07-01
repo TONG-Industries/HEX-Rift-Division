@@ -28,6 +28,7 @@ public class ModModels {
 
 
     public static final PartialModel FUEL_TANK_BIG = PartialModel.of(new ResourceLocation("trd", "block/fuel_tank_big"));
+    public static final PartialModel FUEL_TANK_SMALL = PartialModel.of(new ResourceLocation("trd", "block/fuel_tank_small"));
     public static final PartialModel BOILER = PartialModel.of(new ResourceLocation("trd", "block/boiler"));
 
     public static final PartialModel JERNOVA_BASE = PartialModel.of(new ResourceLocation("trd", "block/jernova_2"));

@@ -278,6 +278,21 @@ public class ClientModEvents {
                     }
                 });
 
+        VisualizerRegistry.setVisualizer(ModBlockEntities.FUEL_TANK_SMALL_BE.get(),
+                new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.trd.multiblock.industrial.FuelTankSmallBlockEntity>() {
+
+                    @Override
+                    public BlockEntityVisual<? super com.trd.multiblock.industrial.FuelTankSmallBlockEntity> createVisual(
+                            VisualizationContext ctx, com.trd.multiblock.industrial.FuelTankSmallBlockEntity be, float partialTick) {
+                        return new com.trd.client.render.flywheel.FuelTankSmallVisual(ctx, be, partialTick);
+                    }
+
+                    @Override
+                    public boolean skipVanillaRender(com.trd.multiblock.industrial.FuelTankSmallBlockEntity be) {
+                        return false; // Позволяем BER рендерить текст
+                    }
+                });
+
         VisualizerRegistry.setVisualizer(ModBlockEntities.BOILER_BE.get(),
                 new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.trd.multiblock.industrial.BoilerBlockEntity>() {
                     @Override

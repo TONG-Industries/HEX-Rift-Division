@@ -216,6 +216,10 @@ public class ModBlocks {
             () -> new FuelTankBlock(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
+    public static final RegistryObject<Block> FUEL_TANK_SMALL = BLOCKS.register("fuel_tank_small",
+            () -> new com.trd.multiblock.industrial.FuelTankSmallBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
+
     public static final RegistryObject<Block> SMALL_SMELTER = registerBlock("small_smelter",
             () -> new SmallSmelterBlock(BlockBehaviour.Properties.of()
                     .strength(1.2F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));

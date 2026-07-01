@@ -143,7 +143,7 @@ public class MultiblockPartBlock extends BaseEntityBlock {
     public boolean isLadder(BlockState state, net.minecraft.world.level.LevelReader level, BlockPos pos, net.minecraft.world.entity.LivingEntity entity) {
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof IMultiblockPart part) {
-            return part.getPartRole() == com.trd.multiblock.system.PartRole.LADDER;
+            return part.getPartRole() != null && part.getPartRole().isLadder();
         }
         return false;
     }

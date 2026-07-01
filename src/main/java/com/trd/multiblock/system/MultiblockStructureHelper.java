@@ -330,7 +330,7 @@ public class MultiblockStructureHelper {
                 PartRole role = resolvePartRole(gridPos, controller);
                 partBe.setPartRole(role);
 
-                if (role == PartRole.LADDER) {
+                if (role.isLadder()) {
                     Set<Direction> localSides = ladderLocalDirections.get(gridPos);
                     EnumSet<Direction> worldSides = EnumSet.noneOf(Direction.class);
 

@@ -170,13 +170,13 @@ public class FluidNetworkManager extends SavedData {
         // Поэтому мы жестко проверяем роль части мультиблока, чтобы не разрывать сеть!
         if (isPipe1 && be2 instanceof com.trd.multiblock.system.MultiblockPartEntity part2) {
             com.trd.multiblock.system.PartRole role = part2.getPartRole();
-            if (role == com.trd.multiblock.system.PartRole.FLUID_CONNECTOR || role == com.trd.multiblock.system.PartRole.UNIVERSAL_CONNECTOR || role == com.trd.multiblock.system.PartRole.FLUID_INPUT || role == com.trd.multiblock.system.PartRole.FLUID_OUTPUT) {
+            if (role == com.trd.multiblock.system.PartRole.FLUID_CONNECTOR || role == com.trd.multiblock.system.PartRole.UNIVERSAL_CONNECTOR || role == com.trd.multiblock.system.PartRole.FLUID_INPUT || role == com.trd.multiblock.system.PartRole.FLUID_OUTPUT || role == com.trd.multiblock.system.PartRole.FLUID_LADDER) {
                 return true;
             }
         }
         if (isPipe2 && be1 instanceof com.trd.multiblock.system.MultiblockPartEntity part1) {
             com.trd.multiblock.system.PartRole role = part1.getPartRole();
-            if (role == com.trd.multiblock.system.PartRole.FLUID_CONNECTOR || role == com.trd.multiblock.system.PartRole.UNIVERSAL_CONNECTOR || role == com.trd.multiblock.system.PartRole.FLUID_INPUT || role == com.trd.multiblock.system.PartRole.FLUID_OUTPUT) {
+            if (role == com.trd.multiblock.system.PartRole.FLUID_CONNECTOR || role == com.trd.multiblock.system.PartRole.UNIVERSAL_CONNECTOR || role == com.trd.multiblock.system.PartRole.FLUID_INPUT || role == com.trd.multiblock.system.PartRole.FLUID_OUTPUT || role == com.trd.multiblock.system.PartRole.FLUID_LADDER) {
                 return true;
             }
         }

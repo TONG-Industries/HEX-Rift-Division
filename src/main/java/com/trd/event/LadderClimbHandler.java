@@ -125,7 +125,7 @@ public class LadderClimbHandler {
 
     private static boolean isLadderAt(Level level, BlockPos pos) {
         BlockEntity be = level.getBlockEntity(pos);
-        return be instanceof IMultiblockPart part && part.getPartRole() == PartRole.LADDER;
+        return be instanceof IMultiblockPart part && part.getPartRole() != null && part.getPartRole().isLadder();
     }
 
     private static boolean tryFindLadderExtended(Level level, Player player) {
