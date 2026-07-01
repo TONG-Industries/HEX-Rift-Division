@@ -5,7 +5,7 @@ import com.trd.block.basic.ModBlocks;
 import com.trd.block.basic.industrial.fluids.FluidBarrelBlock;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.item.ModItems;
-import com.trd.menu.FluidBarrelMenu;
+import com.trd.menu.industrial.FluidBarrelMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustParticleOptions;

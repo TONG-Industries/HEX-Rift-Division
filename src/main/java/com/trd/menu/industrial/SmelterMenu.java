@@ -1,9 +1,9 @@
-package com.trd.menu;
+package com.trd.menu.industrial;
 
 
 import com.trd.api.metallurgy.system.MetallurgyRegistry;
 import com.trd.block.basic.ModBlocks;
-import com.trd.event.HotItemHandler;
+import com.trd.menu.ModMenuTypes;
 import com.trd.multiblock.industrial.SmelterBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;

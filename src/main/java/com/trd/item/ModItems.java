@@ -16,6 +16,7 @@ import com.trd.item.mobs.MoryLahItem;
 import com.trd.item.energy.StatorCoilItem;
 import com.trd.item.energy.WireCoilItem;
 import com.trd.item.rotation.GearItem;
+import com.trd.item.rotation.StatorMultiblockItem;
 import com.trd.item.tools.*;
 import com.trd.item.tools.cast_pickaxes.materials.CastPickaxeIronItem;
 import com.trd.item.tools.cast_pickaxes.materials.CastPickaxeSteelItem;
@@ -102,6 +103,9 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> FLUORITE = ITEMS.register("fluorite",
             () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ASBESTOS = ITEMS.register("asbestos",
+            () -> new Item(new Item.Properties()));
+
     public static final RegistryObject<Item> GRAVITY_GRENADE = ITEMS.register("gravity_grenade",
             () -> new GravityGrenadeItem(new Item.Properties().stacksTo(16), ModEntities.GRAVITY_GRENADE_PROJECTILE));
 
@@ -309,9 +313,10 @@ public class ModItems {
 
 
     public static final RegistryObject<Item> STATOR_ITEM = ITEMS.register("stator",
-            () -> new com.trd.item.StatorMultiblockItem(ModBlocks.STATOR_BLOCK.get(), new Item.Properties()));
+            () -> new StatorMultiblockItem(ModBlocks.STATOR_BLOCK.get(), new Item.Properties()));
 
-
+    public static final RegistryObject<Item> TROMBONE_ITEM = ITEMS.register("trombone",
+            () -> new MultiblockBlockItem(ModBlocks.TROMBONE.get(), new Item.Properties()));
 
 
     //ПАТРОНЫ

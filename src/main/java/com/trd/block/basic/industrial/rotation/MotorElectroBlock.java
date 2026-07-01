@@ -4,7 +4,7 @@ import com.trd.api.energy.EnergyNetworkManager;
 import com.trd.api.rotation.KineticNetworkManager;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.industrial.rotation.MotorElectroBlockEntity;
-import com.trd.menu.MotorElectroMenu;
+import com.trd.menu.rotation.MotorElectroMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;

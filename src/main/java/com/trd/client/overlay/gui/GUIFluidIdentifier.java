@@ -50,6 +50,12 @@ public class GUIFluidIdentifier extends Screen {
     private static final int COLOR_HAZARDOUS = 0xFFFF5555;
     private static final int COLOR_RADIOACTIVE = 0xFF55FF55;
 
+    private boolean isDraggingScrollBar = false;
+    private static final int SCROLLBAR_X = 123;      // относительно leftPos
+    private static final int SCROLLBAR_Y = 75;       // относительно topPos
+    private static final int SCROLLBAR_WIDTH = 8;
+    private static final int SCROLLBAR_HEIGHT = 141; // высота трека
+    private static final int THUMB_HEIGHT = 15;
     private EditBox searchBox;
 
     public GUIFluidIdentifier(ItemStack stack) {
@@ -302,8 +308,30 @@ public class GUIFluidIdentifier extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button);
+
         int x = this.leftPos;
         int y = this.topPos;
+
+        // === ПРОВЕРКА КЛИКА ПО ПОЛЗУНКУ ===
+        int trackX = x + SCROLLBAR_X;
+        int trackY = y + SCROLLBAR_Y;
+        int thumbY = trackY + (int) (scrollAmount * (SCROLLBAR_HEIGHT - THUMB_HEIGHT));
+
+        // Попали в ползунок (thumb)?
+        if (mouseX >= trackX && mouseX <= trackX + SCROLLBAR_WIDTH &&
+                mouseY >= thumbY && mouseY <= thumbY + THUMB_HEIGHT) {
+            isDraggingScrollBar = true;
+            return true;
+        }
+
+        // Попали в трек (клик выше/ниже ползунка — прыжок)?
+        if (mouseX >= trackX && mouseX <= trackX + SCROLLBAR_WIDTH &&
+                mouseY >= trackY && mouseY <= trackY + SCROLLBAR_HEIGHT) {
+            // Прыгаем к позиции клика
+            float clickRatio = (float) ((mouseY - trackY) / (double) (SCROLLBAR_HEIGHT - THUMB_HEIGHT));
+            scrollAmount = Math.max(0f, Math.min(1f, clickRatio));
+            return true;
+        }
 
         if (mouseX >= x + 105 && mouseX <= x + 117 && mouseY >= y + 33 && mouseY <= y + 66) {
             timerClear = PRESS_DURATION;
@@ -345,6 +373,25 @@ public class GUIFluidIdentifier extends Screen {
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (isDraggingScrollBar && button == 0) {
+            int trackY = this.topPos + SCROLLBAR_Y;
+            float dragRatio = (float) ((mouseY - trackY) / (double) (SCROLLBAR_HEIGHT - THUMB_HEIGHT));
+            scrollAmount = Math.max(0f, Math.min(1f, dragRatio));
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            isDraggingScrollBar = false;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     private void selectFluid(String fluid) {
@@ -408,8 +455,15 @@ public class GUIFluidIdentifier extends Screen {
     }
 
     private void renderScrollBar(GuiGraphics graphics, int x, int y) {
-        int thumbY = y + 75 + (int) (scrollAmount * (141 - 15));
-        graphics.blit(TEXTURE, x + 123, thumbY, 215, 80, 8, 15);
+        int trackX = x + SCROLLBAR_X;
+        int trackY = y + SCROLLBAR_Y;
+
+        // Трек (опционально, если есть в текстуре)
+        // graphics.blit(TEXTURE, trackX, trackY, 215, 95, SCROLLBAR_WIDTH, SCROLLBAR_HEIGHT);
+
+        // Ползунок (thumb)
+        int thumbY = trackY + (int) (scrollAmount * (SCROLLBAR_HEIGHT - THUMB_HEIGHT));
+        graphics.blit(TEXTURE, trackX, thumbY, 215, 80, SCROLLBAR_WIDTH, THUMB_HEIGHT);
     }
 
     @Override

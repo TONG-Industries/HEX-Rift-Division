@@ -19,6 +19,7 @@ import com.trd.block.basic.industrial.casting.CastingPotBlock;
 import com.trd.block.basic.industrial.casting.SmallSmelterBlock;
 import com.trd.block.basic.industrial.energy.*;
 
+import com.trd.block.basic.industrial.fluids.LowPressureSteamCondenserBlock;
 import com.trd.block.basic.industrial.rotation.BearingBlock;
 import com.trd.block.basic.industrial.rotation.MotorElectroBlock;
 import com.trd.block.basic.industrial.rotation.ShaftBlock;
@@ -536,9 +537,7 @@ public class ModBlocks {
             () -> new BeamBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
                     .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
 
-    public static final RegistryObject<Block> TROMBONE = registerBlock("trombone",
-            () -> new MissileTurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
-                    .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
+
 
     public static final RegistryObject<Block> MISSILE_LIGHT = registerBlock("missile_light",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE)
@@ -603,6 +602,10 @@ public class ModBlocks {
             () -> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F).sound(SoundType.WOOD).requiresCorrectToolForDrops()));
 
+    public static final RegistryObject<Block> LPSC = registerBlock("lpsc",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
+
 
     //МУЛЬТИБЛОКИ
     public static final RegistryObject<Block> MULTIBLOCK_PART = BLOCKS.register("multiblock_part",
@@ -614,7 +617,15 @@ public class ModBlocks {
     public static final RegistryObject<Block> BOILER = BLOCKS.register("boiler",
             () -> new BoilerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
 
+   //ZAMAZ
+   public static final RegistryObject<Block> LOW_PRESSURE_STEAM_CONDENSER = registerBlock("low_pressure_steam_condenser",
+           () -> new LowPressureSteamCondenserBlock(BlockBehaviour.Properties.of()
+                   .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
+
+    public static final RegistryObject<Block> TROMBONE = BLOCKS.register("trombone",
+            () -> new MissileTurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
+                    .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
 
     // Вспомогательный метод регистрации без предмета
     private static <T extends Block> RegistryObject<T> registerBlockOnly(String name, Supplier<T> block) {

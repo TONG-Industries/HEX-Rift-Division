@@ -1,7 +1,7 @@
 package com.trd.client.overlay.gui;
 
 import com.trd.main.MainRegistry;
-import com.trd.menu.MotorElectroMenu;
+import com.trd.menu.rotation.MotorElectroMenu;
 import com.trd.network.ModPacketHandler;
 import com.trd.network.packet.energy.SyncMotorRpmPacket;
 import com.mojang.blaze3d.systems.RenderSystem;

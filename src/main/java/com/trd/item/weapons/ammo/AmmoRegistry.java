@@ -1,4 +1,4 @@
-package com.trd.item.tags;
+package com.trd.item.weapons.ammo;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;

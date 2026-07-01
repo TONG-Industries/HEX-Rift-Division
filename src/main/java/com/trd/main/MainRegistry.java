@@ -8,6 +8,7 @@ import com.trd.api.metallurgy.system.MetalUnits2;
 import com.trd.api.metallurgy.system.MetallurgyRegistry;
 import com.trd.api.vein.VeinManager;
 import com.trd.block.entity.conglomerate.ConglomerateBlockEntity;
+import com.trd.datagen.stats.ModBlockLootTableProvider;
 import com.trd.entity.mobs.depth_worm.DepthWormBrutalEntity;
 import com.trd.entity.mobs.grenadier.GrenadierZombieEntity;
 import com.trd.event.SlagItem;
@@ -22,7 +23,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,6 +36,7 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -202,15 +207,11 @@ public class MainRegistry {
             event.accept(ModBlocks.DECO_BEAM.get());
             event.accept(ModBlocks.BEAM_BLOCK.get());
             event.accept(ModBlocks.STEEL_PROPS.get());
-            // Другие строительные блоки
-            event.accept(ModBlocks.CRATE.get());
-            event.accept(ModBlocks.CRATE_AMMO.get());
 
         }
 
         if (event.getTab() == ModCreativeTabs.trd_TECH_TAB.get()) {
 
-            event.accept(ModItems.CROWBAR.get());
             event.accept(ModItems.BEAM_PLACER.get());
             event.accept(ModItems.SCREWDRIVER.get());
             event.accept(ModItems.POKER.get());
@@ -284,11 +285,18 @@ public class MainRegistry {
             event.accept(ModItems.STEEL_BARREL_ITEM);
             event.accept(ModItems.LEAD_BARREL_ITEM);
             event.accept(ModBlocks.FUEL_TANK_BIG);
+
             event.accept(ModBlocks.FUEL_TANK_SMALL);
+
+          event.accept(ModItems.BOILER_ITEM);
+          event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
+
             event.accept(ModBlocks.BRONZE_FLUID_PIPE);
             event.accept(ModBlocks.STEEL_FLUID_PIPE);
             event.accept(ModBlocks.LEAD_FLUID_PIPE);
             event.accept(ModBlocks.TUNGSTEN_FLUID_PIPE);
+
+       
 
             // Капли жидкостей
             for (var entry : com.trd.api.fluids.ModFluids.getAllFluidDrops().values()) {
@@ -299,7 +307,6 @@ public class MainRegistry {
             event.accept(ModBlocks.SMALL_SMELTER);
 
             event.accept(ModItems.HEATER_ITEM);
-            event.accept(ModItems.BOILER_ITEM);
             event.accept(ModBlocks.SMELTER);
             event.accept(ModBlocks.CASTING_POT);
             event.accept(ModBlocks.CASTING_DESCENT);
@@ -380,6 +387,7 @@ public class MainRegistry {
             event.accept(ModItems.DOLOMITE_CHUNK);
             event.accept(ModItems.LIMESTONE_CHUNK);
             event.accept(ModItems.BAUXITE_CHUNK);
+            event.accept(ModItems.ASBESTOS);
             event.accept(ModItems.CINNABAR);
             event.accept(ModItems.LIGNITE);
             event.accept(ModItems.FLUORITE);
@@ -402,8 +410,6 @@ public class MainRegistry {
             event.accept(ModBlocks.CINNABAR_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.FLUORITE_ORE.get());
             event.accept(ModBlocks.FLUORITE_ORE_DEEPSLATE.get());
-            event.accept(ModBlocks.RAREGROUND_ORE.get());
-            event.accept(ModBlocks.RAREGROUND_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.SEQUESTRUM_ORE.get());
             event.accept(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE.get());
             event.accept(ModBlocks.SULFUR_ORE.get());
@@ -422,21 +428,12 @@ public class MainRegistry {
             event.accept(ModBlocks.SEQUOIA_HEARTWOOD.get());
             event.accept(ModBlocks.SEQUOIA_LEAVES.get());
             event.accept(ModBlocks.SEQUOIA_BIOME_MOSS.get());
-            event.accept(ModBlocks.WASTE_LOG.get());
-            event.accept(ModBlocks.NECROSIS_PORTAL.get());
-            event.accept(ModBlocks.NECROSIS_TEST.get());
-            event.accept(ModBlocks.NECROSIS_TEST2.get());
-            event.accept(ModBlocks.NECROSIS_TEST3.get());
-            event.accept(ModBlocks.NECROSIS_TEST4.get());
-            event.accept(ModBlocks.DIRT_ROUGH.get());
             event.accept(ModBlocks.BASALT_ROUGH.get());
             event.accept(ModItems.DEPTH_WORM_SPAWN_EGG);
             event.accept(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG);
             event.accept(ModBlocks.DEPTH_WORM_NEST);
             event.accept(ModBlocks.HIVE_SOIL);
             event.accept(ModBlocks.HIVE_ROOTS.get()); // Обычная версия
-            event.accept(ModBlocks.DEPTH_WORM_NEST_DEAD);
-            event.accept(ModBlocks.HIVE_SOIL_DEAD);
             event.accept(ModItems.GRENADIER_ZOMBIE_SPAWN_EGG.get());
         }
 
@@ -545,4 +542,29 @@ public class MainRegistry {
                     false);
         }
     }
+
+    // ═══════════════════════════════════════════════════════
+    // ОПЫТ ПРИ ДОБЫЧЕ РУД
+    // ═══════════════════════════════════════════════════════
+
+    @SubscribeEvent
+    public void onBlockBreak(BlockEvent.BreakEvent event) {
+        Block block = event.getState().getBlock();
+
+        // Проверяем, есть ли этот блок в списке руд с опытом
+        for (ModBlockLootTableProvider.OreXpConfig config : ModBlockLootTableProvider.ORES_WITH_EXPERIENCE) {
+            if (config.block().get() == block) {
+                // Проверяем отсутствие Silk Touch
+                ItemStack tool = event.getPlayer().getMainHandItem();
+                if (EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, tool) == 0) {
+                    // Добавляем опыт к событию
+                    int xp = event.getLevel().getRandom().nextIntBetweenInclusive(config.minXp(), config.maxXp());
+                    event.setExpToDrop(event.getExpToDrop() + xp);
+                }
+                break; // нашли, дальше не ищем
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
 }

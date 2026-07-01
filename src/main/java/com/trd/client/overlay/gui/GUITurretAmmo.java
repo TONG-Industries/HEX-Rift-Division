@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 import com.trd.item.weapons.turrets.TurretChipItem;
-import com.trd.menu.TurretLightMenu;
+import com.trd.menu.turrets.TurretLightMenu;
 import com.trd.network.ModPacketHandler;
 import com.trd.network.packet.turrets.PacketModifyTurretChip;
 import com.trd.network.packet.turrets.PacketToggleTurret;

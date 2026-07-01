@@ -1,7 +1,7 @@
-package com.trd.menu;
+package com.trd.menu.industrial;
 
-import com.trd.block.basic.ModBlocks;
 import com.trd.block.basic.industrial.fluids.FluidBarrelBlock;
+import com.trd.menu.ModMenuTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;

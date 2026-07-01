@@ -1,5 +1,6 @@
 package com.trd.entity.weapons.missiles;
 
+import com.trd.block.entity.weapons.MissileTurretBlockEntity;
 import com.trd.explosion.logic.ExplosionHE;
 import com.trd.explosion.logic.ExplosionFire;
 import com.trd.explosion.logic.ExplosionHENonDestructive;
@@ -52,13 +53,18 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
     private LivingEntity cachedTarget = null;
     private int targetCacheTimer = 0;
     private int lostTargetTimer = 0;
-
+    private MissileTurretBlockEntity turretBlockEntity;
     // Тип ракеты: "standard", "he", "fire"
     private String missileType = "standard";
 
     public MissileLightEntity(EntityType<? extends MissileLightEntity> type, Level level) {
         super(type, level);
         this.noPhysics = false;
+    }
+
+    public MissileLightEntity(Level level, Vec3 startPos, LivingEntity target, Entity owner, String missileType, MissileTurretBlockEntity turretBE) {
+        this(level, startPos, target, owner, missileType);
+        this.turretBlockEntity = turretBE;
     }
 
     public MissileLightEntity(Level level, Vec3 startPos, LivingEntity target, Entity owner, String missileType) {
@@ -365,6 +371,9 @@ public class MissileLightEntity extends Projectile implements IEntityAdditionalS
                     ExplosionHENonDestructive.explode(serverLevel, pos, owner, DETONATION_RADIUS, DETONATION_DAMAGE);
                 }
             }
+        }
+        if (turretBlockEntity != null && !turretBlockEntity.isRemoved()) {
+            turretBlockEntity.incrementKills();
         }
         this.discard();
     }

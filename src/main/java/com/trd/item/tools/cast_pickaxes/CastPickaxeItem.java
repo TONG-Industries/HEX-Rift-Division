@@ -6,6 +6,7 @@ import com.trd.block.basic.conglomerate.ConglomerateBlock;
 import com.trd.client.gecko.item.tools.CastPickaxeItemRenderer;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.trd.datagen.stats.ModBlockLootTableProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
@@ -13,6 +14,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -300,18 +302,28 @@ public class CastPickaxeItem extends PickaxeItem implements GeoItem {
 
         float maxHardness = stats.getMaxHardness(chargePercent);
 
+// === ЖИЛКОВЫЙ МАЙНЕР (железная кирка, полный заряд) ===
         if (fullCharge && stats.getVeinMinerLimit() > 0 && stats.canVeinMine(state)) {
             return performVeinMiner(stack, level, player, pos, state, face, hand, chargePercent);
         }
 
+// === ТУННЕЛЬНЫЙ МАЙНЕР (стальная кирка, полный заряд) ===
+        if (fullCharge && stats.getTunnelLength() > 0) {
+            return performTunnelMiner(stack, level, player, pos, hand, chargePercent);
+        }
+
         if (canHarvest && hardness <= maxHardness) {
             level.destroyBlock(pos, true, player);
+
+            // === ФИКС: спавним опыт для руд ===
+            ModBlockLootTableProvider.spawnOreExperience((ServerLevel) level, pos, state);
+
             int damage = fullCharge ? 2 : 1;
             stack.hurtAndBreak(damage, player, (p) -> p.broadcastBreakEvent(hand));
             if (fullCharge) player.causeFoodExhaustion(0.2f);
             playPickaxeHitSound(level, pos, chargePercent);
             return true;
-        } else {
+        }else {
             stack.hurtAndBreak(1, player, (p) -> p.broadcastBreakEvent(hand));
             spawnCritParticles(level, pos.getCenter());
 
@@ -341,74 +353,158 @@ public class CastPickaxeItem extends PickaxeItem implements GeoItem {
 
     private boolean performVeinMiner(ItemStack stack, Level level, Player player, BlockPos center,
                                      BlockState centerState, Direction face, InteractionHand hand, float chargePercent) {
-        List<BlockPos> toBreak = new ArrayList<>();
+        if (level.isClientSide) return false;
+        ServerLevel serverLevel = (ServerLevel) level;
+
+        Block targetBlock = centerState.getBlock();
+        int maxBlocks = stats.getVeinMinerLimit();
+        int maxSearchRange = 6; // Не искать дальше 6 блоков от центра
+
+        // === 1. BFS с 26-связностью: только касающиеся блоки (включая диагонали) ===
         Queue<BlockPos> queue = new LinkedList<>();
         Set<BlockPos> visited = new HashSet<>();
+        List<BlockPos> allBlocks = new ArrayList<>();
 
         queue.add(center);
         visited.add(center);
-        Block targetBlock = centerState.getBlock();
-        int range = stats.getVeinMinerRange();
 
-        while (!queue.isEmpty() && toBreak.size() < stats.getVeinMinerLimit()) {
+        while (!queue.isEmpty()) {
             BlockPos current = queue.poll();
 
-            // Поиск в зоне range (например, range=2 -> от -2 до 2 по всем осям)
-            for (int x = -range; x <= range; x++) {
-                for (int y = -range; y <= range; y++) {
-                    for (int z = -range; z <= range; z++) {
+            // Все 26 соседей в кубе 3×3×3
+            for (int x = -1; x <= 1; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
                         if (x == 0 && y == 0 && z == 0) continue;
 
                         BlockPos neighbor = current.offset(x, y, z);
                         if (visited.contains(neighbor)) continue;
+
+                        // Не уходим слишком далеко от центра
+                        if (neighbor.distManhattan(center) > maxSearchRange) continue;
+
                         visited.add(neighbor);
 
-                        BlockState neighborState = level.getBlockState(neighbor);
-                        if (neighborState.is(targetBlock) && stats.canVeinMine(neighborState)) {
-                            toBreak.add(neighbor);
+                        BlockState state = level.getBlockState(neighbor);
+                        if (state.is(targetBlock) && stats.canVeinMine(state)) {
+                            allBlocks.add(neighbor);
                             queue.add(neighbor);
-                            if (toBreak.size() >= stats.getVeinMinerLimit()) break;
                         }
                     }
-                    if (toBreak.size() >= stats.getVeinMinerLimit()) break;
                 }
-                if (toBreak.size() >= stats.getVeinMinerLimit()) break;
             }
         }
 
-        // Собираем дропы
-        List<net.minecraft.world.item.ItemStack> allDrops = new ArrayList<>();
+        // === 2. Из связных блоков берём ближайшие к центру ===
+        allBlocks.sort(Comparator.comparingDouble(p -> p.distSqr(center)));
+        int limit = Math.min(allBlocks.size(), maxBlocks);
+        List<BlockPos> toBreak = allBlocks.subList(0, limit);
 
-        allDrops.addAll(Block.getDrops(centerState, (ServerLevel)level, center, null, player, stack));
+        // === 3. Собираем дропы и спавним опыт ===
+        List<ItemStack> allDrops = new ArrayList<>();
+
+        // Центральный блок
+        allDrops.addAll(Block.getDrops(centerState, serverLevel, center, null, player, stack));
+        ModBlockLootTableProvider.spawnOreExperience(serverLevel, center, centerState);
         level.destroyBlock(center, false);
 
+        // Дополнительные блоки
         for (BlockPos pos : toBreak) {
             BlockState state = level.getBlockState(pos);
-            allDrops.addAll(Block.getDrops(state, (ServerLevel)level, pos, null, player, stack));
+            allDrops.addAll(Block.getDrops(state, serverLevel, pos, null, player, stack));
+            ModBlockLootTableProvider.spawnOreExperience(serverLevel, pos, state);
             level.destroyBlock(pos, false);
         }
 
-        // Спавним дропы в центре
-        for (net.minecraft.world.item.ItemStack drop : allDrops) {
+        // === 4. Спавним дропы в центре ===
+        for (ItemStack drop : allDrops) {
             ItemEntity entity = new ItemEntity(level,
                     center.getX() + 0.5, center.getY() + 0.5, center.getZ() + 0.5, drop);
-            entity.setDeltaMovement(0, 0.1, 0);
+            entity.setDeltaMovement(
+                    (level.random.nextDouble() - 0.5) * 0.1,
+                    0.15,
+                    (level.random.nextDouble() - 0.5) * 0.1
+            );
             level.addFreshEntity(entity);
         }
 
-        // Урон кирке
+        // === 5. Урон кирке ===
         int extraBlocks = toBreak.size();
         float durabilityCost = 2.0f + (extraBlocks * stats.getVeinMinerDurabilityCost());
-        int totalDamage = (int)Math.ceil(durabilityCost);
+        int totalDamage = (int) Math.ceil(durabilityCost);
         stack.hurtAndBreak(totalDamage, player, (p) -> p.broadcastBreakEvent(hand));
         player.causeFoodExhaustion(0.2f);
 
         playPickaxeHitSound(level, center, chargePercent);
         spawnCritParticles(level, center.getCenter());
-
         for (BlockPos pos : toBreak) {
             spawnCritParticles(level, pos.getCenter());
         }
+        return true;
+    }
+
+    private boolean performTunnelMiner(ItemStack stack, Level level, Player player, BlockPos startPos,
+                                       InteractionHand hand, float chargePercent) {
+        if (level.isClientSide) return false;
+        ServerLevel serverLevel = (ServerLevel) level;
+
+        // Направление взгляда игрока = направление туннеля
+        Vec3 lookVec = player.getViewVector(1.0f);
+        Direction tunnelDir = Direction.getNearest(lookVec.x, lookVec.y, lookVec.z);
+
+        List<ItemStack> allDrops = new ArrayList<>();
+        int blocksBroken = 0;
+        float decayMultiplier = 1.0f - stats.getTunnelDecay(); // 0.75 для 25%
+
+        for (int i = 0; i < stats.getTunnelLength(); i++) {
+            BlockPos pos = startPos.relative(tunnelDir, i);
+            BlockState state = level.getBlockState(pos);
+
+            // Пропускаем воздух и бедрок
+            if (state.isAir() || state.getDestroySpeed(level, pos) < 0) continue;
+
+            // Экспоненциальное затухание: charge * 0.75^i
+            // i=0: 100%, i=1: 75%, i=2: 56.25%, i=3: 42.19%, i=4: 31.64%
+            float effectiveCharge = chargePercent * (float) Math.pow(decayMultiplier, i);
+            if (effectiveCharge < 0.05f) break; // Не хватает силы
+
+            float maxHardness = stats.getMaxHardness(effectiveCharge);
+            float hardness = state.getDestroySpeed(level, pos);
+            boolean canHarvest = isCorrectToolForDrops(stack, state);
+
+            if (canHarvest && hardness <= maxHardness) {
+                allDrops.addAll(Block.getDrops(state, serverLevel, pos, null, player, stack));
+                ModBlockLootTableProvider.spawnOreExperience(serverLevel, pos, state);
+                level.destroyBlock(pos, false);
+                blocksBroken++;
+            } else {
+                // Не смогли сломать — туннель остановлен
+                break;
+            }
+        }
+
+        // Спавним все дропы в начальной позиции
+        for (ItemStack drop : allDrops) {
+            ItemEntity entity = new ItemEntity(level,
+                    startPos.getX() + 0.5, startPos.getY() + 0.5, startPos.getZ() + 0.5, drop);
+            entity.setDeltaMovement(
+                    (level.random.nextDouble() - 0.5) * 0.1,
+                    0.15,
+                    (level.random.nextDouble() - 0.5) * 0.1
+            );
+            level.addFreshEntity(entity);
+        }
+
+        // Урон кирке: 2 за центр + 1 за каждый следующий
+        int damage = 2 + Math.max(0, blocksBroken - 1);
+        stack.hurtAndBreak(damage, player, (p) -> p.broadcastBreakEvent(hand));
+        if (blocksBroken > 0) {
+            player.causeFoodExhaustion(0.1f * blocksBroken);
+        }
+
+        playPickaxeHitSound(level, startPos, chargePercent);
+        spawnCritParticles(level, startPos.getCenter());
+
         return true;
     }
 
@@ -486,20 +582,31 @@ public class CastPickaxeItem extends PickaxeItem implements GeoItem {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        // Добавляем перки из конфигурации
         for (CastPickaxeStats.PerkTooltip perk : stats.getPerks()) {
-            net.minecraft.network.chat.MutableComponent text;
+            MutableComponent text;
             if (perk.args.length > 0) {
                 text = Component.translatable(perk.translationKey, perk.args);
             } else {
                 text = Component.translatable(perk.translationKey);
             }
-            tooltip.add(text.withStyle(net.minecraft.network.chat.Style.EMPTY.withColor(perk.color)));
+            tooltip.add(text.withStyle(Style.EMPTY.withColor(perk.color)));
         }
-        tooltip.add(Component.translatable("item.trd.cast_pickaxe.desc.charge").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("item.trd.cast_pickaxe.desc.mining_power",
-                stats.getMiningSecondsEquivalent()).withStyle(ChatFormatting.GOLD));
 
+        tooltip.add(Component.translatable("item.trd.cast_pickaxe.desc.charge")
+                .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("item.trd.cast_pickaxe.desc.mining_power",
+                        stats.getMiningSecondsEquivalent())
+                .withStyle(ChatFormatting.GOLD));
+
+        // Туннельный майнер (теперь СТАЛЬНАЯ кирка)
+        if (stats.getTunnelLength() > 0) {
+            tooltip.add(Component.translatable("item.trd.cast_pickaxe.desc.tunnel_miner",
+                            stats.getTunnelLength(),
+                            (int)(stats.getTunnelDecay() * 100))
+                    .withStyle(ChatFormatting.GOLD));
+        }
+
+        // Жилковый майнер (теперь ЖЕЛЕЗНАЯ кирка)
         if (stats.getVeinMinerLimit() > 0) {
             tooltip.add(Component.translatable("item.trd.cast_pickaxe.desc.vein_miner_info",
                             stats.getVeinMinerLimit(),

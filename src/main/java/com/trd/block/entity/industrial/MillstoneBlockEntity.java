@@ -49,23 +49,27 @@ public class MillstoneBlockEntity extends BlockEntity {
                 List.of(new ItemStack(ModItems.DOLOMITE_POWDER.get(), 1)), 2
         ));
 
-        // --- Блоки (новые рецепты) ---
-        // ВАЖНО: замени имена LIMESTONE/BAUXITE/DOLOMITE на реальные из твоего ModBlocks если они отличаются
         RECIPES.put(ModBlocks.LIMESTONE.get().asItem(), new GrindRecipe(
                 List.of(
-                        new ItemStack(ModItems.LIMESTONE_CHUNK.get(), 1),
+                        new ItemStack(ModItems.LIMESTONE_CHUNK.get(), 3),
                         new ItemStack(Blocks.GRAVEL, 1)
                 ), 4
         ));
         RECIPES.put(ModBlocks.BAUXITE.get().asItem(), new GrindRecipe(
                 List.of(
-                        new ItemStack(ModItems.BAUXITE_CHUNK.get(), 1),
+                        new ItemStack(ModItems.BAUXITE_CHUNK.get(), 3),
                         new ItemStack(Blocks.GRAVEL, 1)
                 ), 5
         ));
         RECIPES.put(ModBlocks.DOLOMITE.get().asItem(), new GrindRecipe(
                 List.of(
-                        new ItemStack(ModItems.DOLOMITE_CHUNK.get(), 1),
+                        new ItemStack(ModItems.DOLOMITE_CHUNK.get(), 3),
+                        new ItemStack(Blocks.GRAVEL, 1)
+                ), 6
+        ));
+        RECIPES.put(ModBlocks.SULFUR_CLUSTER.get().asItem(), new GrindRecipe(
+                List.of(
+                        new ItemStack(ModItems.SULFUR.get(), 3),
                         new ItemStack(Blocks.GRAVEL, 1)
                 ), 6
         ));

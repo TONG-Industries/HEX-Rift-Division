@@ -1,4 +1,4 @@
-package com.trd.item.tags;
+package com.trd.item.weapons.ammo;
 
 public interface IAmmoItem {
     String getCaliber();

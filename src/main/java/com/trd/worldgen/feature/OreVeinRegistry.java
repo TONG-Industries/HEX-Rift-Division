@@ -152,19 +152,35 @@ public class OreVeinRegistry {
 
     static {
 
-        register("mineral1", ModBlocks.MINERAL1.get(), 9, 40, 150, 3);
+        register("asbestos_ore", ModBlocks.ASBESOTS_ORE.get(), 9, 0, 150, 6);
+        register("lignite_ore", ModBlocks.LIGNITE_ORE.get(), 18, 0, 150, 6);
 
-            // --- спец-залежи ---
-            registerSpecial("bauxite", ModBlocks.BAUXITE.get(), -64, 150, 15, 25, 10, true, 0.7f);
+        register("sulfur_ore", ModBlocks.SULFUR_ORE.get(), 9, 0, 150, 2);
+        register("sulfur_ore_deepslate", ModBlocks.SULFUR_ORE_DEEPSLATE.get(), 9, -64, 0, 2);
 
-            registerSpecial("limestone", ModBlocks.LIMESTONE.get(), -20, 150, 6, 10, 4, false, 0.9f);
+        register("cinnabar_ore", ModBlocks.CINNABAR_ORE.get(), 9, 0, 150, 2);
+        register("cinnabar_ore_deepslate", ModBlocks.CINNABAR_ORE_DEEPSLATE.get(), 9, -64, 0, 2);
 
-            registerSpecial("dolomite", ModBlocks.DOLOMITE.get(), -64, 70, 5, 8, 2, true, 0.6f);
+        register("fluorite_ore", ModBlocks.FLUORITE_ORE.get(), 9, 0, 150, 2);
+        register("fluorite_ore_deepslate", ModBlocks.FLUORITE_ORE_DEEPSLATE.get(), 9, -64, 0, 2);
+
+        register("sequestrum_ore", ModBlocks.SEQUESTRUM_ORE.get(), 9, 0, 150, 2);
+        register("sequestrum_ore_deepslate", ModBlocks.SEQUESTRUM_ORE_DEEPSLATE.get(), 9, -64, 0, 2);
+
+
+        // --- спец-залежи ---
+            registerSpecial("bauxite", ModBlocks.BAUXITE.get(), -64, 150, 15, 25, 30, true, 0.7f);
+
+            registerSpecial("limestone", ModBlocks.LIMESTONE.get(), -20, 150, 6, 10, 8, false, 0.9f);
+
+            registerSpecial("dolomite", ModBlocks.DOLOMITE.get(), -64, 70, 5, 8, 4, true, 0.6f);
+
+            registerSpecial("sulfur_cluster", ModBlocks.SULFUR_CLUSTER.get(), -64, 150, 5, 8, 10, true, 0.8f);
 
         // === КОНГЛОМЕРАТЫ ===
-        registerConglomerate("surface", 40, 150, 6, 11, 5, 0.65f, 0.3f);
-        registerConglomerate("medium", -20, 40, 5, 9, 7, 0.7f, 0.4f);
-        registerConglomerate("deep", -64, -20, 4, 7, 9, 0.85f, 0.5f);
+        registerConglomerate("surface", 40, 150, 6, 11, 10, 0.65f, 0.3f);
+        registerConglomerate("medium", -20, 40, 5, 9, 14, 0.7f, 0.4f);
+        registerConglomerate("deep", -64, -20, 4, 7, 18, 0.85f, 0.5f);
     }
 
     }

@@ -1,4 +1,3 @@
-
 package com.trd.block.entity.hive;
 
 import net.minecraft.core.BlockPos;
@@ -68,7 +67,8 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
 
     public static void tick(Level level, BlockPos pos, BlockState state, DepthWormNestBlockEntity blockEntity) {
         if (level.isClientSide) return;
-        if (level.getGameTime() % 20 == 0 && !blockEntity.storedWorms.isEmpty()) {
+        // ⭐ ИСПРАВЛЕНО: проверяем только готовых к выпуску червей
+        if (level.getGameTime() % 20 == 0 && blockEntity.hasWormsReadyForRelease()) {
             AABB searchArea = new AABB(pos).inflate(10);
             List<LivingEntity> enemies = level.getEntitiesOfClass(LivingEntity.class, searchArea,
                     e -> e.isAlive() && e.deathTime <= 0 && !(e instanceof DepthWormEntity) &&
@@ -92,13 +92,40 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
     public List<CompoundTag> getStoredWorms() { return new ArrayList<>(this.storedWorms); }
     public int getStoredWormsCount() { return this.storedWorms.size(); }
 
+    // ⭐ НОВОЕ: проверяет, готов ли червь к выпуску (не ранен и без дебаффов)
+    private boolean isWormReadyForRelease(CompoundTag tag) {
+        float health = tag.contains("Health") ? tag.getFloat("Health") : 15.0f;
+        String id = tag.getString("id");
+        boolean isBrutal = id.contains("brutal");
+        float maxHealth = isBrutal ? 45.0f : 15.0f;
+
+        // Менее 1/3 ХП — не выпускаем
+        if (health < maxHealth * 0.34f) return false;
+
+        // Есть негативные эффекты — не выпускаем
+        if (tag.contains("ActiveEffects", 9)) {
+            ListTag effects = tag.getList("ActiveEffects", 10);
+            if (!effects.isEmpty()) return false;
+        }
+        return true;
+    }
+
+    // ⭐ НОВОЕ: есть ли черви, готовые к выпуску
+    public boolean hasWormsReadyForRelease() {
+        for (CompoundTag tag : storedWorms) {
+            if (isWormReadyForRelease(tag)) return true;
+        }
+        return false;
+    }
+
     public void releaseWormsAndNotify() {
         int count = storedWorms.size();
         if (!level.isClientSide && networkId != null) {
             HiveNetworkManager manager = HiveNetworkManager.get(level);
             if (manager != null) manager.updateWormCount(networkId, worldPosition, -count);
         }
-        releaseWorms(this.worldPosition, null);
+        // ⭐ При разрушении блока выпускаем ВСЕХ (даже раненых)
+        releaseWorms(this.worldPosition, null, true);
     }
 
     private BlockPos findSpawnPos(BlockPos center) {
@@ -114,9 +141,31 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
     }
 
     public void releaseWorms(BlockPos spawnPos, LivingEntity target) {
+        releaseWorms(spawnPos, target, false);
+    }
+
+    public void releaseWorms(BlockPos spawnPos, LivingEntity target, boolean forceAll) {
         if (this.level == null || this.level.isClientSide) return;
-        int countBefore = this.storedWorms.size();
-        if (countBefore == 0) return;
+
+        // ⭐ НОВОЕ: разделяем червей на готовых к выпуску и остающихся
+        List<CompoundTag> readyWorms = new ArrayList<>();
+        List<CompoundTag> stayingWorms = new ArrayList<>();
+
+        for (CompoundTag tag : this.storedWorms) {
+            if (forceAll || isWormReadyForRelease(tag)) {
+                readyWorms.add(tag);
+            } else {
+                stayingWorms.add(tag);
+            }
+        }
+
+        int countBefore = readyWorms.size();
+        if (countBefore == 0) {
+            this.storedWorms.clear();
+            this.storedWorms.addAll(stayingWorms);
+            this.setChanged();
+            return;
+        }
 
         if (this.level.getGameTime() - lastReleaseTime < 5) return; // Защита от спама
         lastReleaseTime = this.level.getGameTime();
@@ -125,13 +174,11 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
             HiveNetworkManager manager = HiveNetworkManager.get(this.level);
             if (manager != null) {
                 HiveNetwork network = manager.getNetwork(this.networkId);
-                // ⭐ ИСПРАВЛЕНО: Добавляем активных червей в глобальный пул сети
                 if (network != null) network.addActiveWorms(countBefore);
             }
         }
 
-        for (CompoundTag wormTag : this.storedWorms) {
-            // ⭐ Сохраняем оригинальный ID. Если его нет (старые сохранения) — ставим обычного
+        for (CompoundTag wormTag : readyWorms) {
             if (!wormTag.contains("id")) {
                 wormTag.putString("id", "trd:depth_worm");
             }
@@ -149,8 +196,12 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
                 if (e instanceof DepthWormEntity worm) {
                     worm.setHomePos(actualSpawn);
                     worm.bindToNest(this.worldPosition);
+                    worm.setLastExitPos(actualSpawn);
+                    // ⭐ КРИТИЧНО: сбрасываем retreating при выпуске из гнезда
+                    worm.setRetreating(false);
+                    // ⭐ КРИТИЧНО: сбрасываем kills (очки сети) при выпуске — они уже переданы в сеть
+                    worm.setKills(0);
 
-                    // ⭐ ИСПРАВЛЕНО: Callback просто уменьшает глобальный счетчик при смерти
                     worm.setOnDeathCallback(() -> {
                         if (netId != null) {
                             HiveNetworkManager mgr = HiveNetworkManager.get(worm.level());
@@ -175,6 +226,7 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
         }
 
         this.storedWorms.clear();
+        this.storedWorms.addAll(stayingWorms);
         this.setChanged();
         System.out.println("[Hive] Nest at " + this.worldPosition + " released " + countBefore + " worms.");
     }
@@ -205,19 +257,30 @@ public class DepthWormNestBlockEntity extends BlockEntity implements HiveNetwork
         }
     }
 
+    // ⭐ ИСПРАВЛЕНО: учитываем maxHealth и наличие эффектов
     public boolean hasInjuredWorms() {
         for (CompoundTag tag : storedWorms) {
             float h = tag.contains("Health") ? tag.getFloat("Health") : 15.0f;
-            if (h < 15.0f) return true; // Максимальное здоровье червя - 15.0
+            String id = tag.getString("id");
+            float maxHealth = id.contains("brutal") ? 45.0f : 15.0f;
+            if (h < maxHealth) return true;
+            if (tag.contains("ActiveEffects", 9)) {
+                ListTag effects = tag.getList("ActiveEffects", 10);
+                if (!effects.isEmpty()) return true;
+            }
         }
         return false;
     }
 
+    // ⭐ ИСПРАВЛЕНО: лечим до полного ХП и снимаем эффекты
     public boolean healOneWorm() {
         for (CompoundTag tag : storedWorms) {
             float h = tag.contains("Health") ? tag.getFloat("Health") : 15.0f;
-            if (h < 15.0f) {
-                tag.putFloat("Health", 15.0f); // 1 очко = полное исцеление червя
+            String id = tag.getString("id");
+            float maxHealth = id.contains("brutal") ? 45.0f : 15.0f;
+            if (h < maxHealth || tag.contains("ActiveEffects", 9)) {
+                tag.putFloat("Health", maxHealth);
+                tag.remove("ActiveEffects");
                 this.setChanged();
                 return true;
             }

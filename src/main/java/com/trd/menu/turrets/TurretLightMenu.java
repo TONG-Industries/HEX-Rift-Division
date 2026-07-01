@@ -1,5 +1,6 @@
-package com.trd.menu;
+package com.trd.menu.turrets;
 
+import com.trd.menu.ModMenuTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;

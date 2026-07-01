@@ -10,8 +10,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 import com.trd.item.weapons.turrets.TurretChipItem;
-import com.trd.menu.TurretLightMenu;
-import com.trd.menu.TromboneMenu;
+import com.trd.menu.turrets.TurretLightMenu;
+import com.trd.menu.turrets.TromboneMenu;
 import com.trd.network.ModPacketHandler;
 
 import java.util.Optional;

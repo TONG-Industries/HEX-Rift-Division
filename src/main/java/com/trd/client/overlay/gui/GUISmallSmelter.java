@@ -5,7 +5,7 @@ import com.trd.api.metallurgy.system.MetalUnits2;
 import com.trd.block.entity.industrial.casting.SmallSmelterBlockEntity;
 import com.trd.item.ModItems;
 import com.trd.main.MainRegistry;
-import com.trd.menu.SmallSmelterMenu;
+import com.trd.menu.industrial.SmallSmelterMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;

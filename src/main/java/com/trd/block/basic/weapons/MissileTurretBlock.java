@@ -1,16 +1,21 @@
 package com.trd.block.basic.weapons;
 
+import com.trd.block.basic.ModBlocks;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.weapons.MissileAmmoContainer;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
-import com.trd.menu.TromboneMenu;
+import com.trd.menu.turrets.TromboneMenu;
 import com.trd.api.energy.EnergyNetworkManager;
+import com.trd.multiblock.system.IMultiblockController;
+import com.trd.multiblock.system.MultiblockStructureHelper;
+import com.trd.multiblock.system.PartRole;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -30,11 +35,14 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
-public class MissileTurretBlock extends BaseEntityBlock {
+import java.util.Map;
+import java.util.function.Supplier;
+
+public class MissileTurretBlock extends BaseEntityBlock implements IMultiblockController {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    private static final VoxelShape SHAPE = Block.box(2, 0, 2, 14, 16, 14);
+    private static MultiblockStructureHelper helper;
 
     public MissileTurretBlock(Properties properties) {
         super(properties);
@@ -62,9 +70,13 @@ public class MissileTurretBlock extends BaseEntityBlock {
         return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
+    // === ОБЩАЯ ФОРМА МУЛЬТИБЛОКА (outline + collision) ===
+    // generateShapeFromParts собирает форму всех частей в единый VoxelShape.
+    // MultiblockPartBlock сам смещает её при наведении на структурный блок.
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return SHAPE;
+        Direction facing = state.getValue(FACING);
+        return getStructureHelper().generateShapeFromParts(facing);
     }
 
     @Override
@@ -78,7 +90,81 @@ public class MissileTurretBlock extends BaseEntityBlock {
         return new MissileTurretBlockEntity(pos, state);
     }
 
-    // === ЭНЕРГОСЕТЬ (1:1 с TurretLightPlacerBlock) ===
+    // === МУЛЬТИБЛОК: паттерн 1×1×2 ===
+    @Override
+    public MultiblockStructureHelper getStructureHelper() {
+        if (helper == null) {
+            Map<Character, Supplier<BlockState>> symbols = Map.of(
+                    '#', () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
+                    'O', () -> this.defaultBlockState()
+            );
+            Map<Character, PartRole> roles = Map.of(
+                    '#', PartRole.DEFAULT,
+                    'O', PartRole.CONTROLLER
+            );
+            // Слои снизу вверх: y=0 — контроллер (точка привязки), y=1 — структурный блок
+            helper = MultiblockStructureHelper.createFromLayersWithRoles(
+                    new String[][]{
+                            {"O"}, // y = 0 — контроллер
+                            {"#"}  // y = 1 — структурная часть
+                    },
+                    symbols,
+                    () -> ModBlocks.MULTIBLOCK_PART.get().defaultBlockState(),
+                    roles
+            );
+        }
+        return helper;
+    }
+
+    @Override
+    public PartRole getPartRole(BlockPos localOffset) {
+        return PartRole.DEFAULT;
+    }
+
+    // === ПОСТРОЕНИЕ / РАЗРУШЕНИЕ ===
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (!level.isClientSide) {
+            Direction facing = state.getValue(FACING);
+            if (getStructureHelper().checkPlacement(level, pos, facing, placer instanceof Player ? (Player) placer : null)) {
+                getStructureHelper().placeStructure(level, pos, facing, this);
+                if (placer instanceof Player player && level.getBlockEntity(pos) instanceof MissileTurretBlockEntity be) {
+                    be.setOwner(player.getUUID());
+                }
+            } else {
+                level.destroyBlock(pos, true);
+            }
+        }
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            if (!level.isClientSide) {
+                Direction facing = state.getValue(FACING);
+                getStructureHelper().destroyStructure(level, pos, facing);
+
+                // Дропаем содержимое инвентаря
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof MissileTurretBlockEntity turretBE) {
+                    MissileAmmoContainer container = turretBE.getMissileContainer();
+                    for (int i = 0; i < container.getSlots(); i++) {
+                        ItemStack itemStack = container.getStackInSlot(i);
+                        if (!itemStack.isEmpty()) {
+                            net.minecraft.world.Containers.dropItemStack(
+                                    level, pos.getX(), pos.getY(), pos.getZ(), itemStack);
+                        }
+                    }
+                }
+
+                EnergyNetworkManager.get((ServerLevel) level).removeNode(pos);
+            }
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
+    }
+
+    // === ЭНЕРГОСЕТЬ + TileEntity onPlace ===
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean isMoving) {
         super.onPlace(state, level, pos, oldState, isMoving);
@@ -91,31 +177,10 @@ public class MissileTurretBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.is(newState.getBlock())) {
-            if (!level.isClientSide) {
-                // Выбрасываем содержимое инвентаря
-                BlockEntity be = level.getBlockEntity(pos);
-                if (be instanceof MissileTurretBlockEntity turretBE) {
-                    MissileAmmoContainer container = turretBE.getMissileContainer();
-                    for (int i = 0; i < container.getSlots(); i++) {
-                        ItemStack stack = container.getStackInSlot(i);
-                        if (!stack.isEmpty()) {
-                            net.minecraft.world.Containers.dropItemStack(
-                                    level, pos.getX(), pos.getY(), pos.getZ(), stack);
-                        }
-                    }
-                }
-
-                EnergyNetworkManager.get((ServerLevel) level).removeNode(pos);
-            }
-            super.onRemove(state, level, pos, newState, isMoving);
-        }
-    }
-
-    @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos,
                                  Player player, InteractionHand hand, BlockHitResult hit) {
+        // pos здесь — позиция контроллера, даже если клик был по структурной части
+        // (MultiblockPartBlock перенаправляет hit с ctrlPos внутри своего use())
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof MissileTurretBlockEntity turret) {
             if (player instanceof ServerPlayer serverPlayer) {
                 NetworkHooks.openScreen(serverPlayer,
@@ -139,7 +204,7 @@ public class MissileTurretBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return level.isClientSide ? null : createTickerHelper(type, ModBlockEntities.MISSILE_TURRET_BE.get(),
-                (lvl, pos, st, be) -> MissileTurretBlockEntity.tick(lvl, pos, st, (MissileTurretBlockEntity) be));
+                (lvl, p, st, be) -> MissileTurretBlockEntity.tick(lvl, p, st, (MissileTurretBlockEntity) be));
     }
 
     @Override
