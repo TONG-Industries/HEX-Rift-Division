@@ -130,6 +130,8 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
                     return boiler.getCapabilityForPart(cap, side, role);
                 } else if (be instanceof com.trd.multiblock.industrial.FuelTankSmallBlockEntity smallTank) {
                     return smallTank.getCapabilityForPart(cap, side, role);
+                } else if (be instanceof com.trd.multiblock.industrial.SteamEngineBlockEntity steamEngine) {
+                    return steamEngine.getCapabilityForPart(cap, side, role);
                 } else if (be instanceof IFluidTankProvider provider) {
                     return provider.getFluidHandlerCapability().cast();
                 }

@@ -106,6 +106,7 @@ public class ClientModEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.TACHOMETER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.ber.FuelTankRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.BOILER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.STEAM_ENGINE_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.STATOR_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.MILLSTONE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
 
@@ -160,6 +161,9 @@ public class ClientModEvents {
         event.register(new ResourceLocation("trd", "block/stator_coil_copper"));
         event.register(new ResourceLocation("trd", "block/jernova_1"));
         event.register(new ResourceLocation("trd", "block/jernova_2"));
+        event.register(new ResourceLocation("trd", "block/steam_engine_base"));
+        event.register(new ResourceLocation("trd", "block/crankshaft"));
+        event.register(new ResourceLocation("trd", "block/connecting_rod"));
 
         // 3. Динамические модели
         for (String name : ModModels.GEAR_MODELS.keySet()) {
@@ -305,6 +309,19 @@ public class ClientModEvents {
                         return true;
                     }
                 });
+
+        VisualizerRegistry.setVisualizer(ModBlockEntities.STEAM_ENGINE_BE.get(),
+                new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.trd.multiblock.industrial.SteamEngineBlockEntity>() {
+                    @Override
+                    public BlockEntityVisual<? super com.trd.multiblock.industrial.SteamEngineBlockEntity> createVisual(
+                            VisualizationContext ctx, com.trd.multiblock.industrial.SteamEngineBlockEntity be, float partialTick) {
+                        return new com.trd.client.render.flywheel.SteamEngineVisual(ctx, be, partialTick);
+                    }
+                    @Override
+                    public boolean skipVanillaRender(com.trd.multiblock.industrial.SteamEngineBlockEntity be) {
+                        return true;
+                    }
+                });
     }
     //================================================================================================
     //================================================================================================
@@ -330,6 +347,7 @@ public class ClientModEvents {
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "tachometer_hud", TachometerOverlay.HUD_TACHOMETER);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "stator_hud", StatorOverlay.HUD_STATOR);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "boiler_hud", com.trd.client.overlay.hud.BoilerOverlay.INSTANCE);
+        event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "steam_engine_hud", com.trd.client.overlay.hud.SteamEngineOverlay.INSTANCE);
         MinecraftForge.EVENT_BUS.register(com.trd.client.overlay.hud.LowPressureSteamCondenserOverlay.class);
     }
 

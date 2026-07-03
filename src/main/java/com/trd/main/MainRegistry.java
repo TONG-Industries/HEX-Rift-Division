@@ -289,6 +289,7 @@ public class MainRegistry {
             event.accept(ModBlocks.FUEL_TANK_SMALL);
 
           event.accept(ModItems.BOILER_ITEM);
+          event.accept(ModItems.STEAM_ENGINE_ITEM);
           event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
 
             event.accept(ModBlocks.BRONZE_FLUID_PIPE);

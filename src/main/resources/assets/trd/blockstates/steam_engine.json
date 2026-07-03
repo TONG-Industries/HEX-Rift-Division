@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/steam_engine_base" },
+    "facing=south": { "model": "trd:block/steam_engine_base", "y": 180 },
+    "facing=west": { "model": "trd:block/steam_engine_base", "y": 270 },
+    "facing=east": { "model": "trd:block/steam_engine_base", "y": 90 }
+  }
+}

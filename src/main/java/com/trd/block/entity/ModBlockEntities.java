@@ -118,6 +118,9 @@ public class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<BoilerBlockEntity>> BOILER_BE = BLOCK_ENTITIES.register("boiler_be",
             () -> BlockEntityType.Builder.of(BoilerBlockEntity::new, ModBlocks.BOILER.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<com.trd.multiblock.industrial.SteamEngineBlockEntity>> STEAM_ENGINE_BE = BLOCK_ENTITIES.register("steam_engine_be",
+            () -> BlockEntityType.Builder.of(com.trd.multiblock.industrial.SteamEngineBlockEntity::new, ModBlocks.STEAM_ENGINE.get()).build(null));
+
     public static final RegistryObject<BlockEntityType<SmelterBlockEntity>> SMELTER_BE = BLOCK_ENTITIES.register("smelter_be",
             () -> BlockEntityType.Builder.of(SmelterBlockEntity::new, ModBlocks.SMELTER.get()).build(null));
 

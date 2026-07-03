@@ -31,6 +31,10 @@ public class ModModels {
     public static final PartialModel FUEL_TANK_SMALL = PartialModel.of(new ResourceLocation("trd", "block/fuel_tank_small"));
     public static final PartialModel BOILER = PartialModel.of(new ResourceLocation("trd", "block/boiler"));
 
+    public static final PartialModel STEAM_ENGINE_BASE = PartialModel.of(new ResourceLocation("trd", "block/steam_engine_base"));
+    public static final PartialModel STEAM_ENGINE_CRANKSHAFT = PartialModel.of(new ResourceLocation("trd", "block/crankshaft"));
+    public static final PartialModel STEAM_ENGINE_ROD = PartialModel.of(new ResourceLocation("trd", "block/connecting_rod"));
+
     public static final PartialModel JERNOVA_BASE = PartialModel.of(new ResourceLocation("trd", "block/jernova_2"));
     public static final PartialModel JERNOVA_TOP = PartialModel.of(new ResourceLocation("trd", "block/jernova_1"));
 
