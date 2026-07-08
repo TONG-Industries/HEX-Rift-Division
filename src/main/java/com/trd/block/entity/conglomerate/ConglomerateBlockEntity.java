@@ -17,8 +17,8 @@ public class ConglomerateBlockEntity extends BlockEntity {
     public static final int MAX_CHARGES = 10;
 
     private UUID veinId;
-    private byte stage = 0; // 0..3 для визуала (стадии обеднения текстуры)
-    private byte charges = MAX_CHARGES; // 10 зарядов по 81 OU = 810 OU
+    private byte stage = 0;
+    private byte charges = MAX_CHARGES;
     private boolean depleted = false;
 
     public ConglomerateBlockEntity(BlockPos pos, BlockState state) {
@@ -33,20 +33,15 @@ public class ConglomerateBlockEntity extends BlockEntity {
         return charges;
     }
 
-    /**
-     * Списывает один заряд (81 OU) и обновляет визуальную стадию.
-     */
     public void consumeCharge() {
         if (charges > 0) {
             charges--;
-            // 4 стадии: 10-8=0, 7-5=1, 4-2=2, 1-0=3
             stage = (byte) Math.min(3, (MAX_CHARGES - charges) / 3);
             setChanged();
 
             if (charges <= 0) {
                 markDepleted();
             } else if (level != null && !level.isClientSide) {
-                // Синхронизация для клиента (если будешь менять текстуру через blockstates)
                 level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 2);
             }
         }
@@ -98,7 +93,6 @@ public class ConglomerateBlockEntity extends BlockEntity {
         super.load(tag);
         if (tag.hasUUID("VeinId")) veinId = tag.getUUID("VeinId");
 
-        // Миграция со старых миров: BlockOu → Charges
         if (tag.contains("BlockOu", CompoundTag.TAG_INT)) {
             int oldOu = tag.getInt("BlockOu");
             this.charges = (byte) Math.max(0, Math.min(MAX_CHARGES,

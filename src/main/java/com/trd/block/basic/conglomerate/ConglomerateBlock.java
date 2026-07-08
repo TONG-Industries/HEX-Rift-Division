@@ -59,7 +59,6 @@ public class ConglomerateBlock extends BaseEntityBlock {
             return;
         }
 
-        // Списываем 1 заряд = 81 OU
         entity.consumeCharge();
         manager.consumeVeinUnits(entity.getVeinId(), ConglomerateBlockEntity.OU_PER_CHARGE);
 
@@ -71,7 +70,6 @@ public class ConglomerateBlock extends BaseEntityBlock {
         };
 
         if (level.random.nextFloat() < chunkChance) {
-            // Создаем кусок конгломерата с фракциями жилы
             ItemStack chunk = ConglomerateItem.createFromVein(
                     vein.getComposition().getFractions(),
                     ConglomerateBlockEntity.OU_PER_CHARGE,
