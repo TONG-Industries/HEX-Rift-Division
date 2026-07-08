@@ -7,47 +7,71 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class VeinComposition {
-    private final Map<String, Integer> metals; // metal -> percent
+    private final Map<FractionType, Integer> fractions; // fraction -> percent
     private final int slagPercent;
 
-    public VeinComposition(Map<String, Integer> metals) {
-        this.metals = new HashMap<>(metals);
-        int total = this.metals.values().stream().mapToInt(Integer::intValue).sum();
+    public VeinComposition(Map<FractionType, Integer> fractions) {
+        this.fractions = new HashMap<>(fractions);
+        int total = this.fractions.values().stream().mapToInt(Integer::intValue).sum();
         this.slagPercent = Math.max(0, 100 - total);
     }
 
-    public Map<String, Integer> getMetals() {
-        return Collections.unmodifiableMap(metals);
+    public Map<FractionType, Integer> getFractions() {
+        return Collections.unmodifiableMap(fractions);
     }
 
     public int getSlagPercent() {
         return slagPercent;
     }
 
-    public Map<String, Integer> getFullComposition() {
-        Map<String, Integer> full = new HashMap<>(metals);
-        if (slagPercent > 0) full.put("slag", slagPercent);
-        return full;
+    public Map<FractionType, Integer> getFullComposition() {
+        return Collections.unmodifiableMap(fractions);
     }
 
-    public String getPrimaryMetal() {
-        return metals.entrySet().stream()
+    public FractionType getPrimaryFraction() {
+        return fractions.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse("mixed");
+                .orElse(FractionType.HEAVY_METAL);
+    }
+
+    /**
+     * Для обратной совместимости: возвращает основной металл основной фракции.
+     */
+    public String getPrimaryMetal() {
+        return getPrimaryFraction().getPrimaryMetal();
     }
 
     public CompoundTag serialize() {
         CompoundTag tag = new CompoundTag();
-        metals.forEach(tag::putInt);
+        fractions.forEach((fraction, percent) -> tag.putInt(fraction.name(), percent));
         return tag;
     }
 
     public static VeinComposition deserialize(CompoundTag tag) {
-        Map<String, Integer> metals = new HashMap<>();
+        Map<FractionType, Integer> fractions = new HashMap<>();
         for (String key : tag.getAllKeys()) {
-            metals.put(key, tag.getInt(key));
+            try {
+                FractionType fraction = FractionType.valueOf(key);
+                fractions.put(fraction, tag.getInt(key));
+            } catch (IllegalArgumentException e) {
+                // Миграция со старого формата: металлы маппим на фракции
+                FractionType mapped = mapOldMetalToFraction(key);
+                if (mapped != null) {
+                    fractions.merge(mapped, tag.getInt(key), Integer::sum);
+                }
+            }
         }
-        return new VeinComposition(metals);
+        return new VeinComposition(fractions);
+    }
+
+    private static FractionType mapOldMetalToFraction(String metal) {
+        return switch (metal) {
+            case "aluminum", "titanium", "beryllium" -> FractionType.LIGHT_METAL;
+            case "iron", "copper", "zinc", "lead", "tin", "tungsten", "nickel" -> FractionType.HEAVY_METAL;
+            case "gold", "silver" -> FractionType.NOBLE_METAL;
+            case "uranium", "rare_earth" -> FractionType.RARE_EARTH;
+            default -> null;
+        };
     }
 }
