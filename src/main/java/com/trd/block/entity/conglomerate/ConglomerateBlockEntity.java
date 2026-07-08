@@ -13,21 +13,40 @@ import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class ConglomerateBlockEntity extends BlockEntity {
+    public static final int OU_PER_CHARGE = 81;
+    public static final int MAX_CHARGES = 10;
+
     private UUID veinId;
-    private float localDepletion = 0.0f; // 0.0 - 1.0 для визуала
-    private int blockOu = 810; // Буфер конкретного блока (10 успешных ударов)
+    private byte stage = 0;
+    private byte charges = MAX_CHARGES;
+    private boolean depleted = false;
 
     public ConglomerateBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CONGLOMERATE.get(), pos, state);
     }
-    public int getBlockOu() {
-        return blockOu;
+
+    public int getRemainingOu() {
+        return charges * OU_PER_CHARGE;
     }
 
-    public void consumeOu(int amount) {
-        this.blockOu = Math.max(0, this.blockOu - amount);
-        setChanged();
+    public byte getCharges() {
+        return charges;
     }
+
+    public void consumeCharge() {
+        if (charges > 0) {
+            charges--;
+            stage = (byte) Math.min(3, (MAX_CHARGES - charges) / 3);
+            setChanged();
+
+            if (charges <= 0) {
+                markDepleted();
+            } else if (level != null && !level.isClientSide) {
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 2);
+            }
+        }
+    }
+
     public void setVeinId(UUID id) {
         this.veinId = id;
         setChanged();
@@ -37,42 +56,54 @@ public class ConglomerateBlockEntity extends BlockEntity {
         return veinId;
     }
 
-    public void setLocalDepletion(float ratio) {
-        this.localDepletion = Math.min(1.0f, Math.max(0.0f, ratio));
+    public void setStage(byte stage) {
+        this.stage = (byte) Math.min(3, Math.max(0, stage));
         setChanged();
-        // Синхронизация для клиента (если будешь менять текстуру через blockstates)
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 2);
         }
     }
 
-    private boolean depleted = false;
+    public byte getStage() {
+        return stage;
+    }
 
     public void markDepleted() {
         this.depleted = true;
+        this.charges = 0;
+        this.stage = 3;
         setChanged();
     }
 
     public boolean isDepleted() {
-        return depleted;
+        return depleted || charges <= 0;
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         if (veinId != null) tag.putUUID("VeinId", veinId);
-        tag.putFloat("Depletion", localDepletion);
+        tag.putByte("Stage", stage);
+        tag.putByte("Charges", charges);
         tag.putBoolean("Depleted", depleted);
-        tag.putInt("BlockOu", blockOu);
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
         if (tag.hasUUID("VeinId")) veinId = tag.getUUID("VeinId");
-        localDepletion = tag.getFloat("Depletion");
+
+        if (tag.contains("BlockOu", CompoundTag.TAG_INT)) {
+            int oldOu = tag.getInt("BlockOu");
+            this.charges = (byte) Math.max(0, Math.min(MAX_CHARGES,
+                    (oldOu + OU_PER_CHARGE - 1) / OU_PER_CHARGE));
+            this.stage = (byte) Math.min(3, (MAX_CHARGES - this.charges) / 3);
+        } else {
+            this.charges = tag.contains("Charges") ? tag.getByte("Charges") : MAX_CHARGES;
+            this.stage = tag.contains("Stage") ? tag.getByte("Stage") : 0;
+        }
+
         depleted = tag.getBoolean("Depleted");
-        blockOu = tag.contains("BlockOu") ? tag.getInt("BlockOu") : 810;
     }
 
     @Nullable

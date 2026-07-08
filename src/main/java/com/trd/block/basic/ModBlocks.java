@@ -76,6 +76,8 @@ public class ModBlocks {
             () -> new WireBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
     public static final RegistryObject<Block> SWITCH = registerBlock("switch",
             () -> new SwitchBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)));
+    public static final RegistryObject<Block> DROBITEL = registerBlock("drobitel",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion()));
 
     public static final RegistryObject<Block> CORRUPTED_BARREL = BLOCKS.register("corrupted_barrel",
             () -> new FluidBarrelBlock(BarrelTier.CORRUPTED, BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_GRAY).strength(1.5f).sound(SoundType.METAL)));

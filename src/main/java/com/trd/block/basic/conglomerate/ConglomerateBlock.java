@@ -54,17 +54,13 @@ public class ConglomerateBlock extends BaseEntityBlock {
         VeinManager manager = VeinManager.get(level);
         VeinManager.VeinData vein = manager.getVein(entity.getVeinId());
 
-        if (vein == null || entity.isDepleted() || entity.getBlockOu() <= 0) {
+        if (vein == null || entity.isDepleted() || entity.getRemainingOu() <= 0) {
             convertToDepleted(level, pos);
             return;
         }
 
-        int ouPerHit = 81;
-        entity.consumeOu(ouPerHit);
-
-        // Было: vein.consumeUnits(ouPerHit);
-        // Стало: синхронно обновляем и данные, и метаданные, и ставим dirty
-        manager.consumeVeinUnits(entity.getVeinId(), ouPerHit);
+        entity.consumeCharge();
+        manager.consumeVeinUnits(entity.getVeinId(), ConglomerateBlockEntity.OU_PER_CHARGE);
 
         float chunkChance = switch (tierLevel) {
             case 0 -> 0.30f;
@@ -75,8 +71,8 @@ public class ConglomerateBlock extends BaseEntityBlock {
 
         if (level.random.nextFloat() < chunkChance) {
             ItemStack chunk = ConglomerateItem.createFromVein(
-                    vein.getComposition().getFullComposition(),
-                    ouPerHit,
+                    vein.getComposition().getFractions(),
+                    ConglomerateBlockEntity.OU_PER_CHARGE,
                     vein.getTypeName()
             );
             Block.popResource(level, pos, chunk);
@@ -84,14 +80,9 @@ public class ConglomerateBlock extends BaseEntityBlock {
             Block.popResource(level, pos, new ItemStack(ModItems.HARD_ROCK.get()));
         }
 
-        if (entity.getBlockOu() <= 0) {
-            entity.markDepleted();
+        if (entity.isDepleted()) {
             convertToDepleted(level, pos);
-        } else {
-            entity.setLocalDepletion(1.0f - (entity.getBlockOu() / 810.0f));
         }
-
-        // manager.setDirty(); // УБРАТЬ — теперь dirty ставится внутри consumeVeinUnits
     }
 
     private void convertToDepleted(ServerLevel level, BlockPos pos) {

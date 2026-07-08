@@ -45,11 +45,10 @@ public class VeinManager extends SavedData {
         }
 
         int maxUnits = blocks.size() * 810;
-        // Добавили blockCount
         VeinMetadata meta = new VeinMetadata(id, composition, maxUnits, minChunk, maxChunk, yLevel, blocks.size());
         veinIndex.put(id, meta);
 
-        VeinData data = new VeinData(id, composition, blocks);
+        VeinData data = new VeinData(id, composition, blocks, yLevel);
         activeVeins.put(id, data);
 
         setDirty();
@@ -81,7 +80,7 @@ public class VeinManager extends SavedData {
         for (UUID veinId : veinsInChunk) {
             VeinMetadata meta = veinIndex.get(veinId);
             if (meta != null && areAllChunksUnloaded(meta)) {
-                activeVeins.remove(veinId); // Просто выгружаем из памяти, данные уже в метаданных
+                activeVeins.remove(veinId);
             }
         }
     }
@@ -101,20 +100,13 @@ public class VeinManager extends SavedData {
 
     private boolean areAllChunksUnloaded(VeinMetadata meta) {
         // Заглушка — можно доработать позже, если нужна агрессивная выгрузка из памяти.
-        // Сейчас основной баг не здесь.
         return true;
     }
 
     private VeinData loadVeinFromStorage(UUID id) {
         VeinMetadata meta = veinIndex.get(id);
         if (meta == null) return null;
-        // Восстанавливаем VeinData из метаданных (без огромного списка блоков)
-        return new VeinData(id, meta.composition, meta.remainingUnits, meta.blockCount);
-    }
-
-    private void saveVeinToStorage(VeinData data) {
-        // Больше не нужен — всё хранится в SavedData через метаданные.
-        // Если в будущем понадобится внешнее хранилище, реализовать здесь.
+        return new VeinData(id, meta.composition, meta.remainingUnits, meta.blockCount, meta.yLevel);
     }
 
     @Override
@@ -132,7 +124,7 @@ public class VeinManager extends SavedData {
             VeinMetadata meta = VeinMetadata.deserialize((CompoundTag) nbt);
             manager.veinIndex.put(meta.id, meta);
 
-            // ВОССТАНОВЛЕНИЕ chunkToVeins — ключевой фикс!
+            // ВОССТАНОВЛЕНИЕ chunkToVeins
             for (int cx = meta.minChunk.x; cx <= meta.maxChunk.x; cx++) {
                 for (int cz = meta.minChunk.z; cz <= meta.maxChunk.z; cz++) {
                     manager.chunkToVeins.computeIfAbsent(new ChunkPos(cx, cz), k -> new HashSet<>()).add(meta.id);
@@ -149,7 +141,7 @@ public class VeinManager extends SavedData {
         public final ChunkPos minChunk;
         public final ChunkPos maxChunk;
         public final int yLevel;
-        public final int blockCount; // Новое поле
+        public final int blockCount;
         public int remainingUnits;
 
         public VeinMetadata(UUID id, VeinComposition composition, int maxUnits, ChunkPos minChunk, ChunkPos maxChunk, int yLevel, int blockCount) {
@@ -174,7 +166,7 @@ public class VeinManager extends SavedData {
             tag.putInt("MaxCX", maxChunk.x);
             tag.putInt("MaxCZ", maxChunk.z);
             tag.putInt("YLevel", yLevel);
-            tag.putInt("BlockCount", blockCount); // Сохраняем
+            tag.putInt("BlockCount", blockCount);
             return tag;
         }
 
@@ -198,23 +190,26 @@ public class VeinManager extends SavedData {
         public final Set<BlockPos> blocks;
         private int remainingUnits;
         private final int blockCount;
+        private final int yLevel;
 
         // Конструктор для новой жилы (при генерации)
-        public VeinData(UUID id, VeinComposition composition, Set<BlockPos> blocks) {
+        public VeinData(UUID id, VeinComposition composition, Set<BlockPos> blocks, int yLevel) {
             this.id = id;
             this.composition = composition;
             this.blocks = blocks;
             this.blockCount = blocks.size();
             this.remainingUnits = blocks.size() * 810;
+            this.yLevel = yLevel;
         }
 
         // Конструктор для загрузки (без списка блоков)
-        public VeinData(UUID id, VeinComposition composition, int remainingUnits, int blockCount) {
+        public VeinData(UUID id, VeinComposition composition, int remainingUnits, int blockCount, int yLevel) {
             this.id = id;
             this.composition = composition;
             this.blocks = new HashSet<>();
             this.blockCount = blockCount;
             this.remainingUnits = remainingUnits;
+            this.yLevel = yLevel;
         }
 
         public void consumeUnits(int amount) {
@@ -230,7 +225,13 @@ public class VeinManager extends SavedData {
         public VeinComposition getComposition() { return composition; }
 
         public String getTypeName() {
-            return composition.getPrimaryMetal();
+            return getDepthTypeName(yLevel);
+        }
+
+        private static String getDepthTypeName(int y) {
+            if (y >= 40) return "surface";
+            if (y >= -20) return "medium";
+            return "deep";
         }
     }
 }
