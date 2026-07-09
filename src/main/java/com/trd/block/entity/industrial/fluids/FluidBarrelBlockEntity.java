@@ -179,8 +179,8 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         if (stack.isEmpty()) return new int[]{0, 0};
         Item it = stack.getItem();
         if (it == ModItems.PROTECTOR_STEEL.get()) return new int[]{720, 40};
-        if (it == ModItems.PROTECTOR_LEAD.get()) return new int[]{135, 225};
-        if (it == ModItems.PROTECTOR_TUNGSTEN.get()) return new int[]{1700, 270};
+        if (it == ModItems.PROTECTOR_LEAD.get()) return new int[]{350, 225};
+        if (it == ModItems.PROTECTOR_TUNGSTEN.get()) return new int[]{1440, 270};
         return new int[]{0, 0};
     }
 

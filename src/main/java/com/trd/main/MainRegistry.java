@@ -249,13 +249,15 @@ public class MainRegistry {
 
             event.accept(ModItems.PULLEY.get());
             event.accept(ModItems.FLYWHEEL_LIGHT.get());
+            event.accept(ModItems.COPPER_ROTOR.get());
+
 
             event.accept(ModBlocks.BEARING_BLOCK);
             event.accept(ModBlocks.MOTOR_ELECTRO);
             event.accept(ModBlocks.TACHOMETER);
             event.accept(ModBlocks.STATOR_BLOCK);
-            event.accept(ModItems.COPPER_ROTOR.get());
-
+            event.accept(ModItems.STEAM_ENGINE_ITEM);
+            event.accept(ModBlocks.DROBITEL);
 
 
 
@@ -288,7 +290,6 @@ public class MainRegistry {
             event.accept(ModBlocks.SWITCH);
             event.accept(ModBlocks.CONVERTER_BLOCK);
 
-            event.accept(ModBlocks.DROBITEL);
 
 
 
@@ -311,7 +312,6 @@ public class MainRegistry {
             event.accept(ModBlocks.TUNGSTEN_FLUID_PIPE);
 
             event.accept(ModItems.BOILER_ITEM);
-            event.accept(ModItems.STEAM_ENGINE_ITEM);
             event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
 
             for (var entry : com.trd.api.fluids.ModFluids.getAllFluidDrops().values()) {
@@ -412,11 +412,13 @@ public class MainRegistry {
             event.accept(ModItems.SEQUESTRUM);
             event.accept(ModItems.SULFUR);
 
+            event.accept(ModItems.CONGLOMERATE_POWDER);
             event.accept(ModItems.DOLOMITE_POWDER);
             event.accept(ModItems.LIMESTONE_POWDER);
             event.accept(ModItems.BAUXITE_POWDER);
 
             event.accept(ModItems.FUEL_ASH.get());
+            event.accept(ModItems.TRASH);
 
         }
 
