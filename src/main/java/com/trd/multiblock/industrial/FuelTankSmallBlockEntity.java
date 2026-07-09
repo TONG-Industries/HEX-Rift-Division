@@ -2,7 +2,7 @@ package com.trd.multiblock.industrial;
 
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity;
-import com.trd.menu.industrial.FluidBarrelMenu;
+import com.trd.menu.industrial.FuelTankMenu;
 import com.trd.multiblock.system.IFluidTankProvider;
 import com.trd.multiblock.system.PartRole;
 import net.minecraft.core.BlockPos;
@@ -86,6 +86,6 @@ public class FuelTankSmallBlockEntity extends FluidBarrelBlockEntity implements 
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new FluidBarrelMenu(id, inv, this, this.data);
+        return new FuelTankMenu(id, inv, this, this.data);
     }
 }
