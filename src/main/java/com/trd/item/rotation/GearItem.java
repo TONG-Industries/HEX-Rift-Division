@@ -32,8 +32,11 @@ public class GearItem extends Item {
         BlockState state = level.getBlockState(pos);
 
         if (state.getBlock() instanceof ShaftBlock shaftBlock) {
-            // Если на валу уже есть шестерня - отмена
-            if (state.getValue(ShaftBlock.GEAR_SIZE) != 0) {
+            if (level.getBlockEntity(pos) instanceof ShaftBlockEntity targetBE) {
+                if (targetBE.hasCentralAttachment()) {
+                    return InteractionResult.PASS;
+                }
+            } else {
                 return InteractionResult.PASS;
             }
 

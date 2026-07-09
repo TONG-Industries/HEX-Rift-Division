@@ -119,6 +119,10 @@ public class KineticNetwork {
         this.totalConsumedTorque = (long) (this.totalConsumedTorque * this.bearingFrictionMultiplier);
 
         // 2. Опрашиваем генераторы
+        long maxAbsSpeed = 0;
+        
+        java.util.Map<BlockPos, Long> genSpeeds = new java.util.HashMap<>();
+        
         for (BlockPos genPos : generators) {
             if (level.isLoaded(genPos) && level.getBlockEntity(genPos) instanceof Rotational gen) {
                 totalGeneratedTorque += gen.getTorque();
@@ -131,14 +135,23 @@ public class KineticNetwork {
                         genSpeed = -genSpeed;
                     }
                 }
+                
+                genSpeeds.put(genPos, genSpeed);
 
-                if (targetNetworkSpeed == 0) {
-                    targetNetworkSpeed = genSpeed;
-                } else {
-                    if (genSpeed != targetNetworkSpeed) {
-                        KineticNetworkManager.get(level).scheduleBreakage(genPos);
-                    }
+                if (Math.abs(genSpeed) > maxAbsSpeed) {
+                    maxAbsSpeed = Math.abs(genSpeed);
+                    targetNetworkSpeed = genSpeed; // Сеть вращается с самой быстрой скоростью
                 }
+            }
+        }
+
+        // Проверяем допуск 15%
+        long tolerance = (long) (maxAbsSpeed * 0.15);
+        for (java.util.Map.Entry<BlockPos, Long> entry : genSpeeds.entrySet()) {
+            long genSpeed = entry.getValue();
+            // Если разница скоростей больше допуска (с учетом знака/направления) — ломаем
+            if (Math.abs(genSpeed - targetNetworkSpeed) > tolerance) {
+                KineticNetworkManager.get(level).scheduleBreakage(entry.getKey());
             }
         }
 

@@ -246,6 +246,7 @@ public class MainRegistry {
             event.accept(ModBlocks.TACHOMETER);
             event.accept(ModBlocks.STATOR_BLOCK);
             event.accept(ModItems.COPPER_ROTOR.get());
+            event.accept(ModItems.COPPER_COIL.get());
 
             event.accept(ModItems.BELT.get());
 

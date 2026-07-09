@@ -259,8 +259,8 @@ public class StatorBlockEntity extends KineticNodeBlockEntity implements IEnergy
                         }
                     }
 
-                    // Formula: Speed * Total Conversion * Rotor Efficiency
-                    long generated = (long) ((speed * totalConversion * rotorEfficiency) / 20.0f);
+                    // Formula: Speed * Total Conversion * Rotor Efficiency / 2
+                    long generated = (long) ((speed * totalConversion * rotorEfficiency) / 40.0f);
                     if (generated > 0) {
                         energyStored = Math.min(maxEn, energyStored + generated);
                         setChanged();

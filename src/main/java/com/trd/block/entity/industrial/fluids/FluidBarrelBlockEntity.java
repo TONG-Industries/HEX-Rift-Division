@@ -51,7 +51,7 @@ import org.joml.Vector3f;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider, ITankWithMode {
+public class FluidBarrelBlockEntity extends FluidNodeBlockEntity implements MenuProvider, ITankWithMode {
 
     // === HOOK METHODS для подклассов ===
     protected int getMaxTransferRate() { return MAX_TRANSFER_RATE; }
@@ -350,9 +350,6 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            FluidNetworkManager manager = FluidNetworkManager.get((ServerLevel) level);
-            manager.removeNode(this.getBlockPos());
-            manager.addNode(this.getBlockPos());
         }
     }
 
@@ -361,12 +358,6 @@ public class FluidBarrelBlockEntity extends BlockEntity implements MenuProvider,
         super.onLoad();
         lazyFluidHandler = LazyOptional.of(() -> networkFluidHandler);
         lazyItemHandler = LazyOptional.of(() -> itemHandler);
-        if (level != null && !level.isClientSide) FluidNetworkManager.get((ServerLevel) level).addNode(worldPosition);
-    }
-
-    @Override public void setRemoved() {
-        super.setRemoved();
-        if (this.level != null && !this.level.isClientSide) FluidNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
     }
 
     @Override public void invalidateCaps() {

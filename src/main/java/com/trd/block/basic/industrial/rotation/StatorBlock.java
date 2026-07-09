@@ -163,7 +163,7 @@ public class StatorBlock extends BaseEntityBlock implements IMultiblockControlle
         if (!(be instanceof StatorBlockEntity)) return InteractionResult.PASS;
 
         ItemStack stackInHand = player.getItemInHand(hand);
-        boolean isCoil = stackInHand.getItem() == ModItems.COPPER_COIL.get() || stackInHand.getItem() == ModItems.WIRE_COIL.get();
+        boolean isCoil = stackInHand.getItem() instanceof com.trd.item.energy.StatorCoilItem;
         boolean isScrewdriver = stackInHand.getItem() == ModItems.SCREWDRIVER.get();
 
         // The stator is a 3x3x1 multiblock, but this block is the controller.

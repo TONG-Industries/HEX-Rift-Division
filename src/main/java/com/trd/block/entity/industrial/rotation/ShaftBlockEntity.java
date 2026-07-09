@@ -51,6 +51,10 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
         return !attachedFlywheel.isEmpty();
     }
 
+    public boolean hasCentralAttachment() {
+        return hasGear() || hasPulley() || hasRotor() || hasFlywheel();
+    }
+
     public ItemStack getAttachedFlywheel() {
         return attachedFlywheel;
     }

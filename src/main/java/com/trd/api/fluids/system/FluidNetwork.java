@@ -20,6 +20,11 @@ public class FluidNetwork {
     private final Set<FluidNode> nodes = new HashSet<>();
     private final UUID id = UUID.randomUUID();
     private boolean hasCheckedMeltdown = false;
+    
+    // Кэширование типа жидкости для оптимизации (чтобы не перебирать все ноды каждый тик)
+    private Set<net.minecraft.world.level.material.Fluid> cachedFluids = null;
+    private boolean isFluidCached = false;
+    private int lastNodeCount = -1;
 
     public FluidNetwork(FluidNetworkManager manager) {
         this.manager = manager;
@@ -41,64 +46,165 @@ public class FluidNetwork {
         for (FluidNode node : nodes) {
             BlockPos pos = node.getPos();
             if (!level.isLoaded(pos)) continue;
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be == null || be instanceof FluidPipeBlockEntity) continue;
-            be.getCapability(ForgeCapabilities.FLUID_HANDLER).ifPresent(handler -> {
-                // Дедупликация: если этот хэндлер уже зарегистрирован, пропускаем
-                if (!seenHandlers.add(handler)) return;
+            
+            BlockState state = level.getBlockState(pos);
+            if (!(state.getBlock() instanceof FluidPipeBlock)) continue;
 
-                // Определяем режим: если BE является частью мультиблока, берём режим с контроллера
-                ITankWithMode tank = null;
-                if (be instanceof ITankWithMode direct) {
-                    tank = direct;
-                } else if (be instanceof IMultiblockPart part && part.getControllerPos() != null) {
-                    BlockEntity ctrl = level.getBlockEntity(part.getControllerPos());
-                    if (ctrl instanceof ITankWithMode ctrlTank) tank = ctrlTank;
-                }
+            for (Direction dir : Direction.values()) {
+                if (state.getValue(FluidPipeBlock.PROPERTY_BY_DIRECTION.get(dir))) {
+                    BlockPos neighborPos = pos.relative(dir);
+                    if (!level.isLoaded(neighborPos)) continue;
+                    BlockState neighborState = level.getBlockState(neighborPos);
+                    
+                    if (neighborState.getBlock() instanceof FluidPipeBlock) {
+                        continue;
+                    }
+                    
+                    BlockEntity be = level.getBlockEntity(neighborPos);
+                    if (be == null) continue;
 
-                if (tank != null) {
-                    int m = tank.getMode();
-                    if (m == 1) pureReceivers.add(handler);
-                    else if (m == 2) pureProviders.add(handler);
-                    else buffers.add(handler); // mode 0 = балансировка
-                } else {
-                    pureProviders.add(handler);
-                    pureReceivers.add(handler);
+                    be.getCapability(ForgeCapabilities.FLUID_HANDLER, dir.getOpposite()).ifPresent(handler -> {
+                        if (!seenHandlers.add(handler)) return;
+
+                        ITankWithMode tank = null;
+                        if (be instanceof ITankWithMode direct) {
+                            tank = direct;
+                        } else if (be instanceof IMultiblockPart part && part.getControllerPos() != null) {
+                            BlockEntity ctrl = level.getBlockEntity(part.getControllerPos());
+                            if (ctrl instanceof ITankWithMode ctrlTank) tank = ctrlTank;
+                        }
+
+                        if (tank != null) {
+                            int m = tank.getMode();
+                            if (m == 1) pureReceivers.add(handler);
+                            else if (m == 2) pureProviders.add(handler);
+                            else buffers.add(handler);
+                        } else {
+                            pureProviders.add(handler);
+                            pureReceivers.add(handler);
+                        }
+                    });
                 }
-            });
+            }
         }
 
-        if (transfer(level, pureProviders, pureReceivers)) return;
-        if (transfer(level, pureProviders, buffers)) return;
-        if (transfer(level, buffers, pureReceivers)) return;
-        balance(level, buffers);
+        Set<net.minecraft.world.level.material.Fluid> allowedFluids = determineNetworkFluids(level);
+        if (allowedFluids == null) return; // Сеть содержит трубы без идентификатора! Трансфер заблокирован.
+
+        if (transfer(level, pureProviders, pureReceivers, allowedFluids)) return;
+        if (transfer(level, pureProviders, buffers, allowedFluids)) return;
+        if (transfer(level, buffers, pureReceivers, allowedFluids)) return;
+        balance(level, buffers, allowedFluids);
     }
 
-    private boolean transfer(ServerLevel level, List<IFluidHandler> sources, List<IFluidHandler> destinations) {
+    public void invalidateFluidCache() {
+        this.isFluidCached = false;
+    }
+
+    @javax.annotation.Nullable
+    private Set<net.minecraft.world.level.material.Fluid> determineNetworkFluids(ServerLevel level) {
+        if (isFluidCached && lastNodeCount == nodes.size()) {
+            return cachedFluids;
+        }
+
+        boolean hasPipes = false;
+        Set<net.minecraft.world.level.material.Fluid> filters = new HashSet<>();
+        
+        for (FluidNode node : nodes) {
+            BlockPos pos = node.getPos();
+            if (!level.isLoaded(pos)) continue;
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof FluidPipeBlockEntity pipeBE) {
+                hasPipes = true;
+                net.minecraft.world.level.material.Fluid f = pipeBE.getFilterFluid();
+                if (f == net.minecraft.world.level.material.Fluids.EMPTY) {
+                    // Если хотя бы одна труба пустая, блокируем ВСЮ сеть!
+                    cachedFluids = null;
+                    isFluidCached = true;
+                    lastNodeCount = nodes.size();
+                    return null;
+                }
+                filters.add(f);
+            }
+        }
+        
+        if (hasPipes) {
+            cachedFluids = filters;
+        } else {
+            cachedFluids = Collections.emptySet(); // Если труб нет вообще, разрешаем любые жидкости
+        }
+
+        isFluidCached = true;
+        lastNodeCount = nodes.size();
+        return cachedFluids;
+    }
+
+    private boolean transfer(ServerLevel level, List<IFluidHandler> sources, List<IFluidHandler> destinations, Set<net.minecraft.world.level.material.Fluid> allowedFluids) {
         for (IFluidHandler source : sources) {
             FluidStack available = source.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.SIMULATE);
             if (available.isEmpty() || available.getAmount() <= 0) continue;
+            if (!allowedFluids.isEmpty() && !allowedFluids.contains(available.getFluid())) continue; // Заблокировано фильтром
+
             int remaining = available.getAmount();
+            net.minecraft.world.level.material.Fluid fluid = available.getFluid();
+
+            Map<IFluidHandler, Integer> validDestinations = new HashMap<>();
+            long totalCapacity = 0;
+
             for (IFluidHandler dest : destinations) {
-                if (remaining <= 0) break;
                 if (source == dest) continue;
-                int accepted = dest.fill(new FluidStack(available.getFluid(), remaining), IFluidHandler.FluidAction.SIMULATE);
+                int accepted = dest.fill(new FluidStack(fluid, Integer.MAX_VALUE), IFluidHandler.FluidAction.SIMULATE);
                 if (accepted > 0) {
-                    FluidStack drained = source.drain(new FluidStack(available.getFluid(), accepted), IFluidHandler.FluidAction.EXECUTE);
-                    if (!drained.isEmpty()) {
-                        dest.fill(drained, IFluidHandler.FluidAction.EXECUTE);
-                        remaining -= drained.getAmount();
-                        if (!hasCheckedMeltdown) {
-                            if (checkMeltdown(level, drained.getFluid())) return true;
-                            hasCheckedMeltdown = true;
-                            for (FluidNode node : nodes) {
-                                BlockPos nodePos = node.getPos();
-                                if (level.isLoaded(nodePos)) {
-                                    BlockEntity be = level.getBlockEntity(nodePos);
-                                    if (be instanceof FluidPipeBlockEntity pipeBE) pipeBE.setHasFlowed(true);
+                    validDestinations.put(dest, accepted);
+                    totalCapacity += accepted;
+                }
+            }
+
+            if (validDestinations.isEmpty()) continue;
+
+            while (remaining > 0 && !validDestinations.isEmpty() && totalCapacity > 0) {
+                int initialRemaining = remaining;
+                long currentTotalCapacity = totalCapacity;
+                
+                Iterator<Map.Entry<IFluidHandler, Integer>> it = validDestinations.entrySet().iterator();
+                while (it.hasNext() && remaining > 0) {
+                    Map.Entry<IFluidHandler, Integer> entry = it.next();
+                    IFluidHandler dest = entry.getKey();
+                    int maxAcceptable = entry.getValue();
+
+                    long share = (long) ((double) initialRemaining * ((double) maxAcceptable / currentTotalCapacity));
+                    if (share <= 0) share = 1; 
+                    
+                    int toFill = (int) Math.min(share, maxAcceptable);
+                    toFill = Math.min(toFill, remaining);
+                    
+                    if (toFill > 0) {
+                        FluidStack drained = source.drain(new FluidStack(fluid, toFill), IFluidHandler.FluidAction.EXECUTE);
+                        if (!drained.isEmpty()) {
+                            dest.fill(drained, IFluidHandler.FluidAction.EXECUTE);
+                            remaining -= drained.getAmount();
+                            
+                            if (!hasCheckedMeltdown) {
+                                if (checkMeltdown(level, fluid)) return true;
+                                hasCheckedMeltdown = true;
+                                for (FluidNode node : nodes) {
+                                    BlockPos nodePos = node.getPos();
+                                    if (level.isLoaded(nodePos)) {
+                                        BlockEntity be = level.getBlockEntity(nodePos);
+                                        if (be instanceof FluidPipeBlockEntity pipeBE) pipeBE.setHasFlowed(true);
+                                    }
                                 }
                             }
                         }
+                    }
+                    
+                    int newAccepted = dest.fill(new FluidStack(fluid, Integer.MAX_VALUE), IFluidHandler.FluidAction.SIMULATE);
+                    totalCapacity -= maxAcceptable;
+                    if (newAccepted > 0) {
+                        entry.setValue(newAccepted);
+                        totalCapacity += newAccepted;
+                    } else {
+                        it.remove();
                     }
                 }
             }
@@ -106,81 +212,88 @@ public class FluidNetwork {
         return false;
     }
 
-    private void balance(ServerLevel level, List<IFluidHandler> buffers) {
+    private void balance(ServerLevel level, List<IFluidHandler> buffers, Set<net.minecraft.world.level.material.Fluid> allowedFluids) {
         if (buffers.size() < 2) return;
 
-        // Считаем суммарное кол-во жидкости и суммарную ёмкость всех буферов
-        long totalFluid = 0;
-        long totalCapacity = 0;
-        net.minecraft.world.level.material.Fluid type = null;
-
+        // Группируем баки по типу жидкости
+        Map<net.minecraft.world.level.material.Fluid, List<IFluidHandler>> byFluid = new HashMap<>();
+        
         for (IFluidHandler buf : buffers) {
             FluidStack fs = buf.getFluidInTank(0);
-            int cap = buf.getTankCapacity(0);
-            if (cap <= 0) continue;
             if (!fs.isEmpty()) {
-                totalFluid += fs.getAmount();
-                if (type == null) type = fs.getFluid();
+                if (!allowedFluids.isEmpty() && !allowedFluids.contains(fs.getFluid())) continue;
+                byFluid.computeIfAbsent(fs.getFluid(), k -> new ArrayList<>()).add(buf);
             }
-            // Ёмкость учитываем для всех баков (в т.ч. пустых — они тоже участвуют в балансе)
-            totalCapacity += cap;
         }
+        
+        // Для каждой жидкости балансируем свои баки
+        for (Map.Entry<net.minecraft.world.level.material.Fluid, List<IFluidHandler>> entry : byFluid.entrySet()) {
+            net.minecraft.world.level.material.Fluid type = entry.getKey();
+            List<IFluidHandler> activeBuffers = entry.getValue();
+            
+            // Также добавляем пустые баки, которые могут принять эту жидкость
+            for (IFluidHandler buf : buffers) {
+                if (buf.getFluidInTank(0).isEmpty() && buf.isFluidValid(0, new FluidStack(type, 1))) {
+                    activeBuffers.add(buf);
+                }
+            }
+            
+            if (activeBuffers.size() < 2) continue;
+            
+            long totalFluid = 0;
+            long totalCapacity = 0;
+            
+            for (IFluidHandler buf : activeBuffers) {
+                totalFluid += buf.getFluidInTank(0).getAmount();
+                totalCapacity += buf.getTankCapacity(0);
+            }
+            
+            if (totalFluid == 0 || totalCapacity == 0) continue;
+            
+            final double avgRatio = (double) totalFluid / totalCapacity;
+            final int DEADBAND = 5;
 
-        if (totalFluid == 0 || type == null || totalCapacity == 0) return;
+            List<IFluidHandler> donors    = new ArrayList<>();
+            List<IFluidHandler> receivers = new ArrayList<>();
 
-        // avgRatio — доля заполнения, к которой должен стремиться каждый бак
-        // (например 0.5 = 50% от своей ёмкости)
-        final double avgRatio = (double) totalFluid / totalCapacity;
-        final net.minecraft.world.level.material.Fluid fluidType = type;
-        final int DEADBAND = 5; // минимальная разница mB для начала переноса
+            for (IFluidHandler buf : activeBuffers) {
+                int current = buf.getFluidInTank(0).getAmount();
+                int target  = (int) (buf.getTankCapacity(0) * avgRatio);
 
-        List<IFluidHandler> donors    = new ArrayList<>();
-        List<IFluidHandler> receivers = new ArrayList<>();
+                if (current > target + DEADBAND) donors.add(buf);
+                else if (current < target - DEADBAND) receivers.add(buf);
+            }
 
-        for (IFluidHandler buf : buffers) {
-            FluidStack fs = buf.getFluidInTank(0);
-            int cap = buf.getTankCapacity(0);
-            if (cap <= 0) continue;
+            for (IFluidHandler donor : donors) {
+                FluidStack donorFluid = donor.getFluidInTank(0);
+                if (donorFluid.isEmpty()) continue;
 
-            // Пропускаем баки с чужой жидкостью
-            if (!fs.isEmpty() && fs.getFluid() != fluidType) continue;
+                int donorCap     = donor.getTankCapacity(0);
+                int donorTarget  = (int) (donorCap * avgRatio);
+                int donorExcess  = donorFluid.getAmount() - donorTarget;
+                if (donorExcess <= 0) continue;
 
-            int current = fs.isEmpty() ? 0 : fs.getAmount();
-            int target  = (int) (cap * avgRatio);
+                for (IFluidHandler receiver : receivers) {
+                    if (donorExcess <= 0) break;
 
-            if (current > target + DEADBAND) donors.add(buf);
-            else if (current < target - DEADBAND) receivers.add(buf);
-        }
+                    FluidStack recFluid = receiver.getFluidInTank(0);
+                    int recCap    = receiver.getTankCapacity(0);
+                    int recCurrent = recFluid.isEmpty() ? 0 : recFluid.getAmount();
+                    int recTarget  = (int) (recCap * avgRatio);
+                    int recDeficit = recTarget - recCurrent;
+                    if (recDeficit <= 0) continue;
 
-        for (IFluidHandler donor : donors) {
-            FluidStack donorFluid = donor.getFluidInTank(0);
-            if (donorFluid.isEmpty()) continue;
-
-            int donorCap     = donor.getTankCapacity(0);
-            int donorTarget  = (int) (donorCap * avgRatio);
-            int donorExcess  = donorFluid.getAmount() - donorTarget;
-            if (donorExcess <= 0) continue;
-
-            for (IFluidHandler receiver : receivers) {
-                if (donorExcess <= 0) break;
-
-                FluidStack recFluid = receiver.getFluidInTank(0);
-                int recCap    = receiver.getTankCapacity(0);
-                int recCurrent = recFluid.isEmpty() ? 0 : recFluid.getAmount();
-                int recTarget  = (int) (recCap * avgRatio);
-                int recDeficit = recTarget - recCurrent;
-                if (recDeficit <= 0) continue;
-
-                int toMove = Math.min(donorExcess, recDeficit);
-                int acceptedSim = receiver.fill(new FluidStack(fluidType, toMove), IFluidHandler.FluidAction.SIMULATE);
-                if (acceptedSim > 0) {
-                    FluidStack drained = donor.drain(new FluidStack(fluidType, acceptedSim), IFluidHandler.FluidAction.EXECUTE);
-                    if (!drained.isEmpty()) {
-                        receiver.fill(drained, IFluidHandler.FluidAction.EXECUTE);
-                        donorExcess -= drained.getAmount();
-                        if (!hasCheckedMeltdown) {
-                            if (checkMeltdown(level, drained.getFluid())) return;
-                            hasCheckedMeltdown = true;
+                    int toMove = Math.min(donorExcess, recDeficit);
+                    int acceptedSim = receiver.fill(new FluidStack(type, toMove), IFluidHandler.FluidAction.SIMULATE);
+                    if (acceptedSim > 0) {
+                        FluidStack drained = donor.drain(new FluidStack(type, acceptedSim), IFluidHandler.FluidAction.EXECUTE);
+                        if (!drained.isEmpty()) {
+                            receiver.fill(drained, IFluidHandler.FluidAction.EXECUTE);
+                            donorExcess -= drained.getAmount();
+                            if (!hasCheckedMeltdown) {
+                                if (checkMeltdown(level, drained.getFluid())) return;
+                                hasCheckedMeltdown = true;
+                            }
                         }
                     }
                 }
@@ -188,6 +301,7 @@ public class FluidNetwork {
         }
     }
 
+    // Balancing removed from here as it's fully replaced above.
     private boolean checkMeltdown(ServerLevel level, net.minecraft.world.level.material.Fluid fluid) {
         int tempC = getFluidTemperatureCelsius(fluid);
         int corr = 0;

@@ -25,7 +25,7 @@ public class RotorItem extends Item {
 
         if (state.getBlock() instanceof ShaftBlock) {
             if (level.getBlockEntity(pos) instanceof ShaftBlockEntity shaftBE) {
-                if (!shaftBE.hasRotor()) {
+                if (!shaftBE.hasCentralAttachment()) {
                     if (!level.isClientSide) {
                         ItemStack rotorStack = context.getItemInHand().copy();
                         rotorStack.setCount(1);
