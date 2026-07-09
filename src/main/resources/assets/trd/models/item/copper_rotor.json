@@ -6,5 +6,47 @@
     "m_f41ec8b5-684c-bb67-fb90-c1e5f22a5fdf": "trd:block/rotor",
     "gear_texture": "trd:block/rotor",
     "particle": "trd:block/rotor"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [ 75, 45, 0 ],
+      "translation": [ 0.00, 2.50, 0.00 ],
+      "scale": [ 0.38, 0.38, 0.38 ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [ 75, 45, 0 ],
+      "translation": [ 0.00, 2.50, 0.00 ],
+      "scale": [ 0.38, 0.38, 0.38 ]
+    },
+    "firstperson_righthand": {
+      "rotation": [ 0, 329, 0 ],
+      "translation": [ -1.00, 2.00, 0.00 ],
+      "scale": [ 0.40, 0.40, 0.40 ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [ 0, 45, 0 ],
+      "translation": [ 0.00, 0.00, 0.00 ],
+      "scale": [ 0.40, 0.40, 0.40 ]
+    },
+    "gui": {
+      "rotation": [ 30, 225, 0 ],
+      "translation": [ 0.00, 0.00, 0.00 ],
+      "scale": [ 0.4, 0.4, 0.4 ]
+    },
+    "head": {
+      "rotation": [ 0, 0, 0 ],
+      "translation": [ 0.00, 0.00, 0.00 ],
+      "scale": [ 1.00, 1.00, 1.00 ]
+    },
+    "fixed": {
+      "rotation": [ 0, 0, 0 ],
+      "translation": [ 0.00, 0.00, 0.00 ],
+      "scale": [ 0.50, 0.50, 0.50 ]
+    },
+    "ground": {
+      "rotation": [ 0, 0, 0 ],
+      "translation": [ 0.00, 3.00, 0.00 ],
+      "scale": [ 0.3, 0.3, 0.3 ]
+    }
   }
 }

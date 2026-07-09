@@ -62,7 +62,7 @@ public class StatorOverlay {
         long energyStored = stator.getEnergyStored();
         long maxEnergy = stator.getMaxEnergyDynamic();
         long load = stator.getConsumedTorque();
-        
+
         long production = 0;
         if (energyStored < maxEnergy) {
             BlockPos holeOffset = com.trd.multiblock.system.MultiblockStructureHelper.rotateStatorPos(new BlockPos(0, 1, 0), facing, axis);
@@ -78,8 +78,8 @@ public class StatorOverlay {
             }
         }
 
-        int centerX = screenWidth / 2 + 15;
-        int centerY = screenHeight / 2 - 20;
+        int centerX = screenWidth / 2 + 12;
+        int centerY = screenHeight / 2 + 4;
 
         int lineHeight = 12;
         int bgColor = 0x80000000;
@@ -87,7 +87,7 @@ public class StatorOverlay {
         int whiteColor = 0xFFFFFFFF;
 
         String header = "▶ Stator Network";
-        
+
         String gray = net.minecraft.ChatFormatting.GRAY.toString();
         String white = net.minecraft.ChatFormatting.WHITE.toString();
         String prodColStr = production > 0 ? net.minecraft.ChatFormatting.GREEN.toString() : net.minecraft.ChatFormatting.RED.toString();
@@ -99,8 +99,12 @@ public class StatorOverlay {
 
         int maxWidth = Math.max(mc.font.width(header),
                 Math.max(mc.font.width(bufferText),
-                Math.max(mc.font.width(loadText),
-                Math.max(mc.font.width(coilsText), mc.font.width(prodText)))));
+                        Math.max(mc.font.width(loadText),
+                                Math.max(mc.font.width(coilsText), mc.font.width(prodText)))));
+
+        if (centerX + maxWidth + 8 > screenWidth) {
+            centerX = screenWidth / 2 - maxWidth - 12;
+        }
 
         int bgX1 = centerX - 4;
         int bgY1 = centerY - 4;

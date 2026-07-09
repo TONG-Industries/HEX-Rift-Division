@@ -212,53 +212,65 @@ public class MainRegistry {
 
         if (event.getTab() == ModCreativeTabs.trd_TECH_TAB.get()) {
 
+
+            //ИНСТРУМЕНТЫ
             event.accept(ModItems.BEAM_PLACER.get());
             event.accept(ModItems.SCREWDRIVER.get());
             event.accept(ModItems.POKER.get());
-            event.accept(ModItems.FLUID_IDENTIFIER.get());
-            event.accept(ModItems.INFINITE_FLUID_BARREL);
 
+            event.accept(ModItems.BELT.get());
+            event.accept(ModItems.WIRE_COIL);
+
+            event.accept(ModItems.INFINITE_FLUID_BARREL);
+            event.accept(ModItems.FLUID_IDENTIFIER.get());
+
+
+
+
+            //КИНЕТИКА
             event.accept(ModBlocks.SHAFT_LIGHT_IRON);
             event.accept(ModBlocks.SHAFT_MEDIUM_IRON);
-            event.accept(ModBlocks.SHAFT_HEAVY_IRON);
+
             event.accept(ModBlocks.SHAFT_LIGHT_DURALUMIN);
             event.accept(ModBlocks.SHAFT_MEDIUM_DURALUMIN);
-            event.accept(ModBlocks.SHAFT_HEAVY_DURALUMIN);
+
             event.accept(ModBlocks.SHAFT_LIGHT_STEEL);
             event.accept(ModBlocks.SHAFT_MEDIUM_STEEL);
-            event.accept(ModBlocks.SHAFT_HEAVY_STEEL);
+
             event.accept(ModBlocks.SHAFT_LIGHT_TITANIUM);
             event.accept(ModBlocks.SHAFT_MEDIUM_TITANIUM);
-            event.accept(ModBlocks.SHAFT_HEAVY_TITANIUM);
+
             event.accept(ModBlocks.SHAFT_LIGHT_TUNGSTEN_CARBIDE);
             event.accept(ModBlocks.SHAFT_MEDIUM_TUNGSTEN_CARBIDE);
-            event.accept(ModBlocks.SHAFT_HEAVY_TUNGSTEN_CARBIDE);
 
+            event.accept(ModItems.BEVEL_GEAR.get());
             event.accept(ModItems.GEAR1_STEEL.get());
             event.accept(ModItems.GEAR2_STEEL.get());
 
-            event.accept(ModBlocks.BEARING_BLOCK);
-            event.accept(ModItems.BEVEL_GEAR.get());
             event.accept(ModItems.PULLEY.get());
             event.accept(ModItems.FLYWHEEL_LIGHT.get());
+            event.accept(ModItems.COPPER_ROTOR.get());
 
+
+            event.accept(ModBlocks.BEARING_BLOCK);
             event.accept(ModBlocks.MOTOR_ELECTRO);
             event.accept(ModBlocks.TACHOMETER);
             event.accept(ModBlocks.STATOR_BLOCK);
             event.accept(ModItems.COPPER_ROTOR.get());
             event.accept(ModItems.COPPER_COIL.get());
+            event.accept(ModItems.STEAM_ENGINE_ITEM);
+            event.accept(ModBlocks.DROBITEL);
 
-            event.accept(ModItems.BELT.get());
 
-            event.accept(ModItems.WIRE_COIL);
+
+            //ЭНЕРГОСЕТЬ
+            event.accept(ModBlocks.MACHINE_BATTERY);
+            event.accept(ModItems.ENERGY_CELL_BASIC);
+
+            event.accept(ModBlocks.WIRE_COATED);
             event.accept(ModBlocks.CONNECTOR);
             event.accept(ModBlocks.MEDIUM_CONNECTOR);
             event.accept(ModBlocks.LARGE_CONNECTOR);
-            event.accept(ModBlocks.WIRE_COATED);
-            event.accept(ModBlocks.SWITCH);
-            event.accept(ModBlocks.CONVERTER_BLOCK);
-            event.accept(ModBlocks.MACHINE_BATTERY);
-            event.accept(ModItems.ENERGY_CELL_BASIC);
 
             event.accept(ModItems.CREATIVE_BATTERY);
             List<RegistryObject<Item>> batteriesToAdd = List.of(
@@ -277,34 +289,44 @@ public class MainRegistry {
                 }
             }
 
-            event.accept(ModItems.PROTECTOR_STEEL);
-            event.accept(ModItems.PROTECTOR_LEAD);
-            event.accept(ModItems.PROTECTOR_TUNGSTEN);
+            event.accept(ModBlocks.SWITCH);
+            event.accept(ModBlocks.CONVERTER_BLOCK);
+
+
+
+
+            //ЖИДКОСТИ
             event.accept(ModItems.CORRUPTED_BARREL_ITEM);
             event.accept(ModItems.LEAKING_BARREL_ITEM);
             event.accept(ModItems.IRON_BARREL_ITEM);
             event.accept(ModItems.STEEL_BARREL_ITEM);
             event.accept(ModItems.LEAD_BARREL_ITEM);
+            event.accept(ModBlocks.FUEL_TANK_SMALL);
             event.accept(ModBlocks.FUEL_TANK_BIG);
 
-            event.accept(ModBlocks.FUEL_TANK_SMALL);
-
           event.accept(ModItems.BOILER_ITEM);
-          event.accept(ModItems.STEAM_ENGINE_ITEM);
+        
           event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
+            event.accept(ModItems.PROTECTOR_STEEL);
+            event.accept(ModItems.PROTECTOR_LEAD);
+            event.accept(ModItems.PROTECTOR_TUNGSTEN);
 
             event.accept(ModBlocks.BRONZE_FLUID_PIPE);
             event.accept(ModBlocks.STEEL_FLUID_PIPE);
             event.accept(ModBlocks.LEAD_FLUID_PIPE);
             event.accept(ModBlocks.TUNGSTEN_FLUID_PIPE);
 
-       
+            event.accept(ModItems.BOILER_ITEM);
+            event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
 
-            // Капли жидкостей
             for (var entry : com.trd.api.fluids.ModFluids.getAllFluidDrops().values()) {
                 event.accept(entry.get());
             }
 
+
+
+
+            //ПЛАВИЛЬНИ
             event.accept(ModBlocks.JERNOVA);
             event.accept(ModBlocks.SMALL_SMELTER);
 
@@ -318,8 +340,6 @@ public class MainRegistry {
             event.accept(ModItems.MOLD_INGOT.get());
             event.accept(ModItems.MOLD_BLOCK.get());
             event.accept(ModItems.MOLD_PICKAXE.get());
-
-            event.accept(ModBlocks.DROBITEL);
         }
 
         if (event.getTab() == ModCreativeTabs.trd_WEAPONS_TAB.get()) {
@@ -397,11 +417,13 @@ public class MainRegistry {
             event.accept(ModItems.SEQUESTRUM);
             event.accept(ModItems.SULFUR);
 
+            event.accept(ModItems.CONGLOMERATE_POWDER);
             event.accept(ModItems.DOLOMITE_POWDER);
             event.accept(ModItems.LIMESTONE_POWDER);
             event.accept(ModItems.BAUXITE_POWDER);
 
             event.accept(ModItems.FUEL_ASH.get());
+            event.accept(ModItems.TRASH);
 
         }
 

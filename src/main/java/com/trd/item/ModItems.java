@@ -69,7 +69,7 @@ public class ModItems {
             () -> new ProtectorItem(720, 40, 5, new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> PROTECTOR_LEAD = ITEMS.register("protector_lead",
-            () -> new ProtectorItem(-500, 225, 25, new Item.Properties().stacksTo(1)));
+            () -> new ProtectorItem(350, 225, 25, new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> PROTECTOR_TUNGSTEN = ITEMS.register("protector_tungsten",
             () -> new ProtectorItem(1700, 270, 30, new Item.Properties().stacksTo(1)));
@@ -77,6 +77,8 @@ public class ModItems {
     //ОБЫЧНЫЕ ПРЕДМЕТЫ
     public static final RegistryObject<Item> DEPTH_WORM_SPAWN_EGG = ITEMS.register("depth_worm_spawn_egg",
             () -> new DepthWormSpawnEggItem(new Item.Properties()));
+    public static final RegistryObject<Item> CONGLOMERATE_DETECTOR = ITEMS.register("conglomerate_detector",
+            () -> new ConglomerateDetectorItem(new Item.Properties()));
     public static final RegistryObject<Item> IRON_PLATE = ITEMS.register("iron_plate",
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> ALUMINUM_PLATE = ITEMS.register("aluminum_plate",
@@ -104,6 +106,10 @@ public class ModItems {
     public static final RegistryObject<Item> FLUORITE = ITEMS.register("fluorite",
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> ASBESTOS = ITEMS.register("asbestos",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> CONGLOMERATE_POWDER = ITEMS.register("conglomerate_powder",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> TRASH = ITEMS.register("trash",
             () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> GRAVITY_GRENADE = ITEMS.register("gravity_grenade",
