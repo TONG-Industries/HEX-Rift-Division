@@ -106,12 +106,14 @@ public class FuelTankSmallBlock extends BaseEntityBlock implements IMultiblockCo
 
             String[][] layers = {
                     {
-                            "$#$",
-                            "$@>L"
+                            "$@$",
+                            "<L#$"
+
                     },
                     {
                             "###",
-                            "##>L"
+                            "<L##"
+
                     }
             };
 

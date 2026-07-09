@@ -85,7 +85,7 @@ public class LadderClimbHandler {
 
         for (BlockPos pos : BlockPos.betweenClosed(min, max)) {
             BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof IMultiblockPart part && part.getPartRole() == PartRole.LADDER) {
+            if (be instanceof IMultiblockPart part && part.getPartRole() != null && part.getPartRole().isLadder()) {
                 
                 Set<Direction> allowed = part.getAllowedClimbSides();
                 if (allowed == null || allowed.isEmpty()) continue;
