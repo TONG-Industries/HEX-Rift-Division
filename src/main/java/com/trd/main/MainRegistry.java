@@ -220,6 +220,7 @@ public class MainRegistry {
 
             event.accept(ModItems.BELT.get());
             event.accept(ModItems.WIRE_COIL);
+            event.accept(ModItems.COPPER_COIL.get());
 
             event.accept(ModItems.INFINITE_FLUID_BARREL);
             event.accept(ModItems.FLUID_IDENTIFIER.get());
@@ -256,8 +257,6 @@ public class MainRegistry {
             event.accept(ModBlocks.MOTOR_ELECTRO);
             event.accept(ModBlocks.TACHOMETER);
             event.accept(ModBlocks.STATOR_BLOCK);
-            event.accept(ModItems.COPPER_ROTOR.get());
-            event.accept(ModItems.COPPER_COIL.get());
             event.accept(ModItems.STEAM_ENGINE_ITEM);
             event.accept(ModBlocks.DROBITEL);
 

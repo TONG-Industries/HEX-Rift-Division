@@ -81,6 +81,7 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.DETONATOR);
         simpleItem(ModItems.MULTI_DETONATOR);
         simpleItem(ModItems.MISSILE_100MM);
+        simpleItem(ModItems.COPPER_COIL);
         simpleItem(ModItems.MISSILE_100MM_HE);
         simpleItem(ModItems.MISSILE_100MM_FIRE);
         simpleItem(ModItems.HARD_ROCK);
