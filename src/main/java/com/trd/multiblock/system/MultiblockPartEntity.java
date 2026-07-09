@@ -56,14 +56,10 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
             com.trd.api.energy.EnergyNetworkManager energyManager = com.trd.api.energy.EnergyNetworkManager.get((ServerLevel) this.level);
             
             if (!wasNetworked && isNetworked) {
-                if (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT || role == PartRole.FLUID_LADDER) {
-                    if (!fluidManager.hasNode(this.getBlockPos())) fluidManager.addNode(this.getBlockPos());
-                }
                 if (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR) {
                     if (!energyManager.hasNode(this.getBlockPos())) energyManager.addNode(this.getBlockPos());
                 }
             } else if (wasNetworked && !isNetworked) {
-                fluidManager.removeNode(this.getBlockPos());
                 energyManager.removeNode(this.getBlockPos());
             }
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
@@ -83,10 +79,6 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
     public void onLoad() {
         super.onLoad();
         if (this.level != null && !this.level.isClientSide && isNetworkedRole(this.role)) {
-            if (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT || role == PartRole.FLUID_LADDER) {
-                FluidNetworkManager fluidManager = FluidNetworkManager.get((ServerLevel) this.level);
-                if (!fluidManager.hasNode(this.getBlockPos())) fluidManager.addNode(this.getBlockPos());
-            }
             if (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR) {
                 com.trd.api.energy.EnergyNetworkManager energyManager = com.trd.api.energy.EnergyNetworkManager.get((ServerLevel) this.level);
                 if (!energyManager.hasNode(this.getBlockPos())) energyManager.addNode(this.getBlockPos());
@@ -98,7 +90,6 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
     public void setRemoved() {
         super.setRemoved();
         if (this.level != null && !this.level.isClientSide && isNetworkedRole(this.role)) {
-            FluidNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
             com.trd.api.energy.EnergyNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
         }
     }

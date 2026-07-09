@@ -155,45 +155,11 @@ public class FluidNetworkManager extends SavedData {
         BlockEntity be1 = level.getBlockEntity(pos1);
         BlockEntity be2 = level.getBlockEntity(pos2);
 
-        boolean isPipe1 = be1 instanceof FluidPipeBlockEntity;
-        boolean isPipe2 = be2 instanceof FluidPipeBlockEntity;
-
-        // 1. Если это две трубы - они должны иметь одинаковый фильтр
-        if (isPipe1 && isPipe2) {
-            net.minecraft.world.level.material.Fluid f1 = ((FluidPipeBlockEntity) be1).getFilterFluid();
-            net.minecraft.world.level.material.Fluid f2 = ((FluidPipeBlockEntity) be2).getFilterFluid();
+        // 1. Узлами сети могут быть ТОЛЬКО трубы. Если хотя бы один из блоков не труба - логически они не соединяются в одну сеть.
+        if (be1 instanceof FluidPipeBlockEntity pipe1 && be2 instanceof FluidPipeBlockEntity pipe2) {
+            net.minecraft.world.level.material.Fluid f1 = pipe1.getFilterFluid();
+            net.minecraft.world.level.material.Fluid f2 = pipe2.getFilterFluid();
             return f1 == f2;
-        }
-
-        // --- ФИКС ДЛЯ МУЛЬТИБЛОКОВ ---
-        // Если чанк контроллера выгружен, getCapability() вернет empty.
-        // Поэтому мы жестко проверяем роль части мультиблока, чтобы не разрывать сеть!
-        if (isPipe1 && be2 instanceof com.trd.multiblock.system.MultiblockPartEntity part2) {
-            com.trd.multiblock.system.PartRole role = part2.getPartRole();
-            if (role == com.trd.multiblock.system.PartRole.FLUID_CONNECTOR || role == com.trd.multiblock.system.PartRole.UNIVERSAL_CONNECTOR || role == com.trd.multiblock.system.PartRole.FLUID_INPUT || role == com.trd.multiblock.system.PartRole.FLUID_OUTPUT || role == com.trd.multiblock.system.PartRole.FLUID_LADDER) {
-                return true;
-            }
-        }
-        if (isPipe2 && be1 instanceof com.trd.multiblock.system.MultiblockPartEntity part1) {
-            com.trd.multiblock.system.PartRole role = part1.getPartRole();
-            if (role == com.trd.multiblock.system.PartRole.FLUID_CONNECTOR || role == com.trd.multiblock.system.PartRole.UNIVERSAL_CONNECTOR || role == com.trd.multiblock.system.PartRole.FLUID_INPUT || role == com.trd.multiblock.system.PartRole.FLUID_OUTPUT || role == com.trd.multiblock.system.PartRole.FLUID_LADDER) {
-                return true;
-            }
-        }
-
-        // 2. Если Труба соединяется с Бочкой (или любой другой машиной с баком)
-        if (isPipe1 && be2 != null) {
-            return be2.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.FLUID_HANDLER).isPresent();
-        }
-        if (isPipe2 && be1 != null) {
-            return be1.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.FLUID_HANDLER).isPresent();
-        }
-
-        // 3. Если две бочки/машины стоят впритык друг к другу
-        if (!isPipe1 && !isPipe2 && be1 != null && be2 != null) {
-            if (be1 instanceof com.trd.multiblock.system.MultiblockPartEntity || be2 instanceof com.trd.multiblock.system.MultiblockPartEntity) return true;
-            return be1.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.FLUID_HANDLER).isPresent() &&
-                    be2.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.FLUID_HANDLER).isPresent();
         }
 
         return false;

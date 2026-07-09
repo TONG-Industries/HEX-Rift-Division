@@ -116,7 +116,7 @@ public class SteamEngineBlockEntity extends KineticNodeBlockEntity {
     }
 
     private void serverTick(ServerLevel level) {
-        int maxConvert = 2000;
+        int maxConvert = 100; // 2k/s is 100 per tick (20 ticks per second)
         int availableToConvert = Math.min(steamTank.getFluidAmount(), lowPressureSteamTank.getSpace());
         int converted = Math.min(availableToConvert, maxConvert);
 
@@ -127,8 +127,8 @@ public class SteamEngineBlockEntity extends KineticNodeBlockEntity {
                 FluidStack lowPressure = new FluidStack(com.trd.api.fluids.ModFluids.LOW_PRESSURE_STEAM_SOURCE.get(), amount);
                 lowPressureSteamTank.fill(lowPressure, IFluidHandler.FluidAction.EXECUTE);
 
-                long targetSpeed = amount / 2L;
-                long targetTorque = amount / 10L;
+                long targetSpeed = Math.min(amount * 10L, 750L);
+                long targetTorque = Math.min(amount * 2L, 80L);
 
                 if (currentSpeed != targetSpeed || currentTorque != targetTorque || !isGenerating) {
                     currentSpeed = targetSpeed;

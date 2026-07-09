@@ -144,8 +144,8 @@ public class SteamEngineVisual extends AbstractBlockEntityVisual<SteamEngineBloc
         // Вращаем коленвал
         crankshaft.rotateZ(currentAngle); 
         
-        // Сдвигаем модель в локальных осях, чтобы отцентрировать её вокруг оси вращения
-        crankshaft.translate(0.0f, -0.5625f, 0.0625f);
+        // Сдвигаем модель в локальных осях (вниз и на пол пикселя на юг)
+        crankshaft.translate(0.0f, -0.5625f, 0.03125f);
         crankshaft.setChanged();
 
         // Математика поршня
@@ -168,6 +168,9 @@ public class SteamEngineVisual extends AbstractBlockEntityVisual<SteamEngineBloc
         } else if (facing == Direction.SOUTH) {
             connectingRod.rotateY((float) Math.toRadians(180));
         }
+
+        // Сдвигаем вдоль оси (как у коленвала)
+        connectingRod.translate(0.0f, 0.0f, -0.0625f);
 
         // Основная ось вращения находится точно по центру (0.5, 0.5, 0.5).
         // Сдвигаем шатун на расстояние R (пин коленвала)

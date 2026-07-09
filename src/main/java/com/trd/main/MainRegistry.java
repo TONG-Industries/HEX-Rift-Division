@@ -256,6 +256,8 @@ public class MainRegistry {
             event.accept(ModBlocks.MOTOR_ELECTRO);
             event.accept(ModBlocks.TACHOMETER);
             event.accept(ModBlocks.STATOR_BLOCK);
+            event.accept(ModItems.COPPER_ROTOR.get());
+            event.accept(ModItems.COPPER_COIL.get());
             event.accept(ModItems.STEAM_ENGINE_ITEM);
             event.accept(ModBlocks.DROBITEL);
 
@@ -302,6 +304,9 @@ public class MainRegistry {
             event.accept(ModBlocks.FUEL_TANK_SMALL);
             event.accept(ModBlocks.FUEL_TANK_BIG);
 
+          event.accept(ModItems.BOILER_ITEM);
+        
+          event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
             event.accept(ModItems.PROTECTOR_STEEL);
             event.accept(ModItems.PROTECTOR_LEAD);
             event.accept(ModItems.PROTECTOR_TUNGSTEN);

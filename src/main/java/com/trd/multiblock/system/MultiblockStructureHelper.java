@@ -120,7 +120,7 @@ public class MultiblockStructureHelper {
                             foundControllerPositions.add(pos);
                         } else {
                             structureMap.put(pos, symbolMap.get(symbol));
-                            if (role == PartRole.LADDER && !currentPrefixes.isEmpty()) {
+                            if (role != null && role.isLadder() && !currentPrefixes.isEmpty()) {
                                 ladderDirs.put(pos, EnumSet.copyOf(currentPrefixes));
                             }
                         }

@@ -47,6 +47,15 @@ public class FluidPipeBlock extends Block implements EntityBlock, SimpleWaterlog
     public static final BooleanProperty NONE = BooleanProperty.create("none");
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
+    public static final java.util.Map<Direction, BooleanProperty> PROPERTY_BY_DIRECTION = java.util.Map.of(
+            Direction.NORTH, NORTH,
+            Direction.SOUTH, SOUTH,
+            Direction.EAST, EAST,
+            Direction.WEST, WEST,
+            Direction.UP, UP,
+            Direction.DOWN, DOWN
+    );
+
     private final PipeTier tier;
 
     private static final VoxelShape CORE = Block.box(5.0D, 5.0D, 5.0D, 11.0D, 11.0D, 11.0D);
@@ -146,35 +155,65 @@ public class FluidPipeBlock extends Block implements EntityBlock, SimpleWaterlog
             }
 
             if (player.isCrouching()) {
-                FluidNetwork network = FluidNetworkManager.get(serverLevel).getNetwork(pos);
-                if (network != null && !network.isEmpty()) {
-                    java.util.List<BlockPos> positionsToUpdate = new java.util.ArrayList<>();
-                    for (FluidNode node : network.getNodes()) positionsToUpdate.add(node.getPos());
+                BlockEntity startBe = level.getBlockEntity(pos);
+                if (!(startBe instanceof FluidPipeBlockEntity startPipe)) return InteractionResult.sidedSuccess(level.isClientSide);
+                Fluid originalFilter = startPipe.getFilterFluid();
 
-                    FluidNetworkManager manager = FluidNetworkManager.get(serverLevel);
-                    for (BlockPos nodePos : positionsToUpdate) manager.removeNode(nodePos);
-
-                    int updateCount = 0;
-                    for (BlockPos nodePos : positionsToUpdate) {
-                        if (serverLevel.isLoaded(nodePos)) {
-                            BlockEntity nodeBe = serverLevel.getBlockEntity(nodePos);
-                            if (nodeBe instanceof FluidPipeBlockEntity pipeBE) {
-                                pipeBE.setFilterFluid(fluidToSet); updateCount++;
-                            } else if (nodeBe instanceof FluidBarrelBlockEntity barrelBE) {
-                                barrelBE.setFilter(selectedFluidId); updateCount++;
+                java.util.Set<BlockPos> positionsToUpdate = new java.util.HashSet<>();
+                java.util.Queue<BlockPos> queue = new java.util.LinkedList<>();
+                
+                queue.add(pos);
+                positionsToUpdate.add(pos);
+                
+                while (!queue.isEmpty()) {
+                    BlockPos currentPos = queue.poll();
+                    for (Direction dir : Direction.values()) {
+                        BlockPos neighborPos = currentPos.relative(dir);
+                        if (!positionsToUpdate.contains(neighborPos) && serverLevel.isLoaded(neighborPos)) {
+                            BlockEntity neighborBE = serverLevel.getBlockEntity(neighborPos);
+                            if (neighborBE instanceof FluidPipeBlockEntity neighborPipe) {
+                                if (neighborPipe.getFilterFluid() == originalFilter) {
+                                    queue.add(neighborPos);
+                                    positionsToUpdate.add(neighborPos);
+                                }
                             }
-                            manager.addNode(nodePos);
-                            serverLevel.getBlockState(nodePos).updateNeighbourShapes(serverLevel, nodePos, 3);
                         }
                     }
-                    boolean isResetting = selectedFluidId.equals("none");
-                    level.playSound(null, pos, isResetting ? SoundEvents.ENDERMAN_TELEPORT : SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 1.0F, isResetting ? 0.8F : 1.2F);
-                    String fluidName = isResetting ? "EMPTY" : Component.translatable(fluidToSet.getFluidType().getDescriptionId()).getString();
-                    player.displayClientMessage(Component.literal("§a" + (isResetting ? "Network filter reset." : "Network filter set: " + fluidName) + " §7(" + updateCount + " nodes)"), true);
                 }
+
+                FluidNetworkManager manager = FluidNetworkManager.get(serverLevel);
+                for (BlockPos nodePos : positionsToUpdate) {
+                    com.trd.api.fluids.system.FluidNetwork net = manager.getNetwork(nodePos);
+                    if (net != null) {
+                        net.invalidateFluidCache();
+                    }
+                }
+                for (BlockPos nodePos : positionsToUpdate) manager.removeNode(nodePos);
+
+                int updateCount = 0;
+                for (BlockPos nodePos : positionsToUpdate) {
+                    if (serverLevel.isLoaded(nodePos)) {
+                        BlockEntity nodeBe = serverLevel.getBlockEntity(nodePos);
+                        if (nodeBe instanceof FluidPipeBlockEntity pipeBE) {
+                            pipeBE.setFilterFluid(fluidToSet); 
+                            updateCount++;
+                        }
+                        manager.addNode(nodePos);
+                        serverLevel.getBlockState(nodePos).updateNeighbourShapes(serverLevel, nodePos, 3);
+                    }
+                }
+                
+                boolean isResetting = selectedFluidId.equals("none");
+                level.playSound(null, pos, isResetting ? SoundEvents.ENDERMAN_TELEPORT : SoundEvents.PLAYER_LEVELUP, SoundSource.BLOCKS, 1.0F, isResetting ? 0.8F : 1.2F);
+                String fluidName = isResetting ? "EMPTY" : Component.translatable(fluidToSet.getFluidType().getDescriptionId()).getString();
+                player.displayClientMessage(Component.literal("§a" + (isResetting ? "Pipe line filter reset." : "Pipe line filter set: " + fluidName) + " §7(" + updateCount + " pipes)"), true);
             } else {
                 if (level.getBlockEntity(pos) instanceof FluidPipeBlockEntity be) {
                     FluidNetworkManager manager = FluidNetworkManager.get(serverLevel);
+                    com.trd.api.fluids.system.FluidNetwork net = manager.getNetwork(pos);
+                    if (net != null) {
+                        net.invalidateFluidCache();
+                    }
                     manager.removeNode(pos);
                     be.setFilterFluid(fluidToSet);
                     manager.addNode(pos);

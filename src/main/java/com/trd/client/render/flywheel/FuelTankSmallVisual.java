@@ -64,8 +64,8 @@ public class FuelTankSmallVisual extends AbstractBlockEntityVisual<FuelTankSmall
         // Центрируем модель
         model.translate(-0.5f, -0.5f, -0.5f);
         
-        // Отрегулировано по просьбе: 0.5 по X и -0.5 по Z
-        model.translate(0.5f, 0.0f, -0.5f);
+        // Отрегулировано по просьбе: сдвинуть на 1 блок назад (на юг, +1.0f по Z)
+        model.translate(0.5f, 0.0f, 0.5f);
 
         model.setChanged();
     }

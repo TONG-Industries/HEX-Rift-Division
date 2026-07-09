@@ -31,12 +31,11 @@ public class FlywheelItem extends Item {
         BlockState state = level.getBlockState(pos);
 
         if (state.getBlock() instanceof ShaftBlock shaftBlock) {
-            // 1. ПРОВЕРКА: Вал должен быть абсолютно пустым!
-            if (state.getValue(ShaftBlock.GEAR_SIZE) != 0 || 
-                state.getValue(ShaftBlock.PULLEY_SIZE) != 0 || 
-                state.getValue(ShaftBlock.HAS_BEVEL_START) || 
-                state.getValue(ShaftBlock.HAS_BEVEL_END) ||
-                state.getValue(ShaftBlock.HAS_FLYWHEEL)) {
+            if (level.getBlockEntity(pos) instanceof ShaftBlockEntity targetBE) {
+                if (targetBE.hasCentralAttachment()) {
+                    return InteractionResult.PASS;
+                }
+            } else {
                 return InteractionResult.PASS;
             }
 

@@ -38,7 +38,7 @@ import java.util.Set;
  * Эффективность 1.00× … 2.00× в зависимости от воды в радиусе 10 блоков.
  * Равномерно балансирует пар/воду с соседними конденсаторами по боковым портам.
  */
-public class LowPressureSteamCondenserBlockEntity extends BlockEntity {
+public class LowPressureSteamCondenserBlockEntity extends FluidNodeBlockEntity {
 
     public static final int TANK_CAPACITY = 10_000;
     public static final int CONVERT_RATE  = 10; // базовая скорость, mB/тик
@@ -88,23 +88,6 @@ public class LowPressureSteamCondenserBlockEntity extends BlockEntity {
 
     public LowPressureSteamCondenserBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.LOW_PRESSURE_STEAM_CONDENSER_BE.get(), pos, state);
-    }
-
-    // ===== Регистрация в флюид-сети =====
-    @Override
-    public void onLoad() {
-        super.onLoad();
-        if (level != null && !level.isClientSide && level instanceof ServerLevel sl) {
-            FluidNetworkManager.get(sl).addNode(worldPosition);
-        }
-    }
-
-    @Override
-    public void setRemoved() {
-        super.setRemoved();
-        if (level != null && !level.isClientSide && level instanceof ServerLevel sl) {
-            FluidNetworkManager.get(sl).removeNode(worldPosition);
-        }
     }
 
     // ===== Серверный тик =====
