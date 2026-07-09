@@ -56,14 +56,14 @@ public class MotorElectroOverlay {
         int screenH = event.getWindow().getGuiScaledHeight();
 
         // Позиция: правый нижний угол возле прицела
-        // Прицел в центре (screenW/2, screenH/2). Смещаем: правее +12, ниже +10
+        // Прицел в центре (screenW/2, screenH/2). Смещаем: правее +12, ниже +4
         int panelW = 160;
         int lineH  = font.lineHeight + 2;
         int lines  = 5; // заголовок + 4 строки
         int panelH = lineH * lines + 4;
 
         int x = screenW / 2 + 12;
-        int y = screenH / 2 + 10;  // чуть ниже прицела
+        int y = screenH / 2 + 4;
 
         // Если панель выходит за правый край — сдвигаем влево
         if (x + panelW > screenW - 4) {

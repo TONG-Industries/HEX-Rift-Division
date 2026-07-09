@@ -30,9 +30,9 @@ public class TachometerOverlay {
         // Получаем BlockEntity на клиенте
         if (!(mc.level.getBlockEntity(pos) instanceof TachometerBlockEntity tachometer)) return;
 
-        // Позиция текста — справа от перекрестия
-        int centerX = screenWidth / 2 + 15;
-        int centerY = screenHeight / 2 - 20;
+        // Позиция текста — справа снизу от перекрестия
+        int centerX = screenWidth / 2 + 12;
+        int centerY = screenHeight / 2 + 4;
 
         int lineHeight = 12;
         int bgColor = 0x80000000; // Полупрозрачный черный фон
@@ -44,6 +44,9 @@ public class TachometerOverlay {
             // Нет вала — показываем предупреждение
             String noShaft = "⚠ No Shaft Inserted";
             int textWidth = mc.font.width(noShaft);
+            if (centerX + textWidth + 4 > screenWidth) {
+                centerX = screenWidth / 2 - textWidth - 12;
+            }
             guiGraphics.fill(centerX - 4, centerY - 4, centerX + textWidth + 4, centerY + lineHeight + 2, bgColor);
             guiGraphics.drawString(mc.font, noShaft, centerX, centerY, noShaftColor, true);
         } else {
@@ -53,7 +56,7 @@ public class TachometerOverlay {
             String torqueText = "Torque: " + tachometer.getNetworkConsumedTorque() + " / " + tachometer.getNetworkTorque() + " Nm";
             String inertiaText = String.format("Inertia: %.2f", tachometer.getNetworkInertia());
             String frictionText = String.format("Friction: x%.2f", tachometer.getNetworkFrictionMultiplier());
-            
+
             // Расчет стресса (нагрузки)
             double load = tachometer.getNetworkLoad();
             double stressValue = Math.max(0, (load - 1.0) / 0.25);
@@ -69,8 +72,12 @@ public class TachometerOverlay {
             int maxWidth = Math.max(mc.font.width(header),
                     Math.max(mc.font.width(speedText),
                             Math.max(mc.font.width(torqueText),
-                                    Math.max(mc.font.width(inertiaText), 
+                                    Math.max(mc.font.width(inertiaText),
                                             Math.max(mc.font.width(frictionText), mc.font.width(stressText))))));
+
+            if (centerX + maxWidth + 8 > screenWidth) {
+                centerX = screenWidth / 2 - maxWidth - 12;
+            }
 
             // Фон
             int bgX1 = centerX - 4;
@@ -84,10 +91,10 @@ public class TachometerOverlay {
 
             // Данные
             guiGraphics.drawString(mc.font, speedText, centerX, centerY + lineHeight, valueColor, true);
-            
+
             int torqueColor = (tachometer.getNetworkConsumedTorque() > tachometer.getNetworkTorque() && tachometer.getNetworkTorque() > 0) ? 0xFFFFAA00 : valueColor;
             guiGraphics.drawString(mc.font, torqueText, centerX, centerY + lineHeight * 2, torqueColor, true);
-            
+
             guiGraphics.drawString(mc.font, inertiaText, centerX, centerY + lineHeight * 3, valueColor, true);
             guiGraphics.drawString(mc.font, frictionText, centerX, centerY + lineHeight * 4, valueColor, true);
             guiGraphics.drawString(mc.font, stressText, centerX, centerY + lineHeight * 5, stressColor, true);

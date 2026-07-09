@@ -50,8 +50,8 @@ public class SteamEngineOverlay implements IGuiOverlay {
     }
 
     private void renderEngineHUD(GuiGraphics guiGraphics, SteamEngineBlockEntity engine, int width, int height, Font font) {
-        int x = width / 2;
-        int y = height / 2 + 15; // Чуть ниже прицела
+        int x = width / 2 + 12;
+        int y = height / 2 + 4;
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
@@ -59,7 +59,7 @@ public class SteamEngineOverlay implements IGuiOverlay {
         int steamCapacity = engine.steamTank.getCapacity();
         String steamPrefix = "Пар ";
         String steamSuffix = "§a-> §7" + steamAmount + "/" + steamCapacity + " mB";
-        
+
         int lowPressureAmount = engine.lowPressureSteamTank.getFluidAmount();
         int lowPressureCapacity = engine.lowPressureSteamTank.getCapacity();
         String lowPressurePrefix = "Отраб. Пар ";
@@ -78,13 +78,17 @@ public class SteamEngineOverlay implements IGuiOverlay {
 
         int maxWidth = Math.max(steamTextWidth, lowPressureTextWidth);
 
-        guiGraphics.fill(x - maxWidth / 2 - 4, y - 2, x + maxWidth / 2 + 4, y + 22, 0x90000000);
+        if (x + maxWidth + 4 > width) {
+            x = width / 2 - maxWidth - 12;
+        }
 
-        int steamX = x - steamTextWidth / 2;
+        guiGraphics.fill(x - 4, y - 2, x + maxWidth + 4, y + 22, 0x90000000);
+
+        int steamX = x;
         guiGraphics.drawString(font, steamPrefix, steamX, y, steamColor, true);
         guiGraphics.drawString(font, steamSuffix, steamX + steamPrefixWidth, y, 0xFFFFFF, true);
 
-        int lowPressureX = x - lowPressureTextWidth / 2;
+        int lowPressureX = x;
         guiGraphics.drawString(font, lowPressurePrefix, lowPressureX, y + 10, lowPressureColor, true);
         guiGraphics.drawString(font, lowPressureSuffix, lowPressureX + lowPressurePrefixWidth, y + 10, 0xFFFFFF, true);
     }

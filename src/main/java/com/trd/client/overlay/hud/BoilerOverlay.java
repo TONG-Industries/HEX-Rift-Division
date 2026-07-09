@@ -50,8 +50,8 @@ public class BoilerOverlay implements IGuiOverlay {
     }
 
     private void renderBoilerHUD(GuiGraphics guiGraphics, BoilerBlockEntity boiler, int width, int height, Font font) {
-        int x = width / 2;
-        int y = height / 2 + 15; // Чуть ниже прицела
+        int x = width / 2 + 12;
+        int y = height / 2 + 4;
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
@@ -59,7 +59,7 @@ public class BoilerOverlay implements IGuiOverlay {
         int waterCapacity = boiler.getWaterTank().getCapacity();
         String waterPrefix = "Вода ";
         String waterSuffix = "§a-> §7" + waterAmount + "/" + waterCapacity + " mB";
-        
+
         int steamAmount = boiler.getSteamTank().getFluidAmount();
         int steamCapacity = boiler.getSteamTank().getCapacity();
         String steamPrefix = "Пар ";
@@ -83,17 +83,21 @@ public class BoilerOverlay implements IGuiOverlay {
 
         int maxWidth = Math.max(Math.max(waterTextWidth, steamTextWidth), tempWidth);
 
-        guiGraphics.fill(x - maxWidth / 2 - 4, y - 2, x + maxWidth / 2 + 4, y + 32, 0x90000000);
+        if (x + maxWidth + 4 > width) {
+            x = width / 2 - maxWidth - 12;
+        }
 
-        int waterX = x - waterTextWidth / 2;
+        guiGraphics.fill(x - 4, y - 2, x + maxWidth + 4, y + 32, 0x90000000);
+
+        int waterX = x;
         guiGraphics.drawString(font, waterPrefix, waterX, y, waterColor, true);
         guiGraphics.drawString(font, waterSuffix, waterX + waterPrefixWidth, y, 0xFFFFFF, true);
 
-        int steamX = x - steamTextWidth / 2;
+        int steamX = x;
         guiGraphics.drawString(font, steamPrefix, steamX, y + 10, steamColor, true);
         guiGraphics.drawString(font, steamSuffix, steamX + steamPrefixWidth, y + 10, 0xFFFFFF, true);
 
         int tempColor = temp > 1000 ? ChatFormatting.DARK_RED.getColor() : ChatFormatting.GOLD.getColor();
-        guiGraphics.drawString(font, tempText, x - tempWidth / 2, y + 20, tempColor, true);
+        guiGraphics.drawString(font, tempText, x, y + 20, tempColor, true);
     }
 }
