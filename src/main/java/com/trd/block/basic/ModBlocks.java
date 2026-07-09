@@ -620,6 +620,9 @@ public class ModBlocks {
             () -> new BoilerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
 
    //ZAMAZ
+   public static final RegistryObject<Block> STEAM_ENGINE = BLOCKS.register("steam_engine",
+           () -> new com.trd.multiblock.industrial.SteamEngineBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+   
    public static final RegistryObject<Block> LOW_PRESSURE_STEAM_CONDENSER = registerBlock("low_pressure_steam_condenser",
            () -> new LowPressureSteamCondenserBlock(BlockBehaviour.Properties.of()
                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));

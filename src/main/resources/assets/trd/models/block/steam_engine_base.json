@@ -1,0 +1,9 @@
+{
+  "shading": true,
+  "loader": "forge:obj",
+  "model": "trd:models/block/steam_engine_base.obj",
+  "flip_v": true,
+  "textures": {
+    "default": "trd:block/steam_engine_base"
+  }
+}

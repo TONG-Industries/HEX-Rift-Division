@@ -302,6 +302,9 @@ public class ModItems {
     public static final RegistryObject<Item> BOILER_ITEM = ITEMS.register("boiler",
             () -> new MultiblockBlockItem(ModBlocks.BOILER.get(), new Item.Properties()));
 
+    public static final RegistryObject<Item> STEAM_ENGINE_ITEM = ITEMS.register("steam_engine",
+            () -> new MultiblockBlockItem(ModBlocks.STEAM_ENGINE.get(), new Item.Properties()));
+
     public static final RegistryObject<Item> SMELTER_ITEM = ITEMS.register("smelter",
             () -> new MultiblockBlockItem(ModBlocks.SMELTER.get(), new Item.Properties()));
 
