@@ -207,6 +207,7 @@ public class MainRegistry {
             event.accept(ModBlocks.DECO_BEAM.get());
             event.accept(ModBlocks.BEAM_BLOCK.get());
             event.accept(ModBlocks.STEEL_PROPS.get());
+            event.accept(ModBlocks.ROUND_LAMP.get());
 
         }
 

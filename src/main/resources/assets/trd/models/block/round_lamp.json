@@ -1,0 +1,14 @@
+{
+  "loader": "forge:obj",
+  "model": "trd:models/block/round_lamp.obj",
+  "flip_v": true,
+  "textures": {
+    "round_lamp_texture": "trd:block/round_lamp",
+    "particle": "trd:block/round_lamp"
+  },
+  "transform": {
+    "translation": [0.5, 0.0, 0.5],
+    "rotation": [0, 0, 0],
+    "scale": 1.0
+  }
+}
