@@ -30,7 +30,6 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
     private long networkTorque = 0;
     private long networkConsumedTorque = 0;
     private double networkInertia = 0;
-    private double networkFrictionMultiplier = 1.0;
     private double networkLoad = 0;
 
     public TachometerBlockEntity(BlockPos pos, BlockState state) {
@@ -47,7 +46,6 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
     public long getNetworkTorque() { return networkTorque; }
     public long getNetworkConsumedTorque() { return networkConsumedTorque; }
     public double getNetworkInertia() { return networkInertia; }
-    public double getNetworkFrictionMultiplier() { return networkFrictionMultiplier; }
     public double getNetworkLoad() { return networkLoad; }
 
     // --- Управление валом ---
@@ -67,7 +65,6 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
         this.networkTorque = 0;
         this.networkConsumedTorque = 0;
         this.networkInertia = 0;
-        this.networkFrictionMultiplier = 1.0;
         this.networkLoad = 0;
         setChanged();
         syncToClient();
@@ -78,12 +75,11 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
         if (level.isClientSide) return;
 
         if (!be.hasShaft) {
-            if (be.networkSpeed != 0 || be.networkTorque != 0 || be.networkConsumedTorque != 0 || be.networkInertia != 0 || be.networkFrictionMultiplier != 1.0) {
+            if (be.networkSpeed != 0 || be.networkTorque != 0 || be.networkConsumedTorque != 0 || be.networkInertia != 0) {
                 be.networkSpeed = 0;
                 be.networkTorque = 0;
                 be.networkConsumedTorque = 0;
                 be.networkInertia = 0;
-                be.networkFrictionMultiplier = 1.0;
                 be.networkLoad = 0;
                 be.setChanged();
                 be.syncToClient();
@@ -102,16 +98,14 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
                     ? (long) (net.getTotalConsumedTorque() / absScale)
                     : net.getTotalConsumedTorque();
             double newInertia = net.getTotalInertia();
-            double newFrictionMult = net.getFrictionMultiplier();
             double newLoad = net.getLoadFactor();
             
             if (newSpeed != be.networkSpeed || newTorque != be.networkTorque || newConsumedTorque != be.networkConsumedTorque ||
-                    newInertia != be.networkInertia || newFrictionMult != be.networkFrictionMultiplier || newLoad != be.networkLoad) {
+                    newInertia != be.networkInertia || newLoad != be.networkLoad) {
                 be.networkSpeed = newSpeed;
                 be.networkTorque = newTorque;
                 be.networkConsumedTorque = newConsumedTorque;
                 be.networkInertia = newInertia;
-                be.networkFrictionMultiplier = newFrictionMult;
                 be.networkLoad = newLoad;
                 be.setChanged();
                 be.syncToClient();
@@ -207,7 +201,6 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
         tag.putLong("NetTorque", this.networkTorque);
         tag.putLong("NetConsumedTorque", this.networkConsumedTorque);
         tag.putDouble("NetInertia", this.networkInertia);
-        tag.putDouble("NetFrictionMult", this.networkFrictionMultiplier);
         tag.putDouble("NetLoad", this.networkLoad);
         if (this.hasShaft && this.shaftMaterial != null && this.shaftDiameter != null) {
             tag.putString("ShaftMaterial", this.shaftMaterial.name());
@@ -223,7 +216,6 @@ public class TachometerBlockEntity extends KineticNodeBlockEntity {
         this.networkTorque = tag.getLong("NetTorque");
         this.networkConsumedTorque = tag.getLong("NetConsumedTorque");
         this.networkInertia = tag.getDouble("NetInertia");
-        this.networkFrictionMultiplier = tag.getDouble("NetFrictionMult");
         this.networkLoad = tag.getDouble("NetLoad");
         if (this.hasShaft) {
             String matName = tag.getString("ShaftMaterial").toLowerCase();

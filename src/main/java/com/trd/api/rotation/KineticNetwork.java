@@ -22,7 +22,6 @@ public class KineticNetwork {
     private long totalGeneratedTorque = 0;
     private long totalConsumedTorque = 0;
     private double totalInertia = 1.0;
-    private double bearingFrictionMultiplier = 1.0;
     private long targetNetworkSpeed = 0;
     private boolean needsRecalculation = true;
 
@@ -95,7 +94,6 @@ public class KineticNetwork {
     public void recalculate(ServerLevel level) {
         this.totalGeneratedTorque = 0;
         this.totalInertia = 0.0;
-        this.bearingFrictionMultiplier = 1.0;
         this.totalConsumedTorque = 0;
         this.targetNetworkSpeed = 0;
 
@@ -106,17 +104,14 @@ public class KineticNetwork {
                 float absScale = Math.abs(scale);
 
                 this.totalInertia += node.getInertiaContribution();
-                this.bearingFrictionMultiplier += node.getBearingFrictionCoefficient();
 
                 if (absScale > 0.001f) {
-                    this.totalConsumedTorque += (long) (node.getConsumedTorque() * node.getFrictionMultiplier() * absScale);
+                    this.totalConsumedTorque += (long) (node.getConsumedTorque() * absScale);
                 }
                 node.setSpeed(this.currentSpeed);
                 checkNodeFailure(level, pos, node);
             }
         }
-
-        this.totalConsumedTorque = (long) (this.totalConsumedTorque * this.bearingFrictionMultiplier);
 
         // 2. Опрашиваем генераторы (Сначала ищем максимальную скорость сети)
         long maxAbsSpeed = 0;
@@ -266,7 +261,6 @@ public class KineticNetwork {
     public void setCurrentSpeed(long speed) { this.currentSpeed = speed; }
     public long getTotalTorque() { return totalGeneratedTorque; }
     public double getTotalInertia() { return totalInertia; }
-    public double getFrictionMultiplier() { return bearingFrictionMultiplier; }
     public boolean isOverloaded() { return isOverloaded; }
     public long getTotalConsumedTorque() { return totalConsumedTorque; }
     public double getLoadFactor() { return loadFactor; }

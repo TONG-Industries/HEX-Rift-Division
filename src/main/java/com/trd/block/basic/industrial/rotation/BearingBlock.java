@@ -92,17 +92,6 @@ public class BearingBlock extends BaseEntityBlock {
 
 
 
-        // 3. СМАЗКА
-        if (itemInHand.is(net.minecraft.world.item.Items.SLIME_BALL)) {
-            if (!bearing.isLubricated()) {
-                if (!level.isClientSide) {
-                    bearing.setLubricated(true);
-                    if (!player.isCreative()) itemInHand.shrink(1);
-                    KineticNetworkManager.get((ServerLevel) level).updateNetworkAfterPlace(pos);
-                }
-                return InteractionResult.sidedSuccess(level.isClientSide);
-            }
-        }
 
         return super.use(state, level, pos, player, hand, hit);
     }

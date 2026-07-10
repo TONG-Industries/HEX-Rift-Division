@@ -742,11 +742,6 @@ public class ShaftBlockEntity extends KineticNodeBlockEntity {
         return inertia;
     }
 
-    @Override
-    public float getFrictionMultiplier() {
-        return hasRotor() ? 1.2f : 1.0f;
-    }
-
     /**
      * Вал не потребляет момент напрямую — каждый статор сам декларирует своё потребление
      * через NodeRole.CONSUMER и getConsumedTorque() в StatorBlockEntity.

@@ -179,8 +179,14 @@ public class ShaftBlock extends BaseEntityBlock {
             boolean isBevelStart = state.getValue(HAS_BEVEL_START);
             boolean isBevelEnd = state.getValue(HAS_BEVEL_END);
             boolean isFlywheel = state.getValue(HAS_FLYWHEEL);
+            boolean isRotor = false;
+            
+            BlockEntity preBe = level.getBlockEntity(pos);
+            if (preBe instanceof ShaftBlockEntity shaftBE) {
+                isRotor = shaftBE.hasRotor();
+            }
 
-            if (isGear || isPulley || isBevelStart || isBevelEnd || isFlywheel) {
+            if (isGear || isPulley || isBevelStart || isBevelEnd || isFlywheel || isRotor) {
                 if (!level.isClientSide) {
                     BlockEntity be = level.getBlockEntity(pos);
                     if (be instanceof ShaftBlockEntity shaftBE) {
@@ -216,6 +222,11 @@ public class ShaftBlock extends BaseEntityBlock {
                             Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), shaftBE.getAttachedFlywheel());
                             shaftBE.setAttachedFlywheel(net.minecraft.world.item.ItemStack.EMPTY);
                             level.setBlock(pos, state.setValue(HAS_FLYWHEEL, false), 3);
+                        } else if (isRotor && shaftBE.hasRotor()) {
+                            Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), shaftBE.getAttachedRotor());
+                            shaftBE.setAttachedRotor(net.minecraft.world.item.ItemStack.EMPTY);
+                            shaftBE.setChanged();
+                            level.sendBlockUpdated(pos, state, state, 3);
                         } else {
                             return InteractionResult.PASS; // Не попали ни по одной детали
                         }
@@ -390,6 +401,9 @@ public class ShaftBlock extends BaseEntityBlock {
                 }
                 if (shaftBE.hasFlywheel()) {
                     Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), shaftBE.getAttachedFlywheel());
+                }
+                if (shaftBE.hasRotor()) {
+                    Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), shaftBE.getAttachedRotor());
                 }
             }
             if (!level.isClientSide) {
