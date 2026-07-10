@@ -118,16 +118,16 @@ public class KineticNetwork {
 
         this.totalConsumedTorque = (long) (this.totalConsumedTorque * this.bearingFrictionMultiplier);
 
-        // 2. Опрашиваем генераторы
+        // 2. Опрашиваем генераторы (Сначала ищем максимальную скорость сети)
         long maxAbsSpeed = 0;
         
         java.util.Map<BlockPos, Long> genSpeeds = new java.util.HashMap<>();
+        java.util.Map<BlockPos, Long> genTorques = new java.util.HashMap<>();
         
         for (BlockPos genPos : generators) {
             if (level.isLoaded(genPos) && level.getBlockEntity(genPos) instanceof Rotational gen) {
-                totalGeneratedTorque += gen.getTorque();
-
                 long genSpeed = gen.getGeneratedSpeed();
+                long genTorque = gen.getTorque();
                 net.minecraft.world.level.block.state.BlockState state = level.getBlockState(genPos);
                 if (state.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING)) {
                     net.minecraft.core.Direction facing = state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING);
@@ -137,6 +137,7 @@ public class KineticNetwork {
                 }
                 
                 genSpeeds.put(genPos, genSpeed);
+                genTorques.put(genPos, genTorque);
 
                 if (Math.abs(genSpeed) > maxAbsSpeed) {
                     maxAbsSpeed = Math.abs(genSpeed);
@@ -145,14 +146,28 @@ public class KineticNetwork {
             }
         }
 
-        // Проверяем допуск 15%
-        long tolerance = (long) (maxAbsSpeed * 0.15);
+        // 3. Проверяем допуск 20% и суммируем мощность
+        long tolerance = (long) (maxAbsSpeed * 0.20);
         for (java.util.Map.Entry<BlockPos, Long> entry : genSpeeds.entrySet()) {
+            BlockPos pos = entry.getKey();
             long genSpeed = entry.getValue();
-            // Если разница скоростей больше допуска (с учетом знака/направления) — ломаем
-            if (Math.abs(genSpeed - targetNetworkSpeed) > tolerance) {
-                KineticNetworkManager.get(level).scheduleBreakage(entry.getKey());
+            
+            // Если двигатель не крутится, он просто идет вхолостую
+            if (genSpeed == 0) {
+                continue;
             }
+
+            // Если направление вращения противоположно сети — ломаем (серьезный конфликт механики)
+            if (targetNetworkSpeed != 0 && Math.signum(genSpeed) != Math.signum(targetNetworkSpeed)) {
+                KineticNetworkManager.get(level).scheduleBreakage(pos);
+                continue;
+            }
+
+            // Если скорость в пределах допуска +/- 20% от максимальной
+            if (Math.abs(genSpeed - targetNetworkSpeed) <= tolerance) {
+                this.totalGeneratedTorque += genTorques.get(pos);
+            }
+            // Иначе он просто крутится вхолостую (крутящий момент не добавляется)
         }
 
         // 3. OVERLOAD CHECK
