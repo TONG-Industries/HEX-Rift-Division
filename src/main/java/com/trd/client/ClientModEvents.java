@@ -98,6 +98,7 @@ public class ClientModEvents {
         MenuScreens.register(ModMenuTypes.FLUID_BARREL_MENU.get(), GUIFluidBarrel::new);
         MenuScreens.register(ModMenuTypes.HEATER_MENU.get(), GUIHeater::new);
         MenuScreens.register(ModMenuTypes.SMELTER_MENU.get(), GUISmelter::new);
+        MenuScreens.register(ModMenuTypes.FIREBOX_MENU.get(), GUIFirebox::new);
         MenuScreens.register(ModMenuTypes.FUEL_TANK_MENU.get(), GUIFuelTank::new);
         MenuScreens.register(ModMenuTypes.TROMBONE_MENU.get(), GUITrombone::new);
         

@@ -311,6 +311,12 @@ public class ModItems {
     public static final RegistryObject<Item> STEAM_ENGINE_ITEM = ITEMS.register("steam_engine",
             () -> new MultiblockBlockItem(ModBlocks.STEAM_ENGINE.get(), new Item.Properties()));
 
+    public static final RegistryObject<Item> FIREBOX = ITEMS.register("firebox",
+            () -> new MultiblockBlockItem(ModBlocks.FIREBOX.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> EXHAUST_TOWER = ITEMS.register("exhaust_tower",
+            () -> new MultiblockBlockItem(ModBlocks.EXHAUST_TOWER.get(), new Item.Properties()));
+
     public static final RegistryObject<Item> SMELTER_ITEM = ITEMS.register("smelter",
             () -> new MultiblockBlockItem(ModBlocks.SMELTER.get(), new Item.Properties()));
 

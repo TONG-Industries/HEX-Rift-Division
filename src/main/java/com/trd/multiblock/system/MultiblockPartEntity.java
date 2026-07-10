@@ -123,14 +123,21 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
                     return smallTank.getCapabilityForPart(cap, side, role);
                 } else if (be instanceof com.trd.multiblock.industrial.SteamEngineBlockEntity steamEngine) {
                     return steamEngine.getCapabilityForPart(cap, side, role);
+                } else if (be instanceof com.trd.multiblock.industrial.FireboxBlockEntity firebox) {
+                    return firebox.getCapabilityForPart(cap, side, role);
                 } else if (be instanceof IFluidTankProvider provider) {
                     return provider.getFluidHandlerCapability().cast();
                 }
-            } else if ((cap == com.trd.capability.ModCapabilities.ENERGY_PROVIDER || cap == com.trd.capability.ModCapabilities.ENERGY_CONNECTOR) 
+            } else if ((cap == com.trd.capability.ModCapabilities.ENERGY_PROVIDER || cap == com.trd.capability.ModCapabilities.ENERGY_CONNECTOR || cap == com.trd.capability.ModCapabilities.ENERGY_RECEIVER) 
                         && (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR)) {
                 BlockEntity be = level.getBlockEntity(controllerPos);
                 if (be != null) {
                     return be.getCapability(cap, side);
+                }
+            } else if (cap == ForgeCapabilities.ITEM_HANDLER && (role == PartRole.ITEM_INPUT || role == PartRole.ITEM_OUTPUT)) {
+                BlockEntity be = level.getBlockEntity(controllerPos);
+                if (be instanceof com.trd.multiblock.industrial.FireboxBlockEntity firebox) {
+                    return firebox.getCapabilityForPart(cap, side, role);
                 }
             }
         }

@@ -29,11 +29,7 @@ import com.trd.block.basic.industrial.rotation.ShaftBlock;
 import com.trd.block.basic.necrosis.hive.HiveRootsBlock;
 
 import com.trd.block.basic.weapons.MissileTurretBlock;
-import com.trd.multiblock.industrial.FuelTankBlock;
-import com.trd.multiblock.industrial.HeaterBlock;
-import com.trd.multiblock.industrial.BoilerBlock;
-
-import com.trd.multiblock.industrial.SmelterBlock;
+import com.trd.multiblock.industrial.*;
 
 import com.trd.multiblock.system.MultiblockPartBlock;
 import net.minecraft.core.BlockPos;
@@ -648,6 +644,14 @@ public class ModBlocks {
     public static final RegistryObject<Block> TROMBONE = BLOCKS.register("trombone",
             () -> new MissileTurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
                     .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> FIREBOX = BLOCKS.register("firebox",
+            () -> new FireboxBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .strength(4.0f).noOcclusion()));
+
+    public static final RegistryObject<Block> EXHAUST_TOWER = BLOCKS.register("exhaust_tower",
+            () -> new ExhaustTowerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
+                    .strength(4.0f).noOcclusion()));
 
     // Вспомогательный метод регистрации без предмета
     private static <T extends Block> RegistryObject<T> registerBlockOnly(String name, Supplier<T> block) {

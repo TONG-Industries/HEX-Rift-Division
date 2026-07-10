@@ -14,15 +14,11 @@ import com.trd.block.entity.industrial.rotation.BearingBlockEntity;
 import com.trd.block.entity.industrial.rotation.MotorElectroBlockEntity;
 import com.trd.block.entity.industrial.rotation.ShaftBlockEntity;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
-import com.trd.multiblock.industrial.FuelTankBlockEntity;
-import com.trd.multiblock.industrial.HeaterBlockEntity;
-import com.trd.multiblock.industrial.BoilerBlockEntity;
+import com.trd.multiblock.industrial.*;
 
 import com.trd.block.entity.industrial.casting.CastingDescentBlockEntity;
 import com.trd.block.entity.industrial.casting.CastingPotBlockEntity;
 import com.trd.block.entity.industrial.energy.*;
-
-import com.trd.multiblock.industrial.SmelterBlockEntity;
 
 import com.trd.multiblock.system.MultiblockPartEntity;
 import net.minecraft.world.level.block.Block;
@@ -218,6 +214,14 @@ public class ModBlockEntities {
                     () -> BlockEntityType.Builder.of(FluidBarrelBlockEntity::new,
                             CORRUPTED_BARREL.get(), LEAKING_BARREL.get(), IRON_BARREL.get(),
                             STEEL_BARREL.get(), LEAD_BARREL.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<FireboxBlockEntity>> FIREBOX_BE =
+            BLOCK_ENTITIES.register("firebox_be",
+                    () -> BlockEntityType.Builder.of(FireboxBlockEntity::new, ModBlocks.FIREBOX.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<ExhaustTowerBlockEntity>> EXHAUST_TOWER_BE =
+            BLOCK_ENTITIES.register("exhaust_tower_be",
+                    () -> BlockEntityType.Builder.of(ExhaustTowerBlockEntity::new, ModBlocks.EXHAUST_TOWER.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<LowPressureSteamCondenserBlockEntity>> LOW_PRESSURE_STEAM_CONDENSER_BE =
             BLOCK_ENTITIES.register("low_pressure_steam_condenser",

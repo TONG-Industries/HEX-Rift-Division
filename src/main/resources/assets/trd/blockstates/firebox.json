@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "trd:block/firebox"
+    },
+    "facing=east": {
+      "model": "trd:block/firebox",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "trd:block/firebox",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "trd:block/firebox",
+      "y": 270
+    }
+  }
+}

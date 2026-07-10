@@ -1,0 +1,8 @@
+{
+  "loader": "forge:obj",
+  "flip_v": true,
+  "model": "trd:models/block/firebox.obj",
+  "textures": {
+    "default": "trd:textures/block/firebox.png"
+  }
+}
