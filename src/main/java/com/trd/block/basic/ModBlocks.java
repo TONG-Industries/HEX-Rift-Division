@@ -8,6 +8,7 @@ import com.trd.api.rotation.ShaftMaterial;
 import com.trd.block.basic.conglomerate.ConglomerateBlock;
 import com.trd.block.basic.deco.BeamBlock;
 import com.trd.block.basic.deco.BeamCollisionBlock;
+import com.trd.block.basic.deco.LampBlock;
 import com.trd.block.basic.deco.SteelPropsBlock;
 import com.trd.block.basic.industrial.fluids.FluidBarrelBlock;
 
@@ -110,7 +111,6 @@ public class ModBlocks {
                     new ConnectorTier(100, 11, 0.08f, 8, 13)));
 
     //трубы
-
     public static final RegistryObject<Block> BRONZE_FLUID_PIPE = registerBlock("bronze_fluid_pipe",
             () -> new FluidPipeBlock(PipeTier.BRONZE, BlockBehaviour.Properties.copy(Blocks.COPPER_BLOCK).noOcclusion()));
 
@@ -553,6 +553,14 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> NUCLEAR_CHARGE = registerBlock("nuclear_charge",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE)));
+
+    public static final RegistryObject<Block> ROUND_LAMP = registerBlock("round_lamp",
+            () -> new LampBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion()
+                    .lightLevel(state -> 15)));
 
     //СЕКВОЯ
     public static final RegistryObject<Block> SEQUOIA_BARK = registerBlock("sequoia_bark",

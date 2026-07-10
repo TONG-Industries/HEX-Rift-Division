@@ -530,7 +530,7 @@ public class GUITrombone extends AbstractContainerScreen<TromboneMenu> {
         if (isHovering(180, 27, 16, 52, mouseX, mouseY)) {
             int energy = this.menu.getDataSlot(0);
             int maxEnergy = this.menu.getDataSlot(1);
-            guiGraphics.renderTooltip(this.font, Component.literal(String.format("%d / %d HE", energy, maxEnergy)), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal(String.format("%d / %d JE", energy, maxEnergy)), mouseX, mouseY);
         }
     }
 }

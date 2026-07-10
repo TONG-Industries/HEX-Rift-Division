@@ -194,14 +194,14 @@ public class GUIMachineBattery extends AbstractContainerScreen<MachineBatteryMen
 
             String energyStr = EnergyFormatter.format(energy);
             String maxEnergyStr = EnergyFormatter.format(maxEnergy);
-            tooltip.add(Component.literal(energyStr + " / " + maxEnergyStr + " HE"));
+            tooltip.add(Component.literal(energyStr + " / " + maxEnergyStr + " JE"));
 
             String deltaText = (delta >= 0 ? "+" : "") + EnergyFormatter.formatRate(delta);
             ChatFormatting deltaColor = delta > 0 ? ChatFormatting.GREEN : (delta < 0 ? ChatFormatting.RED : ChatFormatting.YELLOW);
             tooltip.add(Component.literal(deltaText).withStyle(deltaColor));
 
             long deltaPerSecond = delta * 20;
-            String deltaPerSecondText = (deltaPerSecond >= 0 ? "+" : "") + EnergyFormatter.formatWithUnit(deltaPerSecond, "HE/s");
+            String deltaPerSecondText = (deltaPerSecond >= 0 ? "+" : "") + EnergyFormatter.formatWithUnit(deltaPerSecond, "JE/s");
             tooltip.add(Component.literal(deltaPerSecondText).withStyle(deltaColor));
 
             pGuiGraphics.renderTooltip(this.font, tooltip, Optional.empty(), pMouseX, pMouseY);
@@ -249,8 +249,8 @@ public class GUIMachineBattery extends AbstractContainerScreen<MachineBatteryMen
             if (filledCells > 0) {
                 List<Component> tooltip = new ArrayList<>();
                 long speed = menu.getUnchargingSpeed(); // скорость разрядки
-                tooltip.add(Component.literal("§cСкорость разрядки: " + EnergyFormatter.format(speed) + " HE/t"));
-                tooltip.add(Component.literal("§7(" + EnergyFormatter.format(speed * 20) + " HE/s)").withStyle(ChatFormatting.GRAY));
+                tooltip.add(Component.literal("§cСкорость разрядки: " + EnergyFormatter.format(speed) + " JE/t"));
+                tooltip.add(Component.literal("§7(" + EnergyFormatter.format(speed * 20) + " JE/s)").withStyle(ChatFormatting.GRAY));
                 pGuiGraphics.renderTooltip(this.font, tooltip, Optional.empty(), pMouseX, pMouseY);
             }
         }
@@ -261,8 +261,8 @@ public class GUIMachineBattery extends AbstractContainerScreen<MachineBatteryMen
             if (filledCells > 0) {
                 List<Component> tooltip = new ArrayList<>();
                 long speed = menu.getChargingSpeed(); // скорость зарядки
-                tooltip.add(Component.literal("§aСкорость зарядки: " + EnergyFormatter.format(speed) + " HE/t"));
-                tooltip.add(Component.literal("§7(" + EnergyFormatter.format(speed * 20) + " HE/s)").withStyle(ChatFormatting.GRAY));
+                tooltip.add(Component.literal("§aСкорость зарядки: " + EnergyFormatter.format(speed) + " JE/t"));
+                tooltip.add(Component.literal("§7(" + EnergyFormatter.format(speed * 20) + " JE/s)").withStyle(ChatFormatting.GRAY));
                 pGuiGraphics.renderTooltip(this.font, tooltip, Optional.empty(), pMouseX, pMouseY);
             }
         }

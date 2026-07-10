@@ -1,5 +1,6 @@
 package com.trd.multiblock.industrial;
 
+import com.trd.block.basic.ModBlocks;
 import com.trd.block.entity.ModBlockEntities;
 import com.trd.item.ModItems;
 import com.trd.menu.industrial.HeaterMenu;
@@ -27,8 +28,234 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
+import java.util.*;
 
 public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
+
+    // ═══════════════════════════════════════════════════════
+    // СТРУКТУРА ДАННЫХ О ТОПЛИВЕ (единый источник правды)
+    // ═══════════════════════════════════════════════════════
+
+    public record FuelTierInfo(
+            int tier,
+            float heatPerTick,
+            int burnTicks,
+            int ashChance,
+            Component displayName
+    ) {
+        public int getBurnSeconds() {
+            return burnTicks / 20;
+        }
+    }
+
+    private static final List<FuelTierInfo> TIER_INFOS = List.of(
+            new FuelTierInfo(0, 1f, 125, 0,
+                    Component.translatable("gui.trd.heater.tier0")),
+            new FuelTierInfo(1, 2f, 250, 0,
+                    Component.translatable("gui.trd.heater.tier1")),
+            new FuelTierInfo(2, 3f, 800, 40,
+                    Component.translatable("gui.trd.heater.tier2")),
+            new FuelTierInfo(3, 4f, 2400, 60,
+                    Component.translatable("gui.trd.heater.tier3")),
+            new FuelTierInfo(4, 5f, 3600, 80,
+                    Component.translatable("gui.trd.heater.tier4")),
+            new FuelTierInfo(5, 6f, 4800, 100,
+                    Component.translatable("gui.trd.heater.tier5"))
+    );
+
+    // Предметы по тирам — единый источник правды для GUI и логики
+    @SuppressWarnings("unchecked")
+    private static final List<ItemStack>[] FUEL_ITEMS_BY_TIER = new List[6];
+
+    static {
+        // ========== ТИР 0: Дешёвое деревянное топливо ==========
+        FUEL_ITEMS_BY_TIER[0] = Arrays.asList(
+                new ItemStack(Items.STICK), new ItemStack(Items.SCAFFOLDING),
+                new ItemStack(Items.OAK_PLANKS), new ItemStack(Items.SPRUCE_PLANKS),
+                new ItemStack(Items.BIRCH_PLANKS), new ItemStack(Items.JUNGLE_PLANKS),
+                new ItemStack(Items.ACACIA_PLANKS), new ItemStack(Items.DARK_OAK_PLANKS),
+                new ItemStack(Items.MANGROVE_PLANKS), new ItemStack(Items.CHERRY_PLANKS),
+                new ItemStack(Items.BAMBOO_PLANKS), new ItemStack(Items.BAMBOO_MOSAIC),
+                new ItemStack(Items.OAK_SLAB), new ItemStack(Items.SPRUCE_SLAB),
+                new ItemStack(Items.BIRCH_SLAB), new ItemStack(Items.JUNGLE_SLAB),
+                new ItemStack(Items.ACACIA_SLAB), new ItemStack(Items.DARK_OAK_SLAB),
+                new ItemStack(Items.MANGROVE_SLAB), new ItemStack(Items.CHERRY_SLAB),
+                new ItemStack(Items.BAMBOO_SLAB), new ItemStack(Items.BAMBOO_MOSAIC_SLAB),
+                new ItemStack(Items.OAK_STAIRS), new ItemStack(Items.SPRUCE_STAIRS),
+                new ItemStack(Items.BIRCH_STAIRS), new ItemStack(Items.JUNGLE_STAIRS),
+                new ItemStack(Items.ACACIA_STAIRS), new ItemStack(Items.DARK_OAK_STAIRS),
+                new ItemStack(Items.MANGROVE_STAIRS), new ItemStack(Items.CHERRY_STAIRS),
+                new ItemStack(Items.BAMBOO_STAIRS), new ItemStack(Items.BAMBOO_MOSAIC_STAIRS),
+                new ItemStack(Items.OAK_FENCE), new ItemStack(Items.SPRUCE_FENCE),
+                new ItemStack(Items.BIRCH_FENCE), new ItemStack(Items.JUNGLE_FENCE),
+                new ItemStack(Items.ACACIA_FENCE), new ItemStack(Items.DARK_OAK_FENCE),
+                new ItemStack(Items.MANGROVE_FENCE), new ItemStack(Items.CHERRY_FENCE),
+                new ItemStack(Items.BAMBOO_FENCE),
+                new ItemStack(Items.OAK_FENCE_GATE), new ItemStack(Items.SPRUCE_FENCE_GATE),
+                new ItemStack(Items.BIRCH_FENCE_GATE), new ItemStack(Items.JUNGLE_FENCE_GATE),
+                new ItemStack(Items.ACACIA_FENCE_GATE), new ItemStack(Items.DARK_OAK_FENCE_GATE),
+                new ItemStack(Items.MANGROVE_FENCE_GATE), new ItemStack(Items.CHERRY_FENCE_GATE),
+                new ItemStack(Items.BAMBOO_FENCE_GATE),
+                new ItemStack(Items.OAK_DOOR), new ItemStack(Items.SPRUCE_DOOR),
+                new ItemStack(Items.BIRCH_DOOR), new ItemStack(Items.JUNGLE_DOOR),
+                new ItemStack(Items.ACACIA_DOOR), new ItemStack(Items.DARK_OAK_DOOR),
+                new ItemStack(Items.MANGROVE_DOOR), new ItemStack(Items.CHERRY_DOOR),
+                new ItemStack(Items.BAMBOO_DOOR),
+                new ItemStack(Items.OAK_TRAPDOOR), new ItemStack(Items.SPRUCE_TRAPDOOR),
+                new ItemStack(Items.BIRCH_TRAPDOOR), new ItemStack(Items.JUNGLE_TRAPDOOR),
+                new ItemStack(Items.ACACIA_TRAPDOOR), new ItemStack(Items.DARK_OAK_TRAPDOOR),
+                new ItemStack(Items.MANGROVE_TRAPDOOR), new ItemStack(Items.CHERRY_TRAPDOOR),
+                new ItemStack(Items.BAMBOO_TRAPDOOR),
+                new ItemStack(Items.OAK_BUTTON), new ItemStack(Items.SPRUCE_BUTTON),
+                new ItemStack(Items.BIRCH_BUTTON), new ItemStack(Items.JUNGLE_BUTTON),
+                new ItemStack(Items.ACACIA_BUTTON), new ItemStack(Items.DARK_OAK_BUTTON),
+                new ItemStack(Items.MANGROVE_BUTTON), new ItemStack(Items.CHERRY_BUTTON),
+                new ItemStack(Items.BAMBOO_BUTTON),
+                new ItemStack(Items.OAK_PRESSURE_PLATE), new ItemStack(Items.SPRUCE_PRESSURE_PLATE),
+                new ItemStack(Items.BIRCH_PRESSURE_PLATE), new ItemStack(Items.JUNGLE_PRESSURE_PLATE),
+                new ItemStack(Items.ACACIA_PRESSURE_PLATE), new ItemStack(Items.DARK_OAK_PRESSURE_PLATE),
+                new ItemStack(Items.MANGROVE_PRESSURE_PLATE), new ItemStack(Items.CHERRY_PRESSURE_PLATE),
+                new ItemStack(Items.BAMBOO_PRESSURE_PLATE),
+                new ItemStack(Items.OAK_SIGN), new ItemStack(Items.SPRUCE_SIGN),
+                new ItemStack(Items.BIRCH_SIGN), new ItemStack(Items.JUNGLE_SIGN),
+                new ItemStack(Items.ACACIA_SIGN), new ItemStack(Items.DARK_OAK_SIGN),
+                new ItemStack(Items.MANGROVE_SIGN), new ItemStack(Items.CHERRY_SIGN),
+                new ItemStack(Items.BAMBOO_SIGN), new ItemStack(Items.OAK_HANGING_SIGN),
+                new ItemStack(Items.SPRUCE_HANGING_SIGN), new ItemStack(Items.BIRCH_HANGING_SIGN),
+                new ItemStack(Items.JUNGLE_HANGING_SIGN), new ItemStack(Items.ACACIA_HANGING_SIGN),
+                new ItemStack(Items.DARK_OAK_HANGING_SIGN), new ItemStack(Items.MANGROVE_HANGING_SIGN),
+                new ItemStack(Items.CHERRY_HANGING_SIGN), new ItemStack(Items.BAMBOO_HANGING_SIGN),
+                new ItemStack(Items.OAK_LOG), new ItemStack(Items.SPRUCE_LOG),
+                new ItemStack(Items.BIRCH_LOG), new ItemStack(Items.JUNGLE_LOG),
+                new ItemStack(Items.ACACIA_LOG), new ItemStack(Items.DARK_OAK_LOG),
+                new ItemStack(Items.MANGROVE_LOG), new ItemStack(Items.CHERRY_LOG),
+                new ItemStack(Items.BAMBOO_BLOCK), new ItemStack(Items.STRIPPED_BAMBOO_BLOCK),
+                new ItemStack(Items.STRIPPED_OAK_LOG), new ItemStack(Items.STRIPPED_SPRUCE_LOG),
+                new ItemStack(Items.STRIPPED_BIRCH_LOG), new ItemStack(Items.STRIPPED_JUNGLE_LOG),
+                new ItemStack(Items.STRIPPED_ACACIA_LOG), new ItemStack(Items.STRIPPED_DARK_OAK_LOG),
+                new ItemStack(Items.STRIPPED_MANGROVE_LOG), new ItemStack(Items.STRIPPED_CHERRY_LOG),
+                new ItemStack(Items.OAK_WOOD), new ItemStack(Items.SPRUCE_WOOD),
+                new ItemStack(Items.BIRCH_WOOD), new ItemStack(Items.JUNGLE_WOOD),
+                new ItemStack(Items.ACACIA_WOOD), new ItemStack(Items.DARK_OAK_WOOD),
+                new ItemStack(Items.MANGROVE_WOOD), new ItemStack(Items.CHERRY_WOOD),
+                new ItemStack(Items.STRIPPED_OAK_WOOD), new ItemStack(Items.STRIPPED_SPRUCE_WOOD),
+                new ItemStack(Items.STRIPPED_BIRCH_WOOD), new ItemStack(Items.STRIPPED_JUNGLE_WOOD),
+                new ItemStack(Items.STRIPPED_ACACIA_WOOD), new ItemStack(Items.STRIPPED_DARK_OAK_WOOD),
+                new ItemStack(Items.STRIPPED_MANGROVE_WOOD), new ItemStack(Items.STRIPPED_CHERRY_WOOD),
+                new ItemStack(Items.BOWL), new ItemStack(Items.NOTE_BLOCK),
+                new ItemStack(Items.JUKEBOX), new ItemStack(Items.BOOKSHELF),
+                new ItemStack(Items.CHISELED_BOOKSHELF), new ItemStack(Items.COMPOSTER),
+                new ItemStack(Items.BARREL), new ItemStack(Items.CRAFTING_TABLE),
+                new ItemStack(Items.CHEST), new ItemStack(Items.TRAPPED_CHEST),
+                new ItemStack(Items.OAK_BOAT), new ItemStack(Items.SPRUCE_BOAT),
+                new ItemStack(Items.BIRCH_BOAT), new ItemStack(Items.JUNGLE_BOAT),
+                new ItemStack(Items.ACACIA_BOAT), new ItemStack(Items.DARK_OAK_BOAT),
+                new ItemStack(Items.MANGROVE_BOAT), new ItemStack(Items.CHERRY_BOAT),
+                new ItemStack(Items.BAMBOO_RAFT), new ItemStack(Items.OAK_CHEST_BOAT),
+                new ItemStack(Items.SPRUCE_CHEST_BOAT), new ItemStack(Items.BIRCH_CHEST_BOAT),
+                new ItemStack(Items.JUNGLE_CHEST_BOAT), new ItemStack(Items.ACACIA_CHEST_BOAT),
+                new ItemStack(Items.DARK_OAK_CHEST_BOAT), new ItemStack(Items.MANGROVE_CHEST_BOAT),
+                new ItemStack(Items.CHERRY_CHEST_BOAT), new ItemStack(Items.BAMBOO_CHEST_RAFT),
+                new ItemStack(Items.FLETCHING_TABLE), new ItemStack(Items.SMITHING_TABLE),
+                new ItemStack(Items.CARTOGRAPHY_TABLE), new ItemStack(Items.LOOM),
+                new ItemStack(Items.ITEM_FRAME), new ItemStack(Items.GLOW_ITEM_FRAME),
+                new ItemStack(Items.PAINTING),
+                new ItemStack(Items.WHITE_BED), new ItemStack(Items.ORANGE_BED),
+                new ItemStack(Items.MAGENTA_BED), new ItemStack(Items.LIGHT_BLUE_BED),
+                new ItemStack(Items.YELLOW_BED), new ItemStack(Items.LIME_BED),
+                new ItemStack(Items.PINK_BED), new ItemStack(Items.GRAY_BED),
+                new ItemStack(Items.LIGHT_GRAY_BED), new ItemStack(Items.CYAN_BED),
+                new ItemStack(Items.PURPLE_BED), new ItemStack(Items.BLUE_BED),
+                new ItemStack(Items.BROWN_BED), new ItemStack(Items.GREEN_BED),
+                new ItemStack(Items.RED_BED), new ItemStack(Items.BLACK_BED),
+                new ItemStack(Items.WOODEN_SWORD), new ItemStack(Items.WOODEN_PICKAXE),
+                new ItemStack(Items.WOODEN_AXE), new ItemStack(Items.WOODEN_SHOVEL),
+                new ItemStack(Items.WOODEN_HOE), new ItemStack(Items.SHIELD),
+                new ItemStack(Items.BOW), new ItemStack(Items.CROSSBOW),
+                new ItemStack(Items.FISHING_ROD),
+                new ItemStack(Items.CAMPFIRE), new ItemStack(Items.SOUL_CAMPFIRE),
+                new ItemStack(Items.TORCH), new ItemStack(Items.SOUL_TORCH),
+                new ItemStack(Items.REDSTONE_TORCH),
+                new ItemStack(ModItems.FUEL_ASH.get()),
+                new ItemStack(ModItems.ROPE.get()),
+                new ItemStack(ModItems.WOODEN_HANDLE.get()),
+                new ItemStack(Item.byBlock(ModBlocks.SEQUOIA_BARK.get())),
+                new ItemStack(Item.byBlock(ModBlocks.SEQUOIA_HEARTWOOD.get()))
+        );
+
+        // ========== ТИР 1: Обычное топливо ==========
+        FUEL_ITEMS_BY_TIER[1] = Arrays.asList(
+                new ItemStack(Items.COAL),
+                new ItemStack(Items.CHARCOAL),
+                new ItemStack(Items.BLAZE_POWDER),
+                new ItemStack(ModItems.LIGNITE.get())
+        );
+
+        // ========== ТИР 2: Blaze rod и прочее ==========
+        FUEL_ITEMS_BY_TIER[2] = Arrays.asList(
+                new ItemStack(Items.BLAZE_ROD),
+                new ItemStack(Items.MAGMA_CREAM),
+                new ItemStack(Items.PORKCHOP)
+        );
+
+        // ========== ТИР 3: Блок угля ==========
+        FUEL_ITEMS_BY_TIER[3] = Arrays.asList(
+                new ItemStack(Items.COAL_BLOCK),
+                new ItemStack(Item.byBlock(Blocks.MAGMA_BLOCK))
+        );
+
+        // ========== ТИР 4: Лава ==========
+        FUEL_ITEMS_BY_TIER[4] = Arrays.asList(
+                new ItemStack(Items.LAVA_BUCKET)
+        );
+
+        // ========== ТИР 5: Специальное ==========
+        FUEL_ITEMS_BY_TIER[5] = Arrays.asList(
+                new ItemStack(Items.DRAGON_BREATH)
+        );
+    }
+
+    // Быстрый поиск тира по предмету (для getFuelTier)
+    private static final Map<Item, Integer> ITEM_TO_TIER_MAP = new IdentityHashMap<>();
+
+    static {
+        for (int tier = 0; tier < FUEL_ITEMS_BY_TIER.length; tier++) {
+            List<ItemStack> items = FUEL_ITEMS_BY_TIER[tier];
+            if (items != null) {
+                for (ItemStack stack : items) {
+                    ITEM_TO_TIER_MAP.put(stack.getItem(), tier);
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ПУБЛИЧНЫЕ API ДЛЯ GUI
+    // ═══════════════════════════════════════════════════════
+
+    /** Возвращает информацию о тире по номеру */
+    public static FuelTierInfo getTierInfo(int tier) {
+        if (tier < 0 || tier >= TIER_INFOS.size()) return null;
+        return TIER_INFOS.get(tier);
+    }
+
+    /** Возвращает список предметов для указанного тира */
+    public static List<ItemStack> getFuelItemsForTier(int tier) {
+        if (tier < 0 || tier >= FUEL_ITEMS_BY_TIER.length) return Collections.emptyList();
+        List<ItemStack> list = FUEL_ITEMS_BY_TIER[tier];
+        return list != null ? list : Collections.emptyList();
+    }
+
+    /** Возвращает количество тиров */
+    public static int getTierCount() {
+        return TIER_INFOS.size();
+    }
+
+    /** Возвращает список всех тиров */
+    public static List<FuelTierInfo> getAllTierInfos() {
+        return TIER_INFOS;
+    }
+
     // Инвентарь с синхронизацией
     private final ItemStackHandler inventory = new ItemStackHandler(2) {
         @Override
@@ -48,14 +275,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
     };
 
     // Шансы выпадения золы по тирам (в процентах)
-    private static final int[] ASH_CHANCES = {
-            0,    // Тир 0: 0%
-            0,    // Тир 1: 0%
-            40,   // Тир 2: 40%
-            60,   // Тир 3: 60%
-            80,   // Тир 4: 80%
-            100   // Тир 5: 100%
-    };
+    private static final int[] ASH_CHANCES = {0, 0, 40, 60, 80, 100};
 
     // Данные для GUI (температура хранится как int * 10 для 1 знака после запятой)
     private final SimpleContainerData data = new SimpleContainerData(4);
@@ -69,14 +289,15 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
     public int getTemperatureScaled() {
         return (int) (temperature * 10.0f);
     }
+
     // {heatPerTick, burnTicks} - heatPerTick теперь float!
     private static final float[][] TIER_STATS = {
             {1f, 125},
             {2f, 250},
-            {3f, 500},
-            {4f, 800},
-            {6f, 1200},
-            {8f, 2400}
+            {3f, 800},
+            {4f, 2400},
+            {5f, 3600},
+            {6f, 4800}
     };
 
     private float temperature = 0.0f;
@@ -171,145 +392,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public int getFuelTier(ItemStack stack) {
-        Item item = stack.getItem();
-
-        // ========== ТИР 0: Дешёвое деревянное топливо ==========
-
-        // Палки и хлам
-        if (item == Items.STICK) return 0;
-        if (item == Items.SCAFFOLDING) return 0;
-        if (item == Items.OAK_PLANKS || item == Items.SPRUCE_PLANKS ||
-                item == Items.BIRCH_PLANKS || item == Items.JUNGLE_PLANKS ||
-                item == Items.ACACIA_PLANKS || item == Items.DARK_OAK_PLANKS ||
-                item == Items.MANGROVE_PLANKS || item == Items.CHERRY_PLANKS ||
-                item == Items.BAMBOO_PLANKS || item == Items.BAMBOO_MOSAIC) return 0;
-        if (item == Items.OAK_SLAB || item == Items.SPRUCE_SLAB ||
-                item == Items.BIRCH_SLAB || item == Items.JUNGLE_SLAB ||
-                item == Items.ACACIA_SLAB || item == Items.DARK_OAK_SLAB ||
-                item == Items.MANGROVE_SLAB || item == Items.CHERRY_SLAB ||
-                item == Items.BAMBOO_SLAB || item == Items.BAMBOO_MOSAIC_SLAB) return 0;
-        if (item == Items.OAK_STAIRS || item == Items.SPRUCE_STAIRS ||
-                item == Items.BIRCH_STAIRS || item == Items.JUNGLE_STAIRS ||
-                item == Items.ACACIA_STAIRS || item == Items.DARK_OAK_STAIRS ||
-                item == Items.MANGROVE_STAIRS || item == Items.CHERRY_STAIRS ||
-                item == Items.BAMBOO_STAIRS || item == Items.BAMBOO_MOSAIC_STAIRS) return 0;
-        if (item == Items.OAK_FENCE || item == Items.SPRUCE_FENCE ||
-                item == Items.BIRCH_FENCE || item == Items.JUNGLE_FENCE ||
-                item == Items.ACACIA_FENCE || item == Items.DARK_OAK_FENCE ||
-                item == Items.MANGROVE_FENCE || item == Items.CHERRY_FENCE ||
-                item == Items.BAMBOO_FENCE) return 0;
-        if (item == Items.OAK_FENCE_GATE || item == Items.SPRUCE_FENCE_GATE ||
-                item == Items.BIRCH_FENCE_GATE || item == Items.JUNGLE_FENCE_GATE ||
-                item == Items.ACACIA_FENCE_GATE || item == Items.DARK_OAK_FENCE_GATE ||
-                item == Items.MANGROVE_FENCE_GATE || item == Items.CHERRY_FENCE_GATE ||
-                item == Items.BAMBOO_FENCE_GATE) return 0;
-        if (item == Items.OAK_DOOR || item == Items.SPRUCE_DOOR ||
-                item == Items.BIRCH_DOOR || item == Items.JUNGLE_DOOR ||
-                item == Items.ACACIA_DOOR || item == Items.DARK_OAK_DOOR ||
-                item == Items.MANGROVE_DOOR || item == Items.CHERRY_DOOR ||
-                item == Items.BAMBOO_DOOR) return 0;
-        if (item == Items.OAK_TRAPDOOR || item == Items.SPRUCE_TRAPDOOR ||
-                item == Items.BIRCH_TRAPDOOR || item == Items.JUNGLE_TRAPDOOR ||
-                item == Items.ACACIA_TRAPDOOR || item == Items.DARK_OAK_TRAPDOOR ||
-                item == Items.MANGROVE_TRAPDOOR || item == Items.CHERRY_TRAPDOOR ||
-                item == Items.BAMBOO_TRAPDOOR) return 0;
-        if (item == Items.OAK_BUTTON || item == Items.SPRUCE_BUTTON ||
-                item == Items.BIRCH_BUTTON || item == Items.JUNGLE_BUTTON ||
-                item == Items.ACACIA_BUTTON || item == Items.DARK_OAK_BUTTON ||
-                item == Items.MANGROVE_BUTTON || item == Items.CHERRY_BUTTON ||
-                item == Items.BAMBOO_BUTTON) return 0;
-        if (item == Items.OAK_PRESSURE_PLATE || item == Items.SPRUCE_PRESSURE_PLATE ||
-                item == Items.BIRCH_PRESSURE_PLATE || item == Items.JUNGLE_PRESSURE_PLATE ||
-                item == Items.ACACIA_PRESSURE_PLATE || item == Items.DARK_OAK_PRESSURE_PLATE ||
-                item == Items.MANGROVE_PRESSURE_PLATE || item == Items.CHERRY_PRESSURE_PLATE ||
-                item == Items.BAMBOO_PRESSURE_PLATE) return 0;
-        if (item == Items.OAK_SIGN || item == Items.SPRUCE_SIGN ||
-                item == Items.BIRCH_SIGN || item == Items.JUNGLE_SIGN ||
-                item == Items.ACACIA_SIGN || item == Items.DARK_OAK_SIGN ||
-                item == Items.MANGROVE_SIGN || item == Items.CHERRY_SIGN ||
-                item == Items.BAMBOO_SIGN ||  item == Items.OAK_HANGING_SIGN ||
-                item == Items.SPRUCE_HANGING_SIGN || item == Items.BIRCH_HANGING_SIGN ||
-                item == Items.JUNGLE_HANGING_SIGN || item == Items.ACACIA_HANGING_SIGN ||
-                item == Items.DARK_OAK_HANGING_SIGN || item == Items.MANGROVE_HANGING_SIGN ||
-                item == Items.CHERRY_HANGING_SIGN || item == Items.BAMBOO_HANGING_SIGN) return 0;
-        if (item == Items.OAK_LOG || item == Items.SPRUCE_LOG ||
-                item == Items.BIRCH_LOG || item == Items.JUNGLE_LOG ||
-                item == Items.ACACIA_LOG || item == Items.DARK_OAK_LOG ||
-                item == Items.MANGROVE_LOG || item == Items.CHERRY_LOG ||
-                item == Items.BAMBOO_BLOCK || // бамбук как бревно
-                item == Items.STRIPPED_OAK_LOG || item == Items.STRIPPED_SPRUCE_LOG ||
-                item == Items.STRIPPED_BIRCH_LOG || item == Items.STRIPPED_JUNGLE_LOG ||
-                item == Items.STRIPPED_ACACIA_LOG || item == Items.STRIPPED_DARK_OAK_LOG ||
-                item == Items.STRIPPED_MANGROVE_LOG || item == Items.STRIPPED_CHERRY_LOG ||
-                item == Items.STRIPPED_BAMBOO_BLOCK ||
-                item == Items.OAK_WOOD || item == Items.SPRUCE_WOOD ||
-                item == Items.BIRCH_WOOD || item == Items.JUNGLE_WOOD ||
-                item == Items.ACACIA_WOOD || item == Items.DARK_OAK_WOOD ||
-                item == Items.MANGROVE_WOOD || item == Items.CHERRY_WOOD ||
-                item == Items.STRIPPED_OAK_WOOD || item == Items.STRIPPED_SPRUCE_WOOD ||
-                item == Items.STRIPPED_BIRCH_WOOD || item == Items.STRIPPED_JUNGLE_WOOD ||
-                item == Items.STRIPPED_ACACIA_WOOD || item == Items.STRIPPED_DARK_OAK_WOOD ||
-                item == Items.STRIPPED_MANGROVE_WOOD || item == Items.STRIPPED_CHERRY_WOOD) return 0;
-        if (item == Items.BOWL) return 0;
-        if (item == Items.OAK_BOAT || item == Items.SPRUCE_BOAT ||
-                item == Items.BIRCH_BOAT || item == Items.JUNGLE_BOAT ||
-                item == Items.ACACIA_BOAT || item == Items.DARK_OAK_BOAT ||
-                item == Items.MANGROVE_BOAT || item == Items.CHERRY_BOAT ||
-                item == Items.BAMBOO_RAFT || item == Items.OAK_CHEST_BOAT ||
-                item == Items.SPRUCE_CHEST_BOAT || item == Items.BIRCH_CHEST_BOAT ||
-                item == Items.JUNGLE_CHEST_BOAT || item == Items.ACACIA_CHEST_BOAT ||
-                item == Items.DARK_OAK_CHEST_BOAT || item == Items.MANGROVE_CHEST_BOAT ||
-                item == Items.CHERRY_CHEST_BOAT || item == Items.BAMBOO_CHEST_RAFT) return 0;
-        if (item == Items.NOTE_BLOCK) return 0;
-        if (item == Items.JUKEBOX) return 0;
-        if (item == Items.BOOKSHELF) return 0;
-        if (item == Items.CHISELED_BOOKSHELF) return 0;
-        if (item == Items.COMPOSTER) return 0;
-        if (item == Items.BARREL) return 0;
-        if (item == Items.CHEST || item == Items.TRAPPED_CHEST) return 0;
-        if (item == Items.CRAFTING_TABLE) return 0;
-        if (item == Items.FLETCHING_TABLE) return 0;
-        if (item == Items.SMITHING_TABLE) return 0;
-        if (item == Items.CARTOGRAPHY_TABLE) return 0;
-        if (item == Items.LOOM) return 0;
-        if (item == Items.ITEM_FRAME) return 0;
-        if (item == Items.GLOW_ITEM_FRAME) return 0;
-        if (item == Items.PAINTING) return 0;
-        if (item == Items.WHITE_BED || item == Items.ORANGE_BED ||
-                item == Items.MAGENTA_BED || item == Items.LIGHT_BLUE_BED ||
-                item == Items.YELLOW_BED || item == Items.LIME_BED ||
-                item == Items.PINK_BED || item == Items.GRAY_BED ||
-                item == Items.LIGHT_GRAY_BED || item == Items.CYAN_BED ||
-                item == Items.PURPLE_BED || item == Items.BLUE_BED ||
-                item == Items.BROWN_BED || item == Items.GREEN_BED ||
-                item == Items.RED_BED || item == Items.BLACK_BED) return 0;
-        if (item == Items.WOODEN_SWORD || item == Items.WOODEN_PICKAXE ||
-                item == Items.WOODEN_AXE || item == Items.WOODEN_SHOVEL ||
-                item == Items.WOODEN_HOE) return 0;
-        if (item == Items.SHIELD) return 0;
-        if (item == Items.BOW) return 0;
-        if (item == Items.CROSSBOW) return 0;
-        if (item == Items.FISHING_ROD) return 0;
-        if (item == Items.CAMPFIRE || item == Items.SOUL_CAMPFIRE) return 0;
-        if (item == Items.TORCH || item == Items.SOUL_TORCH ||
-                item == Items.REDSTONE_TORCH) return 0;
-
-        // ========== ТИР 1: Обычное топливо ==========
-        if (item == Items.COAL || item == Items.CHARCOAL || item == Items.BLAZE_POWDER) return 1;
-
-        // ========== ТИР 2: Blaze rod и мясо ==========
-        if (item == Items.BLAZE_ROD || item == Items.MAGMA_CREAM || item == Items.PORKCHOP) return 2;
-
-        // ========== ТИР 3: Блок угля ==========
-        if (item == Item.byBlock(Blocks.COAL_BLOCK)) return 3;
-
-        // ========== ТИР 4: Лава ==========
-        if (item == Items.LAVA_BUCKET) return 4;
-
-        // ========== ТИР 5: Специальное ==========
-        if (item == ModItems.MORY_LAH.get() || item == Items.DRAGON_BREATH) return 5;
-
-        return -1;
+        return ITEM_TO_TIER_MAP.getOrDefault(stack.getItem(), -1);
     }
 
     public ItemStackHandler getInventory() {
@@ -322,7 +405,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
 
     // === ГЕТТЕРЫ С FLOAT ===
     public float getTemperature() { return temperature; }
-    public float getTemperatureDisplay() { return temperature; } // Для отображения в GUI
+    public float getTemperatureDisplay() { return temperature; }
     public int getBurnTime() { return burnTime; }
     public int getTotalBurnTime() { return totalBurnTime; }
     public boolean isBurning() { return burnTime > 0; }
@@ -331,7 +414,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("Inventory", inventory.serializeNBT());
-        tag.putFloat("Temperature", temperature);  // putFloat!
+        tag.putFloat("Temperature", temperature);
         tag.putInt("BurnTime", burnTime);
         tag.putInt("TotalBurnTime", totalBurnTime);
         tag.putInt("FuelTier", fuelTier);
@@ -341,12 +424,11 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
     public void load(CompoundTag tag) {
         super.load(tag);
         inventory.deserializeNBT(tag.getCompound("Inventory"));
-        temperature = tag.getFloat("Temperature");  // getFloat!
+        temperature = tag.getFloat("Temperature");
         burnTime = tag.getInt("BurnTime");
         totalBurnTime = tag.getInt("TotalBurnTime");
         fuelTier = tag.getInt("FuelTier");
 
-        // Восстанавливаем данные для GUI
         data.set(DATA_TEMP, (int) (temperature * 10.0f));
         data.set(DATA_BURN_TIME, burnTime);
         data.set(DATA_TOTAL_BURN_TIME, totalBurnTime);
@@ -368,7 +450,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
     public CompoundTag getUpdateTag() {
         CompoundTag tag = super.getUpdateTag();
         tag.put("Inventory", inventory.serializeNBT());
-        tag.putFloat("Temperature", temperature);  // putFloat!
+        tag.putFloat("Temperature", temperature);
         tag.putInt("BurnTime", burnTime);
         tag.putInt("TotalBurnTime", totalBurnTime);
         tag.putInt("FuelTier", fuelTier);
@@ -381,13 +463,12 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
         if (tag.contains("Inventory")) {
             inventory.deserializeNBT(tag.getCompound("Inventory"));
         }
-        if (tag.contains("Temperature", CompoundTag.TAG_FLOAT)) {  // Проверяем тип FLOAT
+        if (tag.contains("Temperature", CompoundTag.TAG_FLOAT)) {
             temperature = tag.getFloat("Temperature");
             burnTime = tag.getInt("BurnTime");
             totalBurnTime = tag.getInt("TotalBurnTime");
             fuelTier = tag.getInt("FuelTier");
 
-            // Обновляем данные для GUI/HUD
             data.set(DATA_TEMP, (int) (temperature * 10.0f));
             data.set(DATA_BURN_TIME, burnTime);
             data.set(DATA_TOTAL_BURN_TIME, totalBurnTime);

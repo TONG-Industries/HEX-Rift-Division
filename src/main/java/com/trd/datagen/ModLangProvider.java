@@ -99,6 +99,12 @@ public class ModLangProvider extends LanguageProvider {
             add("message.trd.selected_fluid", "Selected");
             add("tooltip.trd.no_fluid", "No fluid selected");
 
+            add("gui.trd.heater.tier0", "Tier 0");
+            add( "gui.trd.heater.tier1", "Tier I");
+            add("gui.trd.heater.tier2", "Tier II");
+            add( "gui.trd.heater.tier3", "Tier III");
+            add( "gui.trd.heater.tier4", "Tier IV");
+            add( "gui.trd.heater.tier5", "Tier V");
 
             addFluidTranslations("hydrogen_peroxide", "Пероксид водорода", null, "Hydrogen Peroxide");
             addFluidTranslations("sulfuric_acid", "Серная кислота", null, "Sulfuric Acid");
@@ -345,6 +351,13 @@ public class ModLangProvider extends LanguageProvider {
                 add("metal.trd.beryllium", "Бериллий");
                 add("metal.trd.tungsten", "Вольфрам");
                 add("metal.trd.neodymium", "Неодим");
+
+            add("gui.trd.heater.tier0", "Тир 0");
+            add( "gui.trd.heater.tier1", "Тир I");
+            add("gui.trd.heater.tier2", "Тир II");
+            add( "gui.trd.heater.tier3", "Тир III");
+            add( "gui.trd.heater.tier4", "Тир IV");
+            add( "gui.trd.heater.tier5", "Тир V");
 
                 add("item.trd.hot_ingot.tooltip", "§6§lРАСКАЛЁННЫЙ! §r§7(%s%%)");
                 add(ModBlocks.SEQUOIA_BARK.get(), "Кора секвойи");
