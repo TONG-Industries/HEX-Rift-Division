@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class BoilerBlockEntity extends BlockEntity {
     public static final float BOILING_POINT = 100.0f;
-    public static final float MAX_TEMP = 1500.0f;
+    public static final float MAX_TEMP = 600.0f;
     public static final float HEAT_COST_PER_MB = 0.5f;
     public static final int STEAM_MULTIPLIER = 1;
 
@@ -142,7 +142,7 @@ public class BoilerBlockEntity extends BlockEntity {
 
         // 4. Взрыв при превышении MAX_TEMP
         if (be.temperature >= MAX_TEMP) {
-            level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 5.0f, Level.ExplosionInteraction.BLOCK);
+            level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 10.0f, Level.ExplosionInteraction.TNT);
             level.removeBlock(pos, false);
             return;
         }

@@ -55,7 +55,6 @@ public class TachometerOverlay {
             String speedText = "Speed: " + Math.abs(tachometer.getNetworkSpeed()) + " RPM";
             String torqueText = "Torque: " + tachometer.getNetworkConsumedTorque() + " / " + tachometer.getNetworkTorque() + " Nm";
             String inertiaText = String.format("Inertia: %.2f", tachometer.getNetworkInertia());
-            String frictionText = String.format("Friction: x%.2f", tachometer.getNetworkFrictionMultiplier());
 
             // Расчет стресса (нагрузки)
             double load = tachometer.getNetworkLoad();
@@ -72,8 +71,7 @@ public class TachometerOverlay {
             int maxWidth = Math.max(mc.font.width(header),
                     Math.max(mc.font.width(speedText),
                             Math.max(mc.font.width(torqueText),
-                                    Math.max(mc.font.width(inertiaText),
-                                            Math.max(mc.font.width(frictionText), mc.font.width(stressText))))));
+                                    Math.max(mc.font.width(inertiaText), mc.font.width(stressText)))));
 
             if (centerX + maxWidth + 8 > screenWidth) {
                 centerX = screenWidth / 2 - maxWidth - 12;
@@ -83,7 +81,7 @@ public class TachometerOverlay {
             int bgX1 = centerX - 4;
             int bgY1 = centerY - 4;
             int bgX2 = centerX + maxWidth + 8;
-            int bgY2 = centerY + lineHeight * 6 + 4;
+            int bgY2 = centerY + lineHeight * 5 + 4;
             guiGraphics.fill(bgX1, bgY1, bgX2, bgY2, bgColor);
 
             // Заголовок
@@ -96,8 +94,7 @@ public class TachometerOverlay {
             guiGraphics.drawString(mc.font, torqueText, centerX, centerY + lineHeight * 2, torqueColor, true);
 
             guiGraphics.drawString(mc.font, inertiaText, centerX, centerY + lineHeight * 3, valueColor, true);
-            guiGraphics.drawString(mc.font, frictionText, centerX, centerY + lineHeight * 4, valueColor, true);
-            guiGraphics.drawString(mc.font, stressText, centerX, centerY + lineHeight * 5, stressColor, true);
+            guiGraphics.drawString(mc.font, stressText, centerX, centerY + lineHeight * 4, stressColor, true);
         }
     };
 }

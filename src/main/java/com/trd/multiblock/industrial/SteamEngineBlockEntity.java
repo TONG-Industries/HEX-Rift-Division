@@ -145,8 +145,8 @@ public class SteamEngineBlockEntity extends KineticNodeBlockEntity {
                 isGenerating = false;
                 requestKineticRecalculation();
                 setChanged();
-                this.speed = 0;
-                this.lastSyncedSpeed = 0;
+                // We do NOT reset this.speed here anymore.
+                // The network will update it with inertia in its own tick.
             }
         }
 
@@ -169,7 +169,6 @@ public class SteamEngineBlockEntity extends KineticNodeBlockEntity {
 
     @Override
     public long getVisualSpeed() {
-        if (!isGenerating) return 0;
         BlockState state = getBlockState();
         if (!state.hasProperty(SteamEngineBlock.FACING)) return 0;
         Direction facing = state.getValue(SteamEngineBlock.FACING);
