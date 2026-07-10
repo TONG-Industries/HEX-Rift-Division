@@ -68,6 +68,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
         cubeAllWithItem(ModBlocks.CONVERTER_BLOCK);
         cubeAllWithItem(ModBlocks.CONCRETE_TILE);
         cubeAllWithItem(ModBlocks.CONCRETE);
+        cubeAllWithItem(ModBlocks.LIGNITE_BLOCK);
         cubeAllWithItem(ModBlocks.CONCRETE_RED);
         cubeAllWithItem(ModBlocks.CONCRETE_BLUE);
         cubeAllWithItem(ModBlocks.CONCRETE_GREEN);

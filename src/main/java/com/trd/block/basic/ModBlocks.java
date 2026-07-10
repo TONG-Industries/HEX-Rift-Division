@@ -603,6 +603,9 @@ public class ModBlocks {
                     return 30; // Шанс, что огонь перекинется на этот блок
                 }});
 
+    public static final RegistryObject<Block> LIGNITE_BLOCK = registerBlock("lignite_block",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
 
     public static final RegistryObject<Block> MORY_BLOCK = registerBlock("mory_block",

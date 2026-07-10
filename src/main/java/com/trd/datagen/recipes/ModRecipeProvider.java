@@ -41,6 +41,16 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                 .unlockedBy("has_dolomite_powder", has(ModItems.DOLOMITE_POWDER.get()))
                 .save(writer);
 
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModBlocks.LIGNITE_BLOCK.get(), 1)
+                .requires(ModItems.LIGNITE.get(), 9)
+                .unlockedBy("has_lignite", has(ModItems.LIGNITE.get()))
+                .save(writer);
+
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.LIGNITE.get(), 9)
+                .requires(ModBlocks.LIGNITE_BLOCK.get(), 1)
+                .unlockedBy("has_lignite_block", has(ModBlocks.LIGNITE_BLOCK.get()))
+                .save(writer);
+
 
         // --- ПЕРЕПЛАВКА ---
         SimpleCookingRecipeBuilder.smelting(
