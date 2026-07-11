@@ -82,7 +82,7 @@ public class ElectricFurnaceMenu extends AbstractContainerMenu {
         ItemStack copy = stack.copy();
 
         if (index < 3) {
-            if (index == 1) blockEntity.awardExperience(player);
+            if (index == 1) blockEntity.awardExperience(player); // опыт при быстром перемещении из выхода
             if (!moveItemStackTo(stack, 3, 39, true)) return ItemStack.EMPTY;
         } else {
             if (isEnergyItem(stack)) {
@@ -98,11 +98,6 @@ public class ElectricFurnaceMenu extends AbstractContainerMenu {
         return copy;
     }
 
-    @Override
-    public void removed(Player player) {
-        super.removed(player);
-        blockEntity.awardExperience(player);
-    }
 
     @Override
     public boolean stillValid(Player player) {

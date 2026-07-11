@@ -53,8 +53,10 @@ public class trdJeiPlugin implements IModPlugin {
             RecipeType.create(MainRegistry.MOD_ID, "alloying", AlloyingWrapper.class);
     public static final RecipeType<MillstoneWrapper> MILLSTONE_TYPE =
             RecipeType.create(MainRegistry.MOD_ID, "millstone", MillstoneWrapper.class);
+    public static final RecipeType<ElectricFurnaceWrapper> ELECTRIC_FURNACE_TYPE =
+            RecipeType.create(MainRegistry.MOD_ID, "electric_furnace", ElectricFurnaceWrapper.class);
 
-    public record SmeltingWrapper(ItemStack input, Metal metal, int outputUnits, int temp, float heatConsumption, int timeTicks) {}
+    public record ElectricFurnaceWrapper(net.minecraft.world.item.crafting.AbstractCookingRecipe recipe, int cookTime, int energyPerTick) {}public record SmeltingWrapper(ItemStack input, Metal metal, int outputUnits, int temp, float heatConsumption, int timeTicks) {}
     public record CastingWrapper(MoldRecipe mold, Metal metal, ItemStack output, int requiredUnits) {}
     public record AlloyingWrapper(AlloyRecipe recipe) {}
     public record MillstoneWrapper(Item input, List<ItemStack> outputs, int grindsRequired) {}
@@ -66,6 +68,7 @@ public class trdJeiPlugin implements IModPlugin {
         registration.addRecipeCategories(new CastingCategory(guiHelper));
         registration.addRecipeCategories(new AlloyingCategory(guiHelper));
         registration.addRecipeCategories(new MillstoneCategory(guiHelper));
+        registration.addRecipeCategories(new ElectricFurnaceCategory(guiHelper));
     }
 
 
@@ -147,6 +150,24 @@ public class trdJeiPlugin implements IModPlugin {
             ));
         }
         registration.addRecipes(MILLSTONE_TYPE, millstoneRecipes);
+
+        // === ЭЛЕКТРО-ПЕЧЬ ===
+        List<ElectricFurnaceWrapper> electricRecipes = new ArrayList<>();
+        var recipeManager = Minecraft.getInstance().level.getRecipeManager();
+
+        for (var recipe : recipeManager.getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.SMELTING)) {
+            net.minecraft.world.item.crafting.AbstractCookingRecipe cookingRecipe =
+                    (net.minecraft.world.item.crafting.AbstractCookingRecipe) recipe;
+            electricRecipes.add(new ElectricFurnaceWrapper(
+                    cookingRecipe,
+                    (int) (cookingRecipe.getCookingTime() * 0.7f),
+                    5
+            ));
+        }
+        registration.addRecipes(ELECTRIC_FURNACE_TYPE, electricRecipes);
+
+
+
     }
 
     @Override
@@ -154,6 +175,7 @@ public class trdJeiPlugin implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.SMELTER.get()), SMELTING_TYPE, ALLOYING_TYPE, CASTING_TYPE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.SMALL_SMELTER.get()), SMELTING_TYPE);
         registration.addRecipeCatalyst(new ItemStack(com.trd.block.basic.ModBlocks.JERNOVA.get()), MILLSTONE_TYPE);
+        registration.addRecipeCatalyst(new ItemStack(com.trd.block.basic.ModBlocks.ELECTRO_FURNACE.get()), ELECTRIC_FURNACE_TYPE);
     }
 
     private static ItemStack createLiquidMetalStack(Metal metal, int amount) {
@@ -356,6 +378,67 @@ public class trdJeiPlugin implements IModPlugin {
             var font = Minecraft.getInstance().font;
             gg.drawString(font, recipe.getOutputMetal().getMeltingPoint() + "°C", 4, 42, 0xFF555555, false);
             gg.drawString(font, String.format("%.1fs", recipe.getSmeltTimeTicks() / 20f), 4, 52, 0xFF555555, false);
+        }
+    }
+
+    public static class ElectricFurnaceCategory implements IRecipeCategory<ElectricFurnaceWrapper> {
+        private static final ResourceLocation TEXTURE =
+                new ResourceLocation(MainRegistry.MOD_ID, "textures/gui/jei/jei_electric_furnace_gui.png");
+
+        private final IDrawable background;
+        private final IDrawable icon;
+        private final Component title;
+
+        public ElectricFurnaceCategory(IGuiHelper guiHelper) {
+            this.background = guiHelper.createDrawable(TEXTURE, 0, 0, 76, 60);
+            this.icon = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,
+                    new ItemStack(com.trd.block.basic.ModBlocks.ELECTRO_FURNACE.get()));
+            this.title = Component.translatable("jei.category.trd.electric_furnace");
+        }
+
+        @Override public RecipeType<ElectricFurnaceWrapper> getRecipeType() { return ELECTRIC_FURNACE_TYPE; }
+        @Override public Component getTitle() { return title; }
+        @Override public IDrawable getBackground() { return background; }
+        @Override public IDrawable getIcon() { return icon; }
+
+        @Override
+        public void setRecipe(IRecipeLayoutBuilder builder, ElectricFurnaceWrapper recipe, IFocusGroup focuses) {
+            // Входной слот (5, 22)
+            builder.addSlot(RecipeIngredientRole.INPUT, 5, 22)
+                    .addIngredients(recipe.recipe().getIngredients().get(0));
+
+            // Выходной слот (55, 22)
+            builder.addSlot(RecipeIngredientRole.OUTPUT, 55, 22)
+                    .addItemStack(recipe.recipe().getResultItem(
+                            Minecraft.getInstance().level.registryAccess()));
+        }
+
+        @Override
+        public void draw(ElectricFurnaceWrapper recipe, IRecipeSlotsView view, GuiGraphics gg, double mx, double my) {
+            // === Анимированный прогресс-бар ===
+            int cookTime = recipe.cookTime();
+            int progress = (int) ((System.currentTimeMillis() / 50) % cookTime);
+            int barWidth = (int) (24.0 * progress / cookTime);
+            if (barWidth > 0) {
+                gg.blit(TEXTURE, 26, 27, 77, 0, barWidth, 6);
+            }
+
+            // === Опыт (5, 10) ===
+            var font = Minecraft.getInstance().font;
+            float xp = recipe.recipe().getExperience();
+            if (xp > 0) {
+                String xpText;
+                if (xp == (int) xp) {
+                    xpText = String.format("%d XP", (int) xp);
+                } else {
+                    xpText = String.format("%.1f XP", xp);
+                }
+                gg.drawString(font, xpText, 5, 10, 0xFF555555, false);
+            }
+
+            // === Информация о рецепте (5, 43) ===
+            String info = String.format("%.1fs | %d JE/t", cookTime / 20f, recipe.energyPerTick());
+            gg.drawString(font, info, 5, 43, 0xFF555555, false);
         }
     }
 }

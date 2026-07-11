@@ -103,6 +103,14 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements IEnergyRe
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) {
+            // Снизу — только выходной слот (1), извлечение
+            if (side == Direction.DOWN) {
+                return LazyOptional.of(() -> new ExtractOnlySlotHandler(itemHandler, 1)).cast();
+            }
+            // Со всех остальных сторон — умная вставка: батареи → слот 2, остальное → слот 0
+            if (side != null) {
+                return LazyOptional.of(() -> new SmartInputHandler(itemHandler)).cast();
+            }
             return itemCap.cast();
         }
         if (side == null || side == getBackSide()) {
@@ -348,5 +356,100 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements IEnergyRe
         CompoundTag tag = new CompoundTag();
         saveAdditional(tag);
         return tag;
+    }
+
+    /** Только извлечение из указанного слота */
+    private static class ExtractOnlySlotHandler implements net.minecraftforge.items.IItemHandler {
+        private final ItemStackHandler wrapped;
+        private final int slot;
+
+        ExtractOnlySlotHandler(ItemStackHandler wrapped, int slot) {
+            this.wrapped = wrapped;
+            this.slot = slot;
+        }
+
+        @Override public int getSlots() { return 1; }
+
+        @Override
+        public ItemStack getStackInSlot(int index) {
+            return wrapped.getStackInSlot(slot);
+        }
+
+        @Override
+        public ItemStack insertItem(int index, ItemStack stack, boolean simulate) {
+            return stack; // нельзя класть
+        }
+
+        @Override
+        public ItemStack extractItem(int index, int amount, boolean simulate) {
+            return wrapped.extractItem(slot, amount, simulate);
+        }
+
+        @Override public int getSlotLimit(int index) { return wrapped.getSlotLimit(slot); }
+        @Override public boolean isItemValid(int index, ItemStack stack) { return false; }
+    }
+
+    /** Умная вставка: батареи → слот 2, всё остальное → слот 0. Извлечение невозможно. */
+    private class SmartInputHandler implements net.minecraftforge.items.IItemHandler {
+        private final ItemStackHandler wrapped;
+
+        SmartInputHandler(ItemStackHandler wrapped) {
+            this.wrapped = wrapped;
+        }
+
+        @Override public int getSlots() { return 2; } // виртуальные слоты: 0=вход, 1=батарея
+
+        @Override
+        public ItemStack getStackInSlot(int index) {
+            int realSlot = (index == 1) ? 2 : 0;
+            return wrapped.getStackInSlot(realSlot);
+        }
+
+        @Override
+        public ItemStack insertItem(int index, ItemStack stack, boolean simulate) {
+            if (stack.isEmpty()) return ItemStack.EMPTY;
+
+            boolean isBattery = stack.getCapability(ForgeCapabilities.ENERGY).isPresent()
+                    || stack.getItem() instanceof ModBatteryItem
+                    || stack.getItem() instanceof EnergyCellItem;
+
+            int targetSlot = isBattery ? 2 : 0;
+
+            // Если index указан явно и не совпадает — перенаправляем
+            if (index == 1 && !isBattery) {
+                // Пытались положить не-батарею в батарейный слот → в входной
+                return wrapped.insertItem(0, stack, simulate);
+            }
+            if (index == 0 && isBattery) {
+                // Пытались положить батарею во входной слот → в батарейный
+                return wrapped.insertItem(2, stack, simulate);
+            }
+
+            return wrapped.insertItem(targetSlot, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int index, int amount, boolean simulate) {
+            return ItemStack.EMPTY; // через боковые стороны нельзя забирать
+        }
+
+        @Override
+        public int getSlotLimit(int index) {
+            int realSlot = (index == 1) ? 2 : 0;
+            return wrapped.getSlotLimit(realSlot);
+        }
+
+        @Override
+        public boolean isItemValid(int index, ItemStack stack) {
+            if (index == 1) { // батарейный виртуальный слот
+                return stack.getCapability(ForgeCapabilities.ENERGY).isPresent()
+                        || stack.getItem() instanceof ModBatteryItem
+                        || stack.getItem() instanceof EnergyCellItem;
+            }
+            // входной виртуальный слот — всё кроме батарей
+            return !(stack.getCapability(ForgeCapabilities.ENERGY).isPresent()
+                    || stack.getItem() instanceof ModBatteryItem
+                    || stack.getItem() instanceof EnergyCellItem);
+        }
     }
 }
