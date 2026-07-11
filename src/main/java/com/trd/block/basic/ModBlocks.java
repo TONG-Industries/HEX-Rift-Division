@@ -10,6 +10,8 @@ import com.trd.block.basic.deco.BeamBlock;
 import com.trd.block.basic.deco.BeamCollisionBlock;
 import com.trd.block.basic.deco.LampBlock;
 import com.trd.block.basic.deco.SteelPropsBlock;
+import com.trd.block.basic.direction.SideOBlock;
+import com.trd.block.basic.industrial.ElectricFurnaceBlock;
 import com.trd.block.basic.industrial.fluids.FluidBarrelBlock;
 
 import com.trd.block.basic.industrial.fluids.FluidPipeBlock;
@@ -561,6 +563,10 @@ public class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .noOcclusion()
                     .lightLevel(state -> 15)));
+
+    public static final RegistryObject<Block> ELECTRO_FURNACE = registerBlock("electro_furnace",
+            () -> new ElectricFurnaceBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)));
+
 
     //СЕКВОЯ
     public static final RegistryObject<Block> SEQUOIA_BARK = registerBlock("sequoia_bark",

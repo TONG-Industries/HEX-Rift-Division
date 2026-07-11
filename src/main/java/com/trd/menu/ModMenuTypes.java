@@ -36,6 +36,9 @@ public class ModMenuTypes {
             MENUS.register("fuel_tank_big",
                     () -> IForgeMenuType.create((windowId, inv, data) -> new FuelTankMenu(windowId, inv, data)));
 
+    public static final RegistryObject<MenuType<ElectricFurnaceMenu>> ELECTRIC_FURNACE_MENU =
+            MENUS.register("electric_furnace",
+                    () -> IForgeMenuType.create((windowId, inv, data) -> new ElectricFurnaceMenu(windowId, inv, data)));
     public static final RegistryObject<MenuType<SmallSmelterMenu>> SMALL_SMELTER_MENU =
             MENUS.register("small_smelter_menu", () -> IForgeMenuType.create(SmallSmelterMenu::create));
 

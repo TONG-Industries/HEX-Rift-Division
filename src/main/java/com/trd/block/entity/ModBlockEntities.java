@@ -2,6 +2,7 @@ package com.trd.block.entity;
 
 import com.trd.block.entity.conglomerate.ConglomerateBlockEntity;
 import com.trd.block.entity.deco.BeamCollisionBlockEntity;
+import com.trd.block.entity.industrial.ElectricFurnaceBlockEntity;
 import com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity;
 
 import com.trd.block.entity.industrial.fluids.FluidPipeBlockEntity;
@@ -77,6 +78,9 @@ public class ModBlockEntities {
                     () -> BlockEntityType.Builder.of(ConglomerateBlockEntity::new,
                             ModBlocks.CONGLOMERATE.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<ElectricFurnaceBlockEntity>> ELECTRIC_FURNACE_BE =
+            BLOCK_ENTITIES.register("electric_furnace",
+                    () -> BlockEntityType.Builder.of(ElectricFurnaceBlockEntity::new, ModBlocks.ELECTRO_FURNACE.get()).build(null));
     public static final RegistryObject<BlockEntityType<TurretLightPlacerBlockEntity>> TURRET_LIGHT_PLACER_BE =
             BLOCK_ENTITIES.register("turret_light_placer",
                     () -> BlockEntityType.Builder.of(TurretLightPlacerBlockEntity::new, ModBlocks.TURRET_LIGHT_PLACER.get()).build(null));

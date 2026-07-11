@@ -3,10 +3,12 @@ package com.trd.datagen.assets;
 import com.trd.block.basic.industrial.fluids.FluidPipeBlock;
 import com.trd.main.ResourceRegistry;
 import com.trd.block.basic.necrosis.hive.HiveRootsBlock;
+import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.client.model.generators.BlockStateProvider;
 import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
@@ -157,6 +159,16 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 modLoc("block/det_miner_top"),
                 modLoc("block/det_miner_top")
         );
+
+        horizontalFurnaceBlockWithItem(ModBlocks.ELECTRO_FURNACE,
+                modLoc("block/electro_furnace_side"),
+                modLoc("block/electro_furnace_front"),      // выключена
+                modLoc("block/electro_furnace_on_front"),   // включена
+                modLoc("block/electro_furnace_back"),
+                modLoc("block/electro_furnace_top"),
+                modLoc("block/electro_furnace_top")
+        );
+
         columnBlockWithItem(ModBlocks.DECO_BEAM,
                 modLoc("block/deco_beam_side"),
                 modLoc("block/deco_beam_top"),
@@ -593,6 +605,57 @@ public class ModBlockStateProvider extends BlockStateProvider {
         // сопоставляя текстуры north/south с направлением FACING
         horizontalBlock(block.get(), model);
         simpleBlockItem(block.get(), model);
+    }
+
+    // Улучшенный метод с поддержкой LIT
+    public void horizontalFurnaceBlockWithItem(RegistryObject<Block> block, ResourceLocation side,
+                                               ResourceLocation front, ResourceLocation frontOn,
+                                               ResourceLocation back, ResourceLocation top, ResourceLocation bottom) {
+        String name = block.getId().getPath();
+
+        // Выключенная модель
+        ModelFile modelOff = models().withExistingParent(name, "minecraft:block/cube")
+                .texture("up", top)
+                .texture("down", bottom)
+                .texture("east", side)
+                .texture("west", side)
+                .texture("north", back)
+                .texture("south", front)
+                .texture("particle", side);
+
+        // Включенная модель
+        ModelFile modelOn = models().withExistingParent(name + "_on", "minecraft:block/cube")
+                .texture("up", top)
+                .texture("down", bottom)
+                .texture("east", side)
+                .texture("west", side)
+                .texture("north", back)
+                .texture("south", frontOn)
+                .texture("particle", side);
+
+        // Генерируем варианты с учётом FACING и LIT
+        getVariantBuilder(block.get())
+                .forAllStates(state -> {
+                    Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+                    boolean lit = state.getValue(BlockStateProperties.LIT);
+                    int yRot = (int) facing.toYRot();
+                    return ConfiguredModel.builder()
+                            .modelFile(lit ? modelOn : modelOff)
+                            .rotationY(yRot)
+                            .build();
+                });
+
+        // Костыль: меняем front/back местами для предмета, чтобы лицо смотрело на игрока
+        ModelFile modelItem = models().withExistingParent(name + "_item", "minecraft:block/cube")
+                .texture("up", top)
+                .texture("down", bottom)
+                .texture("east", side)
+                .texture("west", side)
+                .texture("north", front)   // для предмета north — это лицо
+                .texture("south", back)
+                .texture("particle", side);
+
+        simpleBlockItem(block.get(), modelItem);
     }
 
     // 2. Метод для блоков, которые могут вращаться во всех 3 плоскостях (по 6 сторонам)
