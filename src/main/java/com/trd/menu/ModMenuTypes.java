@@ -5,6 +5,7 @@ import com.trd.menu.industrial.*;
 import com.trd.menu.rotation.MotorElectroMenu;
 import com.trd.menu.turrets.TromboneMenu;
 import com.trd.menu.turrets.TurretLightMenu;
+import com.trd.multiblock.industrial.SteelStorageBlockEntity;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -41,6 +42,18 @@ public class ModMenuTypes {
                     () -> IForgeMenuType.create((windowId, inv, data) -> new ElectricFurnaceMenu(windowId, inv, data)));
     public static final RegistryObject<MenuType<SmallSmelterMenu>> SMALL_SMELTER_MENU =
             MENUS.register("small_smelter_menu", () -> IForgeMenuType.create(SmallSmelterMenu::create));
+
+
+    public static final RegistryObject<MenuType<SteelStorageMenu>> STEEL_STORAGE_MENU =
+            MENUS.register("steel_storage_menu", () -> net.minecraftforge.common.extensions.IForgeMenuType.create(
+                    (windowId, inv, data) -> {
+                        net.minecraft.core.BlockPos pos = data.readBlockPos();
+                        if (inv.player.level().getBlockEntity(pos) instanceof SteelStorageBlockEntity be) {
+                            return new SteelStorageMenu(windowId, inv, be);
+                        }
+                        return null;
+                    }
+            ));
 
     public static final RegistryObject<MenuType<HeaterMenu>> HEATER_MENU =
             MENUS.register("heater_menu", () -> IForgeMenuType.create(HeaterMenu::create));

@@ -133,7 +133,13 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
                     return be.getCapability(cap, side);
                 }
             }
+        } else if (cap == ForgeCapabilities.ITEM_HANDLER) {
+            BlockEntity be = level.getBlockEntity(controllerPos);
+            if (be != null) {
+                return be.getCapability(cap, side);
+            }
         }
+
         return super.getCapability(cap, side);
     }
 
