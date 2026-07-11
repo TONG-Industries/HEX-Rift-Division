@@ -88,6 +88,7 @@ public class ClientModEvents {
                         return 0.0f;
                     });
         });
+        MenuScreens.register(ModMenuTypes.ELECTRIC_FURNACE_MENU.get(), GUIElectricFurnace::new);
         MenuScreens.register(ModMenuTypes.SMALL_SMELTER_MENU.get(), GUISmallSmelter::new);
         MenuScreens.register(ModMenuTypes.MACHINE_BATTERY_MENU.get(), GUIMachineBattery::new);
         MenuScreens.register(ModMenuTypes.MOTOR_ELECTRO_MENU.get(), GUIMotorElectro::new);

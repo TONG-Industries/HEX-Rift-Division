@@ -185,7 +185,6 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
 
         // ========== ТИР 1: Обычное топливо ==========
         FUEL_ITEMS_BY_TIER[1] = Arrays.asList(
-                new ItemStack(Items.COAL),
                 new ItemStack(Items.CHARCOAL),
                 new ItemStack(Items.BLAZE_POWDER),
                 new ItemStack(ModItems.LIGNITE.get())
@@ -193,6 +192,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
 
         // ========== ТИР 2: Blaze rod и прочее ==========
         FUEL_ITEMS_BY_TIER[2] = Arrays.asList(
+                new ItemStack(Items.COAL),
                 new ItemStack(Items.BLAZE_ROD),
                 new ItemStack(Items.MAGMA_CREAM),
                 new ItemStack(Items.PORKCHOP)
@@ -201,6 +201,7 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
         // ========== ТИР 3: Блок угля ==========
         FUEL_ITEMS_BY_TIER[3] = Arrays.asList(
                 new ItemStack(Items.COAL_BLOCK),
+                new ItemStack(Item.byBlock(ModBlocks.LIGNITE_BLOCK.get())),
                 new ItemStack(Item.byBlock(Blocks.MAGMA_BLOCK))
         );
 

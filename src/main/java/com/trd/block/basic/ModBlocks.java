@@ -10,6 +10,8 @@ import com.trd.block.basic.deco.BeamBlock;
 import com.trd.block.basic.deco.BeamCollisionBlock;
 import com.trd.block.basic.deco.LampBlock;
 import com.trd.block.basic.deco.SteelPropsBlock;
+import com.trd.block.basic.direction.SideOBlock;
+import com.trd.block.basic.industrial.ElectricFurnaceBlock;
 import com.trd.block.basic.industrial.fluids.FluidBarrelBlock;
 
 import com.trd.block.basic.industrial.fluids.FluidPipeBlock;
@@ -562,6 +564,10 @@ public class ModBlocks {
                     .noOcclusion()
                     .lightLevel(state -> 15)));
 
+    public static final RegistryObject<Block> ELECTRO_FURNACE = registerBlock("electro_furnace",
+            () -> new ElectricFurnaceBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)));
+
+
     //СЕКВОЯ
     public static final RegistryObject<Block> SEQUOIA_BARK = registerBlock("sequoia_bark",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS)));
@@ -603,6 +609,9 @@ public class ModBlocks {
                     return 30; // Шанс, что огонь перекинется на этот блок
                 }});
 
+    public static final RegistryObject<Block> LIGNITE_BLOCK = registerBlock("lignite_block",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
 
     public static final RegistryObject<Block> MORY_BLOCK = registerBlock("mory_block",

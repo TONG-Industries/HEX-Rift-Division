@@ -317,7 +317,7 @@ public class ModLangProvider extends LanguageProvider {
         private void addRussian() {
                 // Секвойя
 
-
+                add("jei.category.trd.electric_furnace", "Электро-печь");
                 add("item.trd.cast_pickaxe_iron", "Литая железная кирка");
                 add("item.trd.cast_pickaxe_steel", "Литая стальная кирка");
 

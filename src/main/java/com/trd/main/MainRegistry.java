@@ -1,6 +1,7 @@
 package com.trd.main;
 
 import com.trd.api.fluids.ModFluids;
+import com.trd.api.fuel.ModFuels;
 import com.trd.api.hive.HiveNetworkManager;
 import com.trd.api.metallurgy.ModMetallurgy;
 import com.trd.api.metallurgy.system.Metal;
@@ -36,6 +37,7 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -100,6 +102,7 @@ public class MainRegistry {
         ModFoliagePlacerTypes.register(modEventBus);
         ModFluids.register(modEventBus);
         ModFeatures.FEATURES.register(modEventBus);
+        MinecraftForge.EVENT_BUS.addListener(this::onFuelBurnTime);
         MinecraftForge.EVENT_BUS.register(new HiveEventHandler());
         // Проверяем, есть ли Окулус
         // Проверяем наличие Окулуса
@@ -221,7 +224,6 @@ public class MainRegistry {
 
             event.accept(ModItems.BELT.get());
             event.accept(ModItems.WIRE_COIL);
-            event.accept(ModItems.COPPER_COIL.get());
 
             event.accept(ModItems.INFINITE_FLUID_BARREL);
             event.accept(ModItems.FLUID_IDENTIFIER.get());
@@ -257,9 +259,10 @@ public class MainRegistry {
             event.accept(ModBlocks.BEARING_BLOCK);
             event.accept(ModBlocks.MOTOR_ELECTRO);
             event.accept(ModBlocks.TACHOMETER);
-            event.accept(ModBlocks.STATOR_BLOCK);
             event.accept(ModItems.STEAM_ENGINE_ITEM);
             event.accept(ModBlocks.DROBITEL);
+            event.accept(ModBlocks.STATOR_BLOCK);
+            event.accept(ModItems.COPPER_COIL.get());
 
 
 
@@ -291,6 +294,8 @@ public class MainRegistry {
 
             event.accept(ModBlocks.SWITCH);
             event.accept(ModBlocks.CONVERTER_BLOCK);
+
+            event.accept(ModBlocks.ELECTRO_FURNACE);
 
 
 
@@ -425,6 +430,8 @@ public class MainRegistry {
             event.accept(ModItems.FUEL_ASH.get());
             event.accept(ModItems.TRASH);
 
+            event.accept(ModBlocks.LIGNITE_BLOCK);
+
         }
 
         if (event.getTab() == ModCreativeTabs.trd_NATURE_TAB.get()) {
@@ -494,6 +501,14 @@ public class MainRegistry {
             event.addCapability(new ResourceLocation("trd", "hive_network_manager"),
                     new HiveNetworkManagerProvider());
             System.out.println("DEBUG: Capability Attached to Level!");
+        }
+    }
+
+    @SubscribeEvent
+    public void onFuelBurnTime(FurnaceFuelBurnTimeEvent event) {
+        int burnTime = ModFuels.getBurnTimeForItem(event.getItemStack().getItem());
+        if (burnTime >= 0) {
+            event.setBurnTime(burnTime);
         }
     }
 

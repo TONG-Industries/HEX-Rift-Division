@@ -21,8 +21,6 @@ public class ModMetallurgy {
         // === ЗОЛОТО ===
         Metal gold = registerMetalWithItems("gold", 0xffac2a, 1064, 0.5f,
                 Items.GOLD_INGOT, Items.GOLD_NUGGET, Blocks.GOLD_BLOCK);
-        MetallurgyRegistry.addSmeltRecipe(Items.GOLD_ORE, gold, 9, 958, 1.0f, 100);
-        MetallurgyRegistry.addSmeltRecipe(Items.DEEPSLATE_GOLD_ORE, gold, 9, 958, 1.0f, 100);
         MetallurgyRegistry.addSmeltRecipe(Items.RAW_GOLD, gold, 9, 958, 0.9f, 80);
         MetallurgyRegistry.addSmeltRecipe(Items.RAW_GOLD_BLOCK, gold, 81, 958, 1.0f, 100);
         MetallurgyRegistry.addSmeltRecipe(Items.GOLDEN_PICKAXE, gold, 27, 1064, 0.7f, 100);
@@ -40,8 +38,6 @@ public class ModMetallurgy {
         // === ЖЕЛЕЗО ===
         Metal iron = registerMetalWithItems("iron", 0xba826c, 958, 0.8f,
                 Items.IRON_INGOT, Items.IRON_NUGGET, Blocks.IRON_BLOCK);
-        MetallurgyRegistry.addSmeltRecipe(Items.IRON_ORE, iron, 9, 958, 1.0f, 100);
-        MetallurgyRegistry.addSmeltRecipe(Items.DEEPSLATE_IRON_ORE, iron, 9, 958, 1.0f, 100);
         MetallurgyRegistry.addSmeltRecipe(Items.RAW_IRON, iron, 9, 958, 0.9f, 80);
         MetallurgyRegistry.addSmeltRecipe(Items.RAW_IRON_BLOCK, iron, 81, 958, 1.0f, 100);
         MetallurgyRegistry.addSmeltRecipe(Items.IRON_SWORD, iron, 9, 958, 0.8f, 60);
@@ -60,8 +56,6 @@ public class ModMetallurgy {
         // === МЕДЬ ===
         Metal copper = registerMetalWithItems("copper", 0xc15a36, 1085, 0.6f,
                 Items.COPPER_INGOT, null, Blocks.COPPER_BLOCK);
-        MetallurgyRegistry.addSmeltRecipe(Items.COPPER_ORE, copper, 9, 1085, 0.8f, 100);
-        MetallurgyRegistry.addSmeltRecipe(Items.DEEPSLATE_COPPER_ORE, copper, 9, 1085, 0.8f, 100);
         MetallurgyRegistry.addSmeltRecipe(Items.RAW_COPPER, copper, 9, 1085, 0.7f, 80);
         MetallurgyRegistry.addSmeltRecipe(Items.RAW_COPPER_BLOCK, copper, 81, 958, 1.0f, 100);
         MetallurgyRegistry.addSmeltRecipe(Items.LIGHTNING_ROD, copper, 27, 958, 1.0f, 50);
