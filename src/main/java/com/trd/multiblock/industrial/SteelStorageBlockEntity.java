@@ -26,9 +26,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class SteelStorageBlockEntity extends BlockEntity implements MenuProvider {
 
-    public static final int ROWS = 4;
+    public static final int ROWS = 7;
     public static final int COLS = 13;
-    public static final int SLOTS = ROWS * COLS; // 52
+    public static final int SLOTS = ROWS * COLS; // 91
 
     private final ItemStackHandler inventory = new ItemStackHandler(SLOTS) {
         @Override
@@ -43,8 +43,6 @@ public class SteelStorageBlockEntity extends BlockEntity implements MenuProvider
                 Block block = bi.getBlock();
                 if (block instanceof ShulkerBoxBlock) return false;
                 if (block instanceof SteelStorageBlock) return false;
-                // Если подключишь HBM ящики, раскомментируй:
-                // if (block instanceof com.hbm_m.block.machines.crates.BaseCrateBlock) return false;
             }
             return super.isItemValid(slot, stack);
         }
@@ -84,7 +82,21 @@ public class SteelStorageBlockEntity extends BlockEntity implements MenuProvider
     public void load(CompoundTag tag) {
         super.load(tag);
         if (tag.contains("Inventory")) {
-            inventory.deserializeNBT(tag.getCompound("Inventory"));
+            CompoundTag invTag = tag.getCompound("Inventory");
+            // ═══════════════════════════════════════════════════════
+            // ФИКС: старые NBT могут содержать меньше слотов (52 вместо 91)
+            // Расширяем до SLOTS, сохраняя старые предметы
+            // ═══════════════════════════════════════════════════════
+            if (invTag.contains("Size", net.minecraft.nbt.Tag.TAG_INT)) {
+                int oldSize = invTag.getInt("Size");
+                if (oldSize < SLOTS) {
+                    invTag.putInt("Size", SLOTS);
+                }
+            } else {
+                // Если нет поля Size — добавляем
+                invTag.putInt("Size", SLOTS);
+            }
+            inventory.deserializeNBT(invTag);
         }
     }
 

@@ -1,7 +1,6 @@
 package com.trd.client.overlay.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import com.trd.menu.industrial.SteelStorageMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -17,7 +16,8 @@ public class SteelStorageScreen extends AbstractContainerScreen<SteelStorageMenu
     public SteelStorageScreen(SteelStorageMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 248;
-        this.imageHeight = 173;
+
+        this.imageHeight = 227;
     }
 
     @Override
@@ -26,7 +26,11 @@ public class SteelStorageScreen extends AbstractContainerScreen<SteelStorageMenu
         this.titleLabelX = 8;
         this.titleLabelY = 6;
         this.inventoryLabelX = 44;
-        this.inventoryLabelY = 81;
+        this.inventoryLabelY = 135;  // ← было 81, стало 135 (сдвинулось на 54 пикселя вниз)
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
     }
 
     @Override

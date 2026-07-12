@@ -20,7 +20,7 @@ public class SteelStorageMenu extends AbstractContainerMenu {
         super(ModMenuTypes.STEEL_STORAGE_MENU.get(), id);
         this.blockEntity = be;
 
-        // Сетка 13x4, начало (8, 15)
+        // Сетка 13×7, начало (8, 15)
         for (int row = 0; row < SteelStorageBlockEntity.ROWS; row++) {
             for (int col = 0; col < SteelStorageBlockEntity.COLS; col++) {
                 int index = row * SteelStorageBlockEntity.COLS + col;
@@ -30,16 +30,16 @@ public class SteelStorageMenu extends AbstractContainerMenu {
             }
         }
 
-        // Инвентарь игрока (44, 91)
+        // Инвентарь игрока (44, 145)
         int invX = 44;
-        int invY = 91;
+        int invY = 145;
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInv, col + row * 9 + 9, invX + col * 18, invY + row * 18));
             }
         }
 
-        // Хотбар (44, 149) — 91 + 58
+        // Хотбар (44, 203) — 145 + 58
         for (int col = 0; col < 9; col++) {
             this.addSlot(new Slot(playerInv, col, invX + col * 18, invY + 58));
         }
