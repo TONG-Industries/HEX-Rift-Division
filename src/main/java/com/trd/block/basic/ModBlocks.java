@@ -574,6 +574,8 @@ public class ModBlocks {
 
 
     //СЕКВОЯ
+
+
     public static final RegistryObject<Block> SEQUOIA_BARK = registerBlock("sequoia_bark",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS)));
     public static final RegistryObject<Block> SEQUOIA_HEARTWOOD = registerBlock("sequoia_heartwood",
@@ -638,6 +640,10 @@ public class ModBlocks {
     // 2. Регистрируем блок самого Нагревателя
     public static final RegistryObject<Block> HEATER = BLOCKS.register("heater",
             () -> new HeaterBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
+    public static final RegistryObject<Block> STEEL_STORAGE = BLOCKS.register("steel_storage",
+            () -> new SteelStorageBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
     public static final RegistryObject<Block> BOILER = BLOCKS.register("boiler",
             () -> new BoilerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
 

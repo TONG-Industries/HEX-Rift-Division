@@ -15,4 +15,9 @@ public interface IMultiblockController {
     default VoxelShape getCustomMasterVoxelShape(BlockState state) {
         return null;
     }
+
+    default net.minecraft.world.item.ItemStack getDropStack(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
+        return new net.minecraft.world.item.ItemStack(state.getBlock());
+    }
+
 }

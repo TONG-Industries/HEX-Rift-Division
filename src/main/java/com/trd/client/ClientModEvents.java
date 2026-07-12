@@ -88,6 +88,9 @@ public class ClientModEvents {
                         return 0.0f;
                     });
         });
+
+        net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.STEEL_STORAGE_MENU.get(), SteelStorageScreen::new);
+
         MenuScreens.register(ModMenuTypes.ELECTRIC_FURNACE_MENU.get(), GUIElectricFurnace::new);
         MenuScreens.register(ModMenuTypes.SMALL_SMELTER_MENU.get(), GUISmallSmelter::new);
         MenuScreens.register(ModMenuTypes.MACHINE_BATTERY_MENU.get(), GUIMachineBattery::new);

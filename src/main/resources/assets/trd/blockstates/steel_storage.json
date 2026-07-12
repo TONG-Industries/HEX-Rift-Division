@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/steel_storage" },
+    "facing=east":  { "model": "trd:block/steel_storage", "y": 90 },
+    "facing=south": { "model": "trd:block/steel_storage", "y": 180 },
+    "facing=west":  { "model": "trd:block/steel_storage", "y": 270 }
+  }
+}

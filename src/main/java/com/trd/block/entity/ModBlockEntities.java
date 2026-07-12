@@ -76,6 +76,10 @@ public class ModBlockEntities {
                     () -> BlockEntityType.Builder.of(ConglomerateBlockEntity::new,
                             ModBlocks.CONGLOMERATE.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<SteelStorageBlockEntity>> STEEL_STORAGE_BE =
+            BLOCK_ENTITIES.register("steel_storage",
+                    () -> BlockEntityType.Builder.of(SteelStorageBlockEntity::new, ModBlocks.STEEL_STORAGE.get()).build(null));
+
     public static final RegistryObject<BlockEntityType<ElectricFurnaceBlockEntity>> ELECTRIC_FURNACE_BE =
             BLOCK_ENTITIES.register("electric_furnace",
                     () -> BlockEntityType.Builder.of(ElectricFurnaceBlockEntity::new, ModBlocks.ELECTRO_FURNACE.get()).build(null));
