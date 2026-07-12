@@ -318,10 +318,10 @@ public class ModItems {
             () -> new MultiblockBlockItem(ModBlocks.STEEL_STORAGE.get(), new Item.Properties()));
 
     public static final RegistryObject<Item> FUEL_TANK_BIG_ITEM = ITEMS.register("fuel_tank_big",
-            () -> new MultiblockBlockItem(ModBlocks.FUEL_TANK_BIG.get(), new Item.Properties()));
+            () -> new MultiblockBlockItem(ModBlocks.FUEL_TANK_BIG.get(), new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> FUEL_TANK_SMALL_ITEM = ITEMS.register("fuel_tank_small",
-            () -> new MultiblockBlockItem(ModBlocks.FUEL_TANK_SMALL.get(), new Item.Properties()));
+            () -> new MultiblockBlockItem(ModBlocks.FUEL_TANK_SMALL.get(), new Item.Properties().stacksTo(1)));
 
 
     public static final RegistryObject<Item> STATOR_ITEM = ITEMS.register("stator",

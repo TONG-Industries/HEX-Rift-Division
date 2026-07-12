@@ -29,6 +29,12 @@ public class WireBlockEntity extends BlockEntity implements IEnergyConnector {
         super(ModBlockEntities.WIRE_BE.get(), pos, state);
     }
 
+    // Позволяет подклассам (напр. PaintableWireBlockEntity) задать свой тип BE,
+    // сохраняя всю логику энергосети и капабилити.
+    protected WireBlockEntity(net.minecraft.world.level.block.entity.BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
+
 
     // --- IEnergyConnector ---
     @Override

@@ -1,8 +1,5 @@
 package com.trd.multiblock.system;
 
-import com.trd.multiblock.system.IMultiblockController;
-import com.trd.multiblock.system.IMultiblockPart;
-import com.trd.multiblock.system.MultiblockPartEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -124,9 +121,15 @@ public class MultiblockPartBlock extends BaseEntityBlock {
                 BlockPos ctrlPos = part.getControllerPos();
                 BlockState ctrlState = level.getBlockState(ctrlPos);
                 if (ctrlState.getBlock() instanceof IMultiblockController controller) {
-                    ItemStack dropStack = controller.getDropStack(level, ctrlPos, ctrlState);
-                    Block.popResource(level, ctrlPos, dropStack);
-
+                    // предмет контроллера С СОХРАНЕНИЕМ NBT (тип сохраняется даже при пустом баке)
+                    ItemStack ctrlDrop = new ItemStack(ctrlState.getBlock());
+                    BlockEntity ctrlBe = level.getBlockEntity(ctrlPos);
+                    if (ctrlBe instanceof com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity) {
+                        net.minecraft.nbt.CompoundTag beNbt = ctrlBe.saveWithoutMetadata();
+                        beNbt.remove("Inventory");
+                        ctrlDrop.addTagElement("BlockEntityTag", beNbt);
+                    }
+                    Block.popResource(level, ctrlPos, ctrlDrop);
                     net.minecraft.core.Direction facing = ctrlState.hasProperty(HorizontalDirectionalBlock.FACING)
                             ? ctrlState.getValue(HorizontalDirectionalBlock.FACING) : net.minecraft.core.Direction.NORTH;
                     controller.getStructureHelper().destroyStructure(level, ctrlPos, facing);

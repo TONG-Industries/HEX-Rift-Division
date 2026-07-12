@@ -1,5 +1,6 @@
 package com.trd.block.entity;
 
+import com.trd.api.energy.EnergyNetworkManager;
 import com.trd.block.entity.conglomerate.ConglomerateBlockEntity;
 import com.trd.block.entity.deco.BeamCollisionBlockEntity;
 import com.trd.block.entity.industrial.ElectricFurnaceBlockEntity;
@@ -10,6 +11,7 @@ import com.trd.block.entity.industrial.fluids.FluidPipeBlockEntity;
 import com.trd.block.entity.industrial.MillstoneBlockEntity;
 import com.trd.block.entity.industrial.casting.SmallSmelterBlockEntity;
 import com.trd.block.entity.industrial.fluids.LowPressureSteamCondenserBlockEntity;
+import com.trd.block.entity.industrial.fluids.PaintablePipeBlockEntity;
 import com.trd.block.entity.industrial.rotation.BearingBlockEntity;
 import com.trd.block.entity.industrial.rotation.MotorElectroBlockEntity;
 import com.trd.block.entity.industrial.rotation.ShaftBlockEntity;
@@ -225,6 +227,17 @@ public class ModBlockEntities {
                             LowPressureSteamCondenserBlockEntity::new,
                             ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get()
                     ).build(null));
+
+    public static final RegistryObject<BlockEntityType<PaintablePipeBlockEntity>> PAINTABLE_PIPE_BE =
+            BLOCK_ENTITIES.register("paintable_pipe_be",
+                    () -> BlockEntityType.Builder.of(PaintablePipeBlockEntity::new,
+                            ModBlocks.PAINTABLE_PIPE.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<PaintableWireBlockEntity>> PAINTABLE_WIRE_BE =
+            BLOCK_ENTITIES.register("paintable_wire_be",
+                    () -> BlockEntityType.Builder.of(PaintableWireBlockEntity::new,
+                            ModBlocks.PAINTABLE_WIRE.get()).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

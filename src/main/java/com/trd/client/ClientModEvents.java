@@ -109,6 +109,8 @@ public class ClientModEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.BEARING_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TACHOMETER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.ber.FuelTankRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.PAINTABLE_PIPE_BE.get(), com.trd.client.render.ber.PaintableConduitRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.PAINTABLE_WIRE_BE.get(), com.trd.client.render.ber.PaintableConduitRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.BOILER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.STEAM_ENGINE_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.STATOR_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
