@@ -29,11 +29,7 @@ import com.trd.block.basic.industrial.rotation.ShaftBlock;
 import com.trd.block.basic.necrosis.hive.HiveRootsBlock;
 
 import com.trd.block.basic.weapons.MissileTurretBlock;
-import com.trd.multiblock.industrial.FuelTankBlock;
-import com.trd.multiblock.industrial.HeaterBlock;
-import com.trd.multiblock.industrial.BoilerBlock;
-
-import com.trd.multiblock.industrial.SmelterBlock;
+import com.trd.multiblock.industrial.*;
 
 import com.trd.multiblock.system.MultiblockPartBlock;
 import net.minecraft.core.BlockPos;
@@ -569,6 +565,8 @@ public class ModBlocks {
 
 
     //СЕКВОЯ
+
+
     public static final RegistryObject<Block> SEQUOIA_BARK = registerBlock("sequoia_bark",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS)));
     public static final RegistryObject<Block> SEQUOIA_HEARTWOOD = registerBlock("sequoia_heartwood",
@@ -633,6 +631,10 @@ public class ModBlocks {
     // 2. Регистрируем блок самого Нагревателя
     public static final RegistryObject<Block> HEATER = BLOCKS.register("heater",
             () -> new HeaterBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
+    public static final RegistryObject<Block> STEEL_STORAGE = BLOCKS.register("steel_storage",
+            () -> new SteelStorageBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
     public static final RegistryObject<Block> BOILER = BLOCKS.register("boiler",
             () -> new BoilerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
 

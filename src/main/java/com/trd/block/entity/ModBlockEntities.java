@@ -14,15 +14,11 @@ import com.trd.block.entity.industrial.rotation.BearingBlockEntity;
 import com.trd.block.entity.industrial.rotation.MotorElectroBlockEntity;
 import com.trd.block.entity.industrial.rotation.ShaftBlockEntity;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
-import com.trd.multiblock.industrial.FuelTankBlockEntity;
-import com.trd.multiblock.industrial.HeaterBlockEntity;
-import com.trd.multiblock.industrial.BoilerBlockEntity;
+import com.trd.multiblock.industrial.*;
 
 import com.trd.block.entity.industrial.casting.CastingDescentBlockEntity;
 import com.trd.block.entity.industrial.casting.CastingPotBlockEntity;
 import com.trd.block.entity.industrial.energy.*;
-
-import com.trd.multiblock.industrial.SmelterBlockEntity;
 
 import com.trd.multiblock.system.MultiblockPartEntity;
 import net.minecraft.world.level.block.Block;
@@ -77,6 +73,10 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("conglomerate",
                     () -> BlockEntityType.Builder.of(ConglomerateBlockEntity::new,
                             ModBlocks.CONGLOMERATE.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<SteelStorageBlockEntity>> STEEL_STORAGE_BE =
+            BLOCK_ENTITIES.register("steel_storage",
+                    () -> BlockEntityType.Builder.of(SteelStorageBlockEntity::new, ModBlocks.STEEL_STORAGE.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<ElectricFurnaceBlockEntity>> ELECTRIC_FURNACE_BE =
             BLOCK_ENTITIES.register("electric_furnace",

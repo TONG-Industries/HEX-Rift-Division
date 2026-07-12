@@ -124,7 +124,9 @@ public class MultiblockPartBlock extends BaseEntityBlock {
                 BlockPos ctrlPos = part.getControllerPos();
                 BlockState ctrlState = level.getBlockState(ctrlPos);
                 if (ctrlState.getBlock() instanceof IMultiblockController controller) {
-                    Block.popResource(level, ctrlPos, new ItemStack(ctrlState.getBlock()));
+                    ItemStack dropStack = controller.getDropStack(level, ctrlPos, ctrlState);
+                    Block.popResource(level, ctrlPos, dropStack);
+
                     net.minecraft.core.Direction facing = ctrlState.hasProperty(HorizontalDirectionalBlock.FACING)
                             ? ctrlState.getValue(HorizontalDirectionalBlock.FACING) : net.minecraft.core.Direction.NORTH;
                     controller.getStructureHelper().destroyStructure(level, ctrlPos, facing);
