@@ -62,11 +62,13 @@ public class SteamEngineOverlay implements IGuiOverlay {
 
         int lowPressureAmount = engine.lowPressureSteamTank.getFluidAmount();
         int lowPressureCapacity = engine.lowPressureSteamTank.getCapacity();
-        String lowPressurePrefix = "Отраб. Пар ";
+        String lowPressurePrefix = "Пар Н.Д. ";
         String lowPressureSuffix = "§c<- §7" + lowPressureAmount + "/" + lowPressureCapacity + " mB";
 
         int steamColor = net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions.of(com.trd.api.fluids.ModFluids.STEAM_SOURCE.get()).getTintColor() | 0xFF000000;
-        int lowPressureColor = net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions.of(com.trd.api.fluids.ModFluids.STEAM_SOURCE.get()).getTintColor() | 0xFF000000;
+
+        // Устанавливаем ваш цвет 0x636a7c с добавлением альфа-канала (0xFF000000) для видимости текста
+        int lowPressureColor = 0xFF636A7C;
 
         int steamPrefixWidth = font.width(steamPrefix);
         int steamSuffixWidth = font.width(steamSuffix);
@@ -89,7 +91,9 @@ public class SteamEngineOverlay implements IGuiOverlay {
         guiGraphics.drawString(font, steamSuffix, steamX + steamPrefixWidth, y, 0xFFFFFF, true);
 
         int lowPressureX = x;
+        // Отрисовка префикса "Пар Н.Д. " теперь использует новый цвет lowPressureColor
         guiGraphics.drawString(font, lowPressurePrefix, lowPressureX, y + 10, lowPressureColor, true);
         guiGraphics.drawString(font, lowPressureSuffix, lowPressureX + lowPressurePrefixWidth, y + 10, 0xFFFFFF, true);
     }
+
 }

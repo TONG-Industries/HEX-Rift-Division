@@ -10,6 +10,7 @@ import com.trd.event.SlagItem;
 import com.trd.item.ModItems;
 import com.trd.menu.industrial.SmallSmelterMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -32,9 +33,14 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 public class SmallSmelterBlockEntity extends BlockEntity implements MenuProvider, ISmelter {
@@ -45,6 +51,10 @@ public class SmallSmelterBlockEntity extends BlockEntity implements MenuProvider
     private static final int SLOT_ASH = 1;
     private static final int SLOT_SMELT = 2;
     private static final int INVENTORY_SIZE = 3;
+    private final LazyOptional<IItemHandler> fullHandler;
+    private final LazyOptional<IItemHandler> upHandler;
+    private final LazyOptional<IItemHandler> downHandler;
+    private final LazyOptional<IItemHandler> sideHandler;
 
     // Параметры нагрева (из HeaterBlockEntity)
     private static final float[][] TIER_STATS = {
@@ -126,6 +136,33 @@ public class SmallSmelterBlockEntity extends BlockEntity implements MenuProvider
 
     public SmallSmelterBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.SMALL_SMELTER_BE.get(), pos, state);
+        this.fullHandler = LazyOptional.of(() -> inventory);
+        this.upHandler   = LazyOptional.of(() -> new InsertOnlyHandler(inventory, SLOT_SMELT));
+        this.downHandler = LazyOptional.of(() -> new ExtractOnlyHandler(inventory, SLOT_ASH));
+        this.sideHandler = LazyOptional.of(() -> new InsertOnlyHandler(inventory, SLOT_FUEL));
+    }
+
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        fullHandler.invalidate();
+        upHandler.invalidate();
+        downHandler.invalidate();
+        sideHandler.invalidate();
+    }
+
+    @Override
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
+        if (cap == ForgeCapabilities.ITEM_HANDLER) {
+            if (side == null) return fullHandler.cast();
+            return switch (side) {
+                case UP    -> upHandler.cast();
+                case DOWN  -> downHandler.cast();
+                default    -> sideHandler.cast();
+            };
+        }
+        return super.getCapability(cap, side);
     }
 
     // ========== ТИКИ ==========
@@ -625,4 +662,86 @@ public class SmallSmelterBlockEntity extends BlockEntity implements MenuProvider
     public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
         return new SmallSmelterMenu(id, inv, this, data);
     }
+
+    private static class InsertOnlyHandler implements IItemHandler {
+        private final ItemStackHandler inventory;
+        private final int[] slots;
+
+        InsertOnlyHandler(ItemStackHandler inventory, int... slots) {
+            this.inventory = inventory;
+            this.slots = slots;
+        }
+
+        @Override public int getSlots() { return slots.length; }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            if (slot < 0 || slot >= slots.length) return ItemStack.EMPTY;
+            return inventory.getStackInSlot(slots[slot]);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (slot < 0 || slot >= slots.length) return stack;
+            return inventory.insertItem(slots[slot], stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            if (slot < 0 || slot >= slots.length) return 0;
+            return inventory.getSlotLimit(slots[slot]);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            if (slot < 0 || slot >= slots.length) return false;
+            return inventory.isItemValid(slots[slot], stack);
+        }
+    }
+
+    private static class ExtractOnlyHandler implements IItemHandler {
+        private final ItemStackHandler inventory;
+        private final int[] slots;
+
+        ExtractOnlyHandler(ItemStackHandler inventory, int... slots) {
+            this.inventory = inventory;
+            this.slots = slots;
+        }
+
+        @Override public int getSlots() { return slots.length; }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            if (slot < 0 || slot >= slots.length) return ItemStack.EMPTY;
+            return inventory.getStackInSlot(slots[slot]);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return stack;
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot < 0 || slot >= slots.length) return ItemStack.EMPTY;
+            return inventory.extractItem(slots[slot], amount, simulate);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            if (slot < 0 || slot >= slots.length) return 0;
+            return inventory.getSlotLimit(slots[slot]);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return false;
+        }
+    }
+
 }

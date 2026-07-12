@@ -12,6 +12,7 @@ import com.trd.event.HotItemHandler;
 import com.trd.event.SlagItem;
 import com.trd.menu.industrial.SmelterMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -32,9 +33,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -116,6 +122,10 @@ public class SmelterBlockEntity extends BlockEntity implements MenuProvider, ISm
     private boolean allTopSlotsReady = false;
     private final ItemStack[] previousTopStacks = new ItemStack[4];
 
+    private final LazyOptional<IItemHandler> fullHandler;
+    private final LazyOptional<IItemHandler> upHandler;
+    private final LazyOptional<IItemHandler> sideHandler;
+
     private final ContainerData data = new SimpleContainerData(14) {
         @Override
         public void set(int index, int value) {
@@ -145,6 +155,30 @@ public class SmelterBlockEntity extends BlockEntity implements MenuProvider, ISm
             previousTopStacks[i] = ItemStack.EMPTY;
         }
         Arrays.fill(slotTemperatures, 20);
+        this.fullHandler = LazyOptional.of(() -> inventory);
+        this.upHandler   = LazyOptional.of(() -> new InsertOnlyHandler(inventory, 0, 1, 2, 3));
+        this.sideHandler = LazyOptional.of(() -> new InsertOnlyHandler(inventory, 4, 5, 6, 7));
+    }
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        fullHandler.invalidate();
+        upHandler.invalidate();
+        sideHandler.invalidate();
+    }
+
+    @Override
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
+        if (cap == ForgeCapabilities.ITEM_HANDLER) {
+            if (side == null) return fullHandler.cast();
+            return switch (side) {
+                case UP    -> upHandler.cast();
+                case DOWN  -> LazyOptional.empty();
+                default    -> sideHandler.cast();
+            };
+        }
+        return super.getCapability(cap, side);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, SmelterBlockEntity be) {
@@ -1192,4 +1226,46 @@ public class SmelterBlockEntity extends BlockEntity implements MenuProvider, ISm
     public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
         return new SmelterMenu(id, inv, this, data);
     }
+
+    private static class InsertOnlyHandler implements IItemHandler {
+        private final ItemStackHandler inventory;
+        private final int[] slots;
+
+        InsertOnlyHandler(ItemStackHandler inventory, int... slots) {
+            this.inventory = inventory;
+            this.slots = slots;
+        }
+
+        @Override public int getSlots() { return slots.length; }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            if (slot < 0 || slot >= slots.length) return ItemStack.EMPTY;
+            return inventory.getStackInSlot(slots[slot]);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (slot < 0 || slot >= slots.length) return stack;
+            return inventory.insertItem(slots[slot], stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            if (slot < 0 || slot >= slots.length) return 0;
+            return inventory.getSlotLimit(slots[slot]);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            if (slot < 0 || slot >= slots.length) return false;
+            return inventory.isItemValid(slots[slot], stack);
+        }
+    }
+
 }

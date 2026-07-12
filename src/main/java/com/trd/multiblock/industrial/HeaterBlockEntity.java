@@ -5,6 +5,7 @@ import com.trd.block.entity.ModBlockEntities;
 import com.trd.item.ModItems;
 import com.trd.menu.industrial.HeaterMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
@@ -25,8 +26,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -284,7 +290,10 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
     public static final int DATA_BURN_TIME = 1;
     public static final int DATA_TOTAL_BURN_TIME = 2;
     public static final int DATA_IS_BURNING = 3;
-
+    private final LazyOptional<IItemHandler> fullHandler;
+    private final LazyOptional<IItemHandler> upHandler;
+    private final LazyOptional<IItemHandler> downHandler;
+    private final LazyOptional<IItemHandler> sideHandler;
     public static final float MAX_TEMP = 1600.0f;
 
     public int getTemperatureScaled() {
@@ -308,6 +317,32 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
 
     public HeaterBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.HEATER_BE.get(), pos, state);
+        this.fullHandler = LazyOptional.of(() -> inventory);
+        this.upHandler   = LazyOptional.of(() -> new InsertOnlyHandler(inventory, 0));
+        this.downHandler = LazyOptional.of(() -> new ExtractOnlyHandler(inventory, 1));
+        this.sideHandler = LazyOptional.of(() -> new InsertOnlyHandler(inventory, 0));
+    }
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        fullHandler.invalidate();
+        upHandler.invalidate();
+        downHandler.invalidate();
+        sideHandler.invalidate();
+    }
+
+    @Override
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
+        if (cap == ForgeCapabilities.ITEM_HANDLER) {
+            if (side == null) return fullHandler.cast();
+            return switch (side) {
+                case UP    -> upHandler.cast();
+                case DOWN  -> downHandler.cast();
+                default    -> sideHandler.cast();
+            };
+        }
+        return super.getCapability(cap, side);
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, HeaterBlockEntity be) {
@@ -488,6 +523,87 @@ public class HeaterBlockEntity extends BlockEntity implements MenuProvider {
         CompoundTag tag = pkt.getTag();
         if (tag != null) {
             handleUpdateTag(tag);
+        }
+    }
+
+    private static class InsertOnlyHandler implements IItemHandler {
+        private final ItemStackHandler inventory;
+        private final int[] slots;
+
+        InsertOnlyHandler(ItemStackHandler inventory, int... slots) {
+            this.inventory = inventory;
+            this.slots = slots;
+        }
+
+        @Override public int getSlots() { return slots.length; }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            if (slot < 0 || slot >= slots.length) return ItemStack.EMPTY;
+            return inventory.getStackInSlot(slots[slot]);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (slot < 0 || slot >= slots.length) return stack;
+            return inventory.insertItem(slots[slot], stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            if (slot < 0 || slot >= slots.length) return 0;
+            return inventory.getSlotLimit(slots[slot]);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            if (slot < 0 || slot >= slots.length) return false;
+            return inventory.isItemValid(slots[slot], stack);
+        }
+    }
+
+    private static class ExtractOnlyHandler implements IItemHandler {
+        private final ItemStackHandler inventory;
+        private final int[] slots;
+
+        ExtractOnlyHandler(ItemStackHandler inventory, int... slots) {
+            this.inventory = inventory;
+            this.slots = slots;
+        }
+
+        @Override public int getSlots() { return slots.length; }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            if (slot < 0 || slot >= slots.length) return ItemStack.EMPTY;
+            return inventory.getStackInSlot(slots[slot]);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return stack;
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot < 0 || slot >= slots.length) return ItemStack.EMPTY;
+            return inventory.extractItem(slots[slot], amount, simulate);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            if (slot < 0 || slot >= slots.length) return 0;
+            return inventory.getSlotLimit(slots[slot]);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return false;
         }
     }
 }
