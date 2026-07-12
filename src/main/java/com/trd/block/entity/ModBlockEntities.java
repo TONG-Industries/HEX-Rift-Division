@@ -1,5 +1,6 @@
 package com.trd.block.entity;
 
+import com.trd.api.energy.EnergyNetworkManager;
 import com.trd.block.entity.conglomerate.ConglomerateBlockEntity;
 import com.trd.block.entity.deco.BeamCollisionBlockEntity;
 import com.trd.block.entity.industrial.ElectricFurnaceBlockEntity;
@@ -10,6 +11,7 @@ import com.trd.block.entity.industrial.fluids.FluidPipeBlockEntity;
 import com.trd.block.entity.industrial.MillstoneBlockEntity;
 import com.trd.block.entity.industrial.casting.SmallSmelterBlockEntity;
 import com.trd.block.entity.industrial.fluids.LowPressureSteamCondenserBlockEntity;
+import com.trd.block.entity.industrial.fluids.PaintablePipeBlockEntity;
 import com.trd.block.entity.industrial.rotation.BearingBlockEntity;
 import com.trd.block.entity.industrial.rotation.MotorElectroBlockEntity;
 import com.trd.block.entity.industrial.rotation.ShaftBlockEntity;
@@ -215,20 +217,23 @@ public class ModBlockEntities {
                             CORRUPTED_BARREL.get(), LEAKING_BARREL.get(), IRON_BARREL.get(),
                             STEEL_BARREL.get(), LEAD_BARREL.get()).build(null));
 
-    public static final RegistryObject<BlockEntityType<FireboxBlockEntity>> FIREBOX_BE =
-            BLOCK_ENTITIES.register("firebox_be",
-                    () -> BlockEntityType.Builder.of(FireboxBlockEntity::new, ModBlocks.FIREBOX.get()).build(null));
-
-    public static final RegistryObject<BlockEntityType<ExhaustTowerBlockEntity>> EXHAUST_TOWER_BE =
-            BLOCK_ENTITIES.register("exhaust_tower_be",
-                    () -> BlockEntityType.Builder.of(ExhaustTowerBlockEntity::new, ModBlocks.EXHAUST_TOWER.get()).build(null));
-
     public static final RegistryObject<BlockEntityType<LowPressureSteamCondenserBlockEntity>> LOW_PRESSURE_STEAM_CONDENSER_BE =
             BLOCK_ENTITIES.register("low_pressure_steam_condenser",
                     () -> BlockEntityType.Builder.of(
                             LowPressureSteamCondenserBlockEntity::new,
                             ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get()
                     ).build(null));
+
+    public static final RegistryObject<BlockEntityType<PaintablePipeBlockEntity>> PAINTABLE_PIPE_BE =
+            BLOCK_ENTITIES.register("paintable_pipe_be",
+                    () -> BlockEntityType.Builder.of(PaintablePipeBlockEntity::new,
+                            ModBlocks.PAINTABLE_PIPE.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<PaintableWireBlockEntity>> PAINTABLE_WIRE_BE =
+            BLOCK_ENTITIES.register("paintable_wire_be",
+                    () -> BlockEntityType.Builder.of(PaintableWireBlockEntity::new,
+                            ModBlocks.PAINTABLE_WIRE.get()).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

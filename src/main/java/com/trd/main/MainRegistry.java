@@ -308,6 +308,8 @@ public class MainRegistry {
             event.accept(ModItems.LEAD_BARREL_ITEM);
             event.accept(ModBlocks.FUEL_TANK_SMALL);
             event.accept(ModBlocks.FUEL_TANK_BIG);
+            event.accept(ModBlocks.PAINTABLE_PIPE);
+            event.accept(ModBlocks.PAINTABLE_WIRE);
 
           event.accept(ModItems.BOILER_ITEM);
         
@@ -322,8 +324,6 @@ public class MainRegistry {
             event.accept(ModBlocks.TUNGSTEN_FLUID_PIPE);
 
             event.accept(ModItems.BOILER_ITEM);
-            event.accept(ModBlocks.EXHAUST_TOWER.get());
-            event.accept(ModBlocks.FIREBOX.get());
 
             for (var entry : com.trd.api.fluids.ModFluids.getAllFluidDrops().values()) {
                 event.accept(entry.get());

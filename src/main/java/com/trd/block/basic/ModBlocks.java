@@ -23,6 +23,7 @@ import com.trd.block.basic.industrial.casting.SmallSmelterBlock;
 import com.trd.block.basic.industrial.energy.*;
 
 import com.trd.block.basic.industrial.fluids.LowPressureSteamCondenserBlock;
+import com.trd.block.basic.industrial.fluids.PaintablePipeBlock;
 import com.trd.block.basic.industrial.rotation.BearingBlock;
 import com.trd.block.basic.industrial.rotation.MotorElectroBlock;
 import com.trd.block.basic.industrial.rotation.ShaftBlock;
@@ -122,6 +123,14 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> TUNGSTEN_FLUID_PIPE = registerBlock("tungsten_fluid_pipe",
             () -> new FluidPipeBlock(PipeTier.TUNGSTEN, BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
+    public static final RegistryObject<Block> PAINTABLE_PIPE = registerBlock("paintable_pipe",
+            () -> new PaintablePipeBlock(PipeTier.STEEL,
+                    BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
+    public static final RegistryObject<Block> PAINTABLE_WIRE = registerBlock("paintable_wire",
+            () -> new PaintableWireBlock(
+                    BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
 
 
     // Конгломераты
@@ -644,14 +653,6 @@ public class ModBlocks {
     public static final RegistryObject<Block> TROMBONE = BLOCKS.register("trombone",
             () -> new MissileTurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
                     .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));
-
-    public static final RegistryObject<Block> FIREBOX = BLOCKS.register("firebox",
-            () -> new FireboxBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
-                    .strength(4.0f).noOcclusion()));
-
-    public static final RegistryObject<Block> EXHAUST_TOWER = BLOCKS.register("exhaust_tower",
-            () -> new ExhaustTowerBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)
-                    .strength(4.0f).noOcclusion()));
 
     // Вспомогательный метод регистрации без предмета
     private static <T extends Block> RegistryObject<T> registerBlockOnly(String name, Supplier<T> block) {

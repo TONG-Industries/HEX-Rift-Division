@@ -16,7 +16,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
 
-public class FluidPipeBlockEntity extends FluidNodeBlockEntity {
+public class FluidPipeBlockEntity extends BlockEntity {
 
     public static final ModelProperty<Fluid> FLUID_PROP = new ModelProperty<>();
     private Fluid filterFluid = Fluids.EMPTY;
@@ -26,17 +26,31 @@ public class FluidPipeBlockEntity extends FluidNodeBlockEntity {
         super(ModBlockEntities.FLUID_PIPE_BE.get(), pos, state);
     }
 
+    // Позволяет подклассам (напр. PaintablePipeBlockEntity) задать свой тип BE,
+    // сохраняя всю логику жидкостной сети и коннектов.
+    protected FluidPipeBlockEntity(net.minecraft.world.level.block.entity.BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
+
+    // ==========================================
+    // ЛОГИКА ЖИДКОСТНОЙ СЕТИ (БЕЗ ТИКОВ!)
+    // ==========================================
     @Override
     public void onLoad() {
         super.onLoad();
+        // Добавляем трубу в сеть только один раз при прогрузке чанка
         if (this.level != null && !this.level.isClientSide) {
-            FluidNetworkManager.get((ServerLevel) this.level).addNode(this.getBlockPos());
+            FluidNetworkManager manager = FluidNetworkManager.get((ServerLevel) this.level);
+            if (!manager.hasNode(this.getBlockPos())) {
+                manager.addNode(this.getBlockPos());
+            }
         }
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
+        // Удаляем трубу из сети при разрушении блока или выгрузке чанка
         if (this.level != null && !this.level.isClientSide) {
             FluidNetworkManager.get((ServerLevel) this.level).removeNode(this.getBlockPos());
         }
@@ -51,13 +65,6 @@ public class FluidPipeBlockEntity extends FluidNodeBlockEntity {
         this.requestModelDataUpdate();
         if (this.level != null && !this.level.isClientSide) {
             this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
-            
-            // Сбрасываем кэш сети, чтобы она пересчитала свой идентификатор
-            FluidNetworkManager manager = FluidNetworkManager.get((ServerLevel) this.level);
-            com.trd.api.fluids.system.FluidNetwork net = manager.getNetwork(this.getBlockPos());
-            if (net != null) {
-                net.invalidateFluidCache();
-            }
         }
     }
 

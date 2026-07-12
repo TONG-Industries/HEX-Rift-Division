@@ -98,7 +98,6 @@ public class ClientModEvents {
         MenuScreens.register(ModMenuTypes.FLUID_BARREL_MENU.get(), GUIFluidBarrel::new);
         MenuScreens.register(ModMenuTypes.HEATER_MENU.get(), GUIHeater::new);
         MenuScreens.register(ModMenuTypes.SMELTER_MENU.get(), GUISmelter::new);
-        MenuScreens.register(ModMenuTypes.FIREBOX_MENU.get(), GUIFirebox::new);
         MenuScreens.register(ModMenuTypes.FUEL_TANK_MENU.get(), GUIFuelTank::new);
         MenuScreens.register(ModMenuTypes.TROMBONE_MENU.get(), GUITrombone::new);
         
@@ -107,6 +106,8 @@ public class ClientModEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.BEARING_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.TACHOMETER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.FUEL_TANK_BE.get(), com.trd.client.render.ber.FuelTankRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.PAINTABLE_PIPE_BE.get(), com.trd.client.render.ber.PaintableConduitRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.PAINTABLE_WIRE_BE.get(), com.trd.client.render.ber.PaintableConduitRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.BOILER_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.STEAM_ENGINE_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.STATOR_BE.get(), com.trd.client.render.flywheel.DummyFlywheelRenderer::new);
