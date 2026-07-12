@@ -138,6 +138,16 @@ public class FuelTankSmallBlock extends BaseEntityBlock implements IMultiblockCo
         if (!level.isClientSide) {
             Direction facing = state.getValue(FACING);
             getStructureHelper().placeStructure(level, pos, facing, this);
+
+            // восстанавливаем тип/жидкость из предмета
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof FuelTankSmallBlockEntity tank) {
+                net.minecraft.nbt.CompoundTag itemNbt = stack.getTag();
+                if (itemNbt != null && itemNbt.contains("BlockEntityTag")) {
+                    tank.load(itemNbt.getCompound("BlockEntityTag"));
+                    tank.setChanged();
+                }
+            }
         }
     }
 
@@ -211,5 +221,32 @@ public class FuelTankSmallBlock extends BaseEntityBlock implements IMultiblockCo
         super.appendHoverText(stack, level, tooltip, flag);
         tooltip.add(Component.literal("Ёмкость: 288 000 mB").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal("Устойчив к коррозии и нагреву").withStyle(ChatFormatting.GREEN));
+
+        net.minecraft.nbt.CompoundTag nbt = stack.getTag();
+        net.minecraft.nbt.CompoundTag beTag = (nbt != null && nbt.contains("BlockEntityTag")) ? nbt.getCompound("BlockEntityTag") : null;
+
+        if (beTag != null && beTag.contains("FluidName")) {
+            String fluidName = beTag.getString("FluidName");
+            int amount = beTag.getInt("Amount");
+            if (!fluidName.equals("minecraft:empty") && amount > 0) {
+                Fluid fluid = net.minecraftforge.registries.ForgeRegistries.FLUIDS.getValue(new net.minecraft.resources.ResourceLocation(fluidName));
+                String loc = fluid != null ? Component.translatable(fluid.getFluidType().getDescriptionId()).getString() : fluidName;
+                tooltip.add(Component.literal("§bЖидкость: §f" + loc));
+                tooltip.add(Component.literal("§eОбъём: §f" + amount + " / 288000 mB"));
+            } else {
+                tooltip.add(Component.literal("§bЖидкость: §7Пусто"));
+            }
+        } else {
+            tooltip.add(Component.literal("§bЖидкость: §7Пусто"));
+        }
+
+        String filter = beTag != null ? beTag.getString("FluidFilter") : "";
+        if (filter != null && !filter.isEmpty() && !filter.equals("none")) {
+            Fluid f = net.minecraftforge.registries.ForgeRegistries.FLUIDS.getValue(new net.minecraft.resources.ResourceLocation(filter));
+            String fName = f != null ? Component.translatable(f.getFluidType().getDescriptionId()).getString() : filter;
+            tooltip.add(Component.literal("§aТип: §f" + fName));
+        } else {
+            tooltip.add(Component.literal("§aТип: §cне задан"));
+        }
     }
 }

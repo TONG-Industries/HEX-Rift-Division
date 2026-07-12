@@ -15,7 +15,6 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -346,6 +345,10 @@ public class FluidBarrelBlockEntity extends FluidNodeBlockEntity implements Menu
         if (!newFilter.equals("none") && !fluidTank.isEmpty()) {
             ResourceLocation cur = ForgeRegistries.FLUIDS.getKey(fluidTank.getFluid().getFluid());
             if (cur != null && !cur.toString().equals(newFilter)) fluidTank.setFluid(FluidStack.EMPTY);
+        }
+        // при сбросе типа на "none" — сливаем всю жидкость
+        if (newFilter.equals("none") && !fluidTank.isEmpty()) {
+            fluidTank.setFluid(FluidStack.EMPTY);
         }
         setChanged();
         if (level != null && !level.isClientSide) {
