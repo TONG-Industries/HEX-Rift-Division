@@ -5,6 +5,7 @@ import com.trd.menu.industrial.SteelStorageMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -34,6 +35,10 @@ public class SteelStorageBlockEntity extends BlockEntity implements MenuProvider
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+            // ═══ ФИКС: шлём обновление клиентам при изменении инвентаря ═══
+            if (level != null && !level.isClientSide) {
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 2);
+            }
         }
 
         @Override
@@ -59,6 +64,24 @@ public class SteelStorageBlockEntity extends BlockEntity implements MenuProvider
             if (!inventory.getStackInSlot(i).isEmpty()) return false;
         }
         return true;
+    }
+
+    @Override
+    public net.minecraft.nbt.CompoundTag getUpdateTag() {
+        net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
+        saveAdditional(tag);
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(net.minecraft.nbt.CompoundTag tag) {
+        load(tag);
+    }
+
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     public void dropContents() {
