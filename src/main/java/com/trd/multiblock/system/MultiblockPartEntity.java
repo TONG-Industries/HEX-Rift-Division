@@ -115,6 +115,7 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
     @Override
     public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (controllerPos != null && level != null) {
+            // === FLUID ===
             if (cap == ForgeCapabilities.FLUID_HANDLER && (role == PartRole.FLUID_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR || role == PartRole.FLUID_INPUT || role == PartRole.FLUID_OUTPUT || role == PartRole.FLUID_LADDER)) {
                 BlockEntity be = level.getBlockEntity(controllerPos);
                 if (be instanceof com.trd.multiblock.industrial.BoilerBlockEntity boiler) {
@@ -126,20 +127,23 @@ public class MultiblockPartEntity extends BlockEntity implements IMultiblockPart
                 } else if (be instanceof IFluidTankProvider provider) {
                     return provider.getFluidHandlerCapability().cast();
                 }
-            } else if ((cap == com.trd.capability.ModCapabilities.ENERGY_PROVIDER || cap == com.trd.capability.ModCapabilities.ENERGY_CONNECTOR) 
-                        && (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR)) {
+            }
+            // === ENERGY ===
+            else if ((cap == com.trd.capability.ModCapabilities.ENERGY_PROVIDER || cap == com.trd.capability.ModCapabilities.ENERGY_CONNECTOR)
+                    && (role == PartRole.ENERGY_CONNECTOR || role == PartRole.UNIVERSAL_CONNECTOR)) {
                 BlockEntity be = level.getBlockEntity(controllerPos);
                 if (be != null) {
                     return be.getCapability(cap, side);
                 }
             }
-        } else if (cap == ForgeCapabilities.ITEM_HANDLER) {
-            BlockEntity be = level.getBlockEntity(controllerPos);
-            if (be != null) {
-                return be.getCapability(cap, side);
+            // === ITEMS (новое!) ===
+            else if (cap == ForgeCapabilities.ITEM_HANDLER) {
+                BlockEntity be = level.getBlockEntity(controllerPos);
+                if (be != null) {
+                    return be.getCapability(cap, side);
+                }
             }
         }
-
         return super.getCapability(cap, side);
     }
 
