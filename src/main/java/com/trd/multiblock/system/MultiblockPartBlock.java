@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -121,15 +122,17 @@ public class MultiblockPartBlock extends BaseEntityBlock {
                 BlockPos ctrlPos = part.getControllerPos();
                 BlockState ctrlState = level.getBlockState(ctrlPos);
                 if (ctrlState.getBlock() instanceof IMultiblockController controller) {
-                    // предмет контроллера С СОХРАНЕНИЕМ NBT (тип сохраняется даже при пустом баке)
-                    ItemStack ctrlDrop = new ItemStack(ctrlState.getBlock());
-                    BlockEntity ctrlBe = level.getBlockEntity(ctrlPos);
-                    if (ctrlBe instanceof com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity) {
-                        net.minecraft.nbt.CompoundTag beNbt = ctrlBe.saveWithoutMetadata();
-                        beNbt.remove("Inventory");
-                        ctrlDrop.addTagElement("BlockEntityTag", beNbt);
+                    // Только в выживании дропаем предмет
+                    if (!player.isCreative()) {
+                        ItemStack ctrlDrop = new ItemStack(ctrlState.getBlock());
+                        BlockEntity ctrlBe = level.getBlockEntity(ctrlPos);
+                        if (ctrlBe instanceof com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity) {
+                            net.minecraft.nbt.CompoundTag beNbt = ctrlBe.saveWithoutMetadata();
+                            beNbt.remove("Inventory");
+                            ctrlDrop.addTagElement("BlockEntityTag", beNbt);
+                        }
+                        Block.popResource(level, ctrlPos, ctrlDrop);
                     }
-                    Block.popResource(level, ctrlPos, ctrlDrop);
                     net.minecraft.core.Direction facing = ctrlState.hasProperty(HorizontalDirectionalBlock.FACING)
                             ? ctrlState.getValue(HorizontalDirectionalBlock.FACING) : net.minecraft.core.Direction.NORTH;
                     controller.getStructureHelper().destroyStructure(level, ctrlPos, facing);
@@ -139,6 +142,27 @@ public class MultiblockPartBlock extends BaseEntityBlock {
         }
         super.playerWillDestroy(level, pos, state, player);
     }
+
+    @Override
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof IMultiblockPart part && part.getControllerPos() != null) {
+            BlockPos ctrlPos = part.getControllerPos();
+            BlockState ctrlState = level.getBlockState(ctrlPos);
+            if (ctrlState.getBlock() instanceof IMultiblockController) {
+                ItemStack ctrlDrop = new ItemStack(ctrlState.getBlock());
+                BlockEntity ctrlBe = level.getBlockEntity(ctrlPos);
+                if (ctrlBe instanceof com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity) {
+                    net.minecraft.nbt.CompoundTag beNbt = ctrlBe.saveWithoutMetadata();
+                    beNbt.remove("Inventory");
+                    ctrlDrop.addTagElement("BlockEntityTag", beNbt);
+                }
+                return ctrlDrop;
+            }
+        }
+        return super.getCloneItemStack(state, target, level, pos, player);
+    }
+
     @Override
     public VoxelShape getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos) {
         return Shapes.empty();
