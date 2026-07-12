@@ -271,6 +271,8 @@ public class MainRegistry {
             event.accept(ModItems.ENERGY_CELL_BASIC);
 
             event.accept(ModBlocks.WIRE_COATED);
+            event.accept(ModBlocks.PAINTABLE_PIPE);
+            event.accept(ModBlocks.PAINTABLE_WIRE);
             event.accept(ModBlocks.CONNECTOR);
             event.accept(ModBlocks.MEDIUM_CONNECTOR);
             event.accept(ModBlocks.LARGE_CONNECTOR);
@@ -308,8 +310,6 @@ public class MainRegistry {
             event.accept(ModItems.LEAD_BARREL_ITEM);
             event.accept(ModBlocks.FUEL_TANK_SMALL);
             event.accept(ModBlocks.FUEL_TANK_BIG);
-            event.accept(ModBlocks.PAINTABLE_PIPE);
-            event.accept(ModBlocks.PAINTABLE_WIRE);
 
           event.accept(ModItems.BOILER_ITEM);
         
