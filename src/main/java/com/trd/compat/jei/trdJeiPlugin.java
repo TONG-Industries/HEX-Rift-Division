@@ -58,6 +58,10 @@ public class trdJeiPlugin implements IModPlugin {
             RecipeType.create(MainRegistry.MOD_ID, "electric_furnace", ElectricFurnaceWrapper.class);
     public static final RecipeType<BoilingWrapper> BOILING_TYPE =
             RecipeType.create(MainRegistry.MOD_ID, "boiling", BoilingWrapper.class);
+    public static final RecipeType<SteamEngineWrapper> STEAM_ENGINE_TYPE =
+            RecipeType.create(MainRegistry.MOD_ID, "steam_engine", SteamEngineWrapper.class);
+    public static final RecipeType<CondensingWrapper> CONDENSING_TYPE =
+            RecipeType.create(MainRegistry.MOD_ID, "condensing", CondensingWrapper.class);
 
     public record ElectricFurnaceWrapper(net.minecraft.world.item.crafting.AbstractCookingRecipe recipe, int cookTime, int energyPerTick) {}
     public record SmeltingWrapper(ItemStack input, Metal metal, int outputUnits, int temp, float heatConsumption, int timeTicks) {}
@@ -65,6 +69,8 @@ public class trdJeiPlugin implements IModPlugin {
     public record AlloyingWrapper(AlloyRecipe recipe) {}
     public record MillstoneWrapper(Item input, List<ItemStack> outputs, int grindsRequired) {}
     public record BoilingWrapper(ItemStack waterInput, ItemStack steamOutput, int tempC) {}
+    public record SteamEngineWrapper(ItemStack steamInput, ItemStack lowPressureOutput) {}
+    public record CondensingWrapper(ItemStack lowPressureInput, ItemStack waterOutput) {}
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
@@ -75,6 +81,8 @@ public class trdJeiPlugin implements IModPlugin {
         registration.addRecipeCategories(new MillstoneCategory(guiHelper));
         registration.addRecipeCategories(new ElectricFurnaceCategory(guiHelper));
         registration.addRecipeCategories(new BoilingCategory(guiHelper));
+        registration.addRecipeCategories(new SteamEngineCategory(guiHelper));
+        registration.addRecipeCategories(new CondensingCategory(guiHelper));
     }
 
     @Override
@@ -170,10 +178,21 @@ public class trdJeiPlugin implements IModPlugin {
 
         // === БОЙЛЕР ===
         List<BoilingWrapper> boilingRecipes = new ArrayList<>();
-        ItemStack waterDrop = new ItemStack(ModFluids.FLUID_DROP_WATER.get(), 1);
-        ItemStack steamDrop = new ItemStack(ModFluids.getFluidDrop(ModFluids.STEAM_TYPE.get()), 1);
+        ItemStack waterDrop = new ItemStack(ModFluids.FLUID_DROP_WATER.get());
+        ItemStack steamDrop = new ItemStack(ModFluids.getFluidDrop(ModFluids.STEAM_TYPE.get()));
         boilingRecipes.add(new BoilingWrapper(waterDrop, steamDrop, 100));
         registration.addRecipes(BOILING_TYPE, boilingRecipes);
+
+        // === ПАРОВОЙ ДВИГАТЕЛЬ ===
+        List<SteamEngineWrapper> steamEngineRecipes = new ArrayList<>();
+        ItemStack lowPressureDrop = new ItemStack(ModFluids.getFluidDrop(ModFluids.LOW_PRESSURE_STEAM_TYPE.get()));
+        steamEngineRecipes.add(new SteamEngineWrapper(steamDrop.copy(), lowPressureDrop));
+        registration.addRecipes(STEAM_ENGINE_TYPE, steamEngineRecipes);
+
+        // === КОНДЕНСАТОР ===
+        List<CondensingWrapper> condensingRecipes = new ArrayList<>();
+        condensingRecipes.add(new CondensingWrapper(lowPressureDrop.copy(), waterDrop.copy()));
+        registration.addRecipes(CONDENSING_TYPE, condensingRecipes);
     }
 
     @Override
@@ -183,6 +202,8 @@ public class trdJeiPlugin implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(com.trd.block.basic.ModBlocks.JERNOVA.get()), MILLSTONE_TYPE);
         registration.addRecipeCatalyst(new ItemStack(com.trd.block.basic.ModBlocks.ELECTRO_FURNACE.get()), ELECTRIC_FURNACE_TYPE);
         registration.addRecipeCatalyst(new ItemStack(ModItems.BOILER_ITEM.get()), BOILING_TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ModItems.STEAM_ENGINE_ITEM.get()), STEAM_ENGINE_TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get()), CONDENSING_TYPE);
     }
 
     private static ItemStack createLiquidMetalStack(Metal metal, int amount) {
@@ -228,6 +249,74 @@ public class trdJeiPlugin implements IModPlugin {
             var font = Minecraft.getInstance().font;
             String tempText = recipe.tempC() + "°C";
             gg.drawString(font, tempText, 5, 43, 0xFF555555, false);
+        }
+    }
+
+    public static class SteamEngineCategory implements IRecipeCategory<SteamEngineWrapper> {
+        private static final ResourceLocation TEXTURE =
+                new ResourceLocation(MainRegistry.MOD_ID, "textures/gui/jei/jei_universal_gui2.png");
+
+        private final IDrawable background;
+        private final IDrawable icon;
+        private final Component title;
+
+        public SteamEngineCategory(IGuiHelper guiHelper) {
+            this.background = guiHelper.createDrawable(TEXTURE, 0, 0, 76, 60);
+            this.icon = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,
+                    new ItemStack(ModItems.STEAM_ENGINE_ITEM.get()));
+            this.title = Component.translatable("jei.category.trd.steam_engine");
+        }
+
+        @Override public RecipeType<SteamEngineWrapper> getRecipeType() { return STEAM_ENGINE_TYPE; }
+        @Override public Component getTitle() { return title; }
+        @Override public IDrawable getBackground() { return background; }
+        @Override public IDrawable getIcon() { return icon; }
+
+        @Override
+        public void setRecipe(IRecipeLayoutBuilder builder, SteamEngineWrapper recipe, IFocusGroup focuses) {
+            builder.addSlot(RecipeIngredientRole.INPUT, 5, 22)
+                    .addItemStack(recipe.steamInput());
+            builder.addSlot(RecipeIngredientRole.OUTPUT, 55, 22)
+                    .addItemStack(recipe.lowPressureOutput());
+        }
+
+        @Override
+        public void draw(SteamEngineWrapper recipe, IRecipeSlotsView view, GuiGraphics gg, double mx, double my) {
+            // Без текста
+        }
+    }
+
+    public static class CondensingCategory implements IRecipeCategory<CondensingWrapper> {
+        private static final ResourceLocation TEXTURE =
+                new ResourceLocation(MainRegistry.MOD_ID, "textures/gui/jei/jei_universal_gui2.png");
+
+        private final IDrawable background;
+        private final IDrawable icon;
+        private final Component title;
+
+        public CondensingCategory(IGuiHelper guiHelper) {
+            this.background = guiHelper.createDrawable(TEXTURE, 0, 0, 76, 60);
+            this.icon = guiHelper.createDrawableIngredient(VanillaTypes.ITEM_STACK,
+                    new ItemStack(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get()));
+            this.title = Component.translatable("jei.category.trd.condensing");
+        }
+
+        @Override public RecipeType<CondensingWrapper> getRecipeType() { return CONDENSING_TYPE; }
+        @Override public Component getTitle() { return title; }
+        @Override public IDrawable getBackground() { return background; }
+        @Override public IDrawable getIcon() { return icon; }
+
+        @Override
+        public void setRecipe(IRecipeLayoutBuilder builder, CondensingWrapper recipe, IFocusGroup focuses) {
+            builder.addSlot(RecipeIngredientRole.INPUT, 5, 22)
+                    .addItemStack(recipe.lowPressureInput());
+            builder.addSlot(RecipeIngredientRole.OUTPUT, 55, 22)
+                    .addItemStack(recipe.waterOutput());
+        }
+
+        @Override
+        public void draw(CondensingWrapper recipe, IRecipeSlotsView view, GuiGraphics gg, double mx, double my) {
+            // Без текста
         }
     }
 
