@@ -59,16 +59,13 @@ public class ConveyorBufferBlockEntity extends BlockEntity implements MenuProvid
     public IItemHandler getInventory() { return inventory; }
     public boolean isConnectedToMachine() { return connectedToMachine; }
 
-    // ------------------------------------------------------------
-    //  Тик
-    // ------------------------------------------------------------
     public static void tick(Level level, BlockPos pos, BlockState state, ConveyorBufferBlockEntity be) {
         if (level.isClientSide) return;
 
         Direction facing = state.getValue(BlockStateProperties.FACING);
-        Direction machineSide = (be.mode == Mode.EXTRACTOR) ? facing.getOpposite() : facing;
+        // === ОБА: станок сзади (back), front — к конвейеру ===
+        Direction machineSide = facing.getOpposite();
 
-        // Обновляем светодиод
         boolean wasConnected = be.connectedToMachine;
         be.connectedToMachine = be.findMachine(machineSide) != null;
         if (wasConnected != be.connectedToMachine) {
@@ -91,53 +88,53 @@ public class ConveyorBufferBlockEntity extends BlockEntity implements MenuProvid
     private void tickExtractor(Direction facing) {
         Direction back = facing.getOpposite();
 
-        // 1. Забираем из станка (до 3 шт за раз)
+        // 1. Забираем из станка сзади — до 3 из ОДНОГО слота за раз
         IItemHandler machine = findMachine(back);
         if (machine != null) {
             int extracted = 0;
-            for (int i = 0; i < machine.getSlots() && extracted < 3; i++) {
-                ItemStack sim = machine.extractItem(i, 1, true);
+            for (int i = 0; i < machine.getSlots() && extracted == 0; i++) {
+                ItemStack sim = machine.extractItem(i, 3, true);
                 if (!sim.isEmpty() && ItemHandlerHelper.insertItem(inventory, sim, true).isEmpty()) {
-                    machine.extractItem(i, 1, false);
-                    ItemHandlerHelper.insertItem(inventory, sim, false);
-                    extracted++;
+                    ItemStack actual = machine.extractItem(i, sim.getCount(), false);
+                    if (!actual.isEmpty()) {
+                        ItemStack rem = ItemHandlerHelper.insertItem(inventory, actual, false);
+                        extracted = actual.getCount() - rem.getCount();
+                    }
                 }
             }
             if (extracted > 0) setChanged();
         }
 
-        // 2. Передаём на конвейер спереди
+        // 2. Передаём на конвейер спереди — до 3 за раз
         BlockEntity frontBe = level.getBlockEntity(worldPosition.relative(facing));
         if (frontBe instanceof ConveyorBlockEntity conveyor) {
-            for (int i = 0; i < inventory.getSlots(); i++) {
+            int pushed = 0;
+            int i = 0;
+            while (i < inventory.getSlots() && pushed < 3) {
                 ItemStack stack = inventory.getStackInSlot(i);
                 if (!stack.isEmpty()) {
                     ItemStack single = stack.split(1);
                     if (conveyor.tryAcceptItem(single)) {
+                        pushed++;
                         setChanged();
-                        break; // 1 за тик
+                        // НЕ инкрементируем i — проверяем тот же слот ещё раз
                     } else {
                         stack.grow(1); // не принял — возвращаем
+                        i++; // идём к следующему слоту
                     }
+                } else {
+                    i++; // пустой слот — следующий
                 }
             }
         }
     }
 
-    // Вставщик: конвейер сзади → буфер → станок спереди
+    // Вставщик: конвейер спереди (через tryAcceptItem) → буфер → станок сзади
     private void tickInserter(Direction facing) {
         Direction back = facing.getOpposite();
 
-        // 1. Принимаем от конвейера сзади
-        BlockEntity backBe = level.getBlockEntity(worldPosition.relative(back));
-        if (backBe instanceof ConveyorBlockEntity conveyor) {
-            // Конвейер сам пушит предметы через tryAcceptItem,
-            // но если он не может — мы ничего не делаем здесь.
-            // Однако можно добавить активное вытягивание, если нужно.
-        }
-
-        // 2. Пушим в станок спереди
-        IItemHandler machine = findMachine(facing);
+        // 1. Пушим в станок сзади
+        IItemHandler machine = findMachine(back);
         if (machine != null) {
             for (int i = 0; i < inventory.getSlots(); i++) {
                 ItemStack stack = inventory.getStackInSlot(i);
@@ -151,7 +148,7 @@ public class ConveyorBufferBlockEntity extends BlockEntity implements MenuProvid
             }
         }
 
-        // 3. Переполнение — выбросить сверху
+        // 2. Переполнение — выбросить сверху
         if (isBufferFull()) {
             for (int i = 0; i < inventory.getSlots(); i++) {
                 ItemStack stack = inventory.getStackInSlot(i);
@@ -165,9 +162,7 @@ public class ConveyorBufferBlockEntity extends BlockEntity implements MenuProvid
         }
     }
 
-    // ------------------------------------------------------------
-    //  Приём от конвейера (вызывается из ConveyorBlockEntity.tick)
-    // ------------------------------------------------------------
+    // Вызывается из ConveyorBlockEntity когда конвейер пушит предмет
     public boolean tryAcceptItem(ItemStack stack) {
         ItemStack rem = ItemHandlerHelper.insertItem(inventory, stack, false);
         if (rem.isEmpty()) {
@@ -177,14 +172,17 @@ public class ConveyorBufferBlockEntity extends BlockEntity implements MenuProvid
         return false;
     }
 
-    // ------------------------------------------------------------
-    //  Утилиты
-    // ------------------------------------------------------------
     @Nullable
     private IItemHandler findMachine(Direction side) {
         BlockEntity be = level.getBlockEntity(worldPosition.relative(side));
         if (be == null) return null;
-        return be.getCapability(ForgeCapabilities.ITEM_HANDLER, side.getOpposite()).orElse(null);
+
+        // Сначала пытаемся со стороны (как воронка)
+        LazyOptional<IItemHandler> cap = be.getCapability(ForgeCapabilities.ITEM_HANDLER, side.getOpposite());
+        if (cap.isPresent()) return cap.orElse(null);
+
+        // Fallback: внутренний инвентарь без учёта стороны (для извлекателя сбоку/сверху)
+        return be.getCapability(ForgeCapabilities.ITEM_HANDLER, null).orElse(null);
     }
 
     private boolean isBufferFull() {
@@ -212,9 +210,6 @@ public class ConveyorBufferBlockEntity extends BlockEntity implements MenuProvid
         }
     }
 
-    // ------------------------------------------------------------
-    //  Capabilities
-    // ------------------------------------------------------------
     @Override
     public @Nonnull <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyInventory.cast();
@@ -227,9 +222,6 @@ public class ConveyorBufferBlockEntity extends BlockEntity implements MenuProvid
         lazyInventory.invalidate();
     }
 
-    // ------------------------------------------------------------
-    //  GUI
-    // ------------------------------------------------------------
     @Override
     public Component getDisplayName() {
         return Component.translatable(mode == Mode.EXTRACTOR ? "block.trd.conveyor_izvlekatel" : "block.trd.conveyor_vstavshik");
@@ -241,9 +233,6 @@ public class ConveyorBufferBlockEntity extends BlockEntity implements MenuProvid
         return new ConveyorBufferMenu(id, playerInv, this);
     }
 
-    // ------------------------------------------------------------
-    //  NBT
-    // ------------------------------------------------------------
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);

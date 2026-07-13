@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -27,12 +28,9 @@ public class ConveyorBlockEntity extends BlockEntity {
     public static final double SPEED = 1.5 / 20.0;
     public static final double ITEM_Y_OFFSET = 2 / 16.0;
 
-    private static final int MAX_ITEMS = 64; // Лимит предметов на конвейере
+    private static final int MAX_ITEMS = 64;
 
-    // Серверные данные
     private final List<ConveyorItem> items = new ArrayList<>();
-
-    // Клиентские данные для интерполяции
     private final List<ConveyorItem> clientItems = new ArrayList<>();
     private final List<ConveyorItem> prevClientItems = new ArrayList<>();
 
@@ -55,7 +53,6 @@ public class ConveyorBlockEntity extends BlockEntity {
         return prevClientItems;
     }
 
-    // Синхронизация клиентских списков с серверными
     private void syncClient() {
         clientItems.clear();
         prevClientItems.clear();
@@ -69,16 +66,12 @@ public class ConveyorBlockEntity extends BlockEntity {
         }
     }
 
-    // ------------------------------------------------------------
-    //  Тик
-    // ------------------------------------------------------------
     public static void tick(Level level, BlockPos pos, BlockState state, ConveyorBlockEntity be) {
         if (level.isClientSide) {
             be.tickClient();
             return;
         }
 
-        // 1. Захват предметов с земли
         AABB box = new AABB(pos).inflate(0.1, 0.3, 0.1).move(0, 0.2, 0);
         List<ItemEntity> entities = level.getEntitiesOfClass(ItemEntity.class, box,
                 e -> !e.isRemoved() && e.getDeltaMovement().y <= 0.01);
@@ -91,7 +84,6 @@ public class ConveyorBlockEntity extends BlockEntity {
             }
         }
 
-        // 2. Движение и передача предметов
         Direction facing = state.getValue(ConveyorBlock.FACING);
         Iterator<ConveyorItem> iterator = be.items.iterator();
         while (iterator.hasNext()) {
@@ -101,17 +93,21 @@ public class ConveyorBlockEntity extends BlockEntity {
             if (ci.progress >= 1.0) {
                 BlockPos nextPos = pos.relative(facing);
                 BlockState nextState = level.getBlockState(nextPos);
-                BlockEntity nextBe = level.getBlockEntity(nextPos); // ← ОБЪЯВЛЕНО ДО ИСПОЛЬЗОВАНИЯ
+                BlockEntity nextBe = level.getBlockEntity(nextPos);
 
                 // === ВСТАВЩИК ===
+                // Принимаем ТОЛЬКО если вставщик смотрит на нас своей передней (FACING) стороной
                 if (nextBe instanceof ConveyorBufferBlockEntity buffer && buffer.getMode() == ConveyorBufferBlockEntity.Mode.INSERTER) {
-                    if (buffer.tryAcceptItem(ci.stack.copy())) {
-                        iterator.remove();
-                        be.syncClient();
-                        continue;
-                    } else {
-                        ci.progress = 1.0 - 0.001; // задерживаем, буфер полон
-                        continue;
+                    Direction bufferFacing = nextState.getValue(BlockStateProperties.FACING);
+                    if (bufferFacing == facing.getOpposite()) {
+                        if (buffer.tryAcceptItem(ci.stack.copy())) {
+                            iterator.remove();
+                            be.syncClient();
+                            continue;
+                        } else {
+                            ci.progress = 1.0 - 0.001; // задерживаем, буфер полон
+                            continue;
+                        }
                     }
                 }
 
@@ -127,23 +123,18 @@ public class ConveyorBlockEntity extends BlockEntity {
                         continue;
                     }
                 }
-                // Не удалось передать – выбрасываем
                 be.ejectItem(level, facing, ci.stack);
                 iterator.remove();
                 be.syncClient();
             }
         }
 
-        // 3. Добавляем новые предметы
         if (!newItems.isEmpty()) {
             be.items.addAll(newItems);
             be.syncClient();
         }
     }
 
-    // ------------------------------------------------------------
-    //  Клиентская симуляция с интерполяцией
-    // ------------------------------------------------------------
     private void tickClient() {
         prevClientItems.clear();
         for (ConveyorItem ci : clientItems) {
@@ -156,9 +147,6 @@ public class ConveyorBlockEntity extends BlockEntity {
         }
     }
 
-    // ------------------------------------------------------------
-    //  Выброс предмета
-    // ------------------------------------------------------------
     private void ejectItem(Level level, Direction facing, ItemStack stack) {
         if (stack.isEmpty()) return;
 
@@ -175,9 +163,6 @@ public class ConveyorBlockEntity extends BlockEntity {
         level.addFreshEntity(itemEntity);
     }
 
-    // ------------------------------------------------------------
-    //  Взятие предмета игроком (ПКМ пустой рукой)
-    // ------------------------------------------------------------
     public ItemStack popItem() {
         if (items.isEmpty()) return ItemStack.EMPTY;
         ConveyorItem ci = items.remove(items.size() - 1);
@@ -185,9 +170,6 @@ public class ConveyorBlockEntity extends BlockEntity {
         return ci.stack;
     }
 
-    // ------------------------------------------------------------
-    //  Выброс всех предметов при разрушении блока
-    // ------------------------------------------------------------
     public void dropAllItems(Level level, BlockPos pos) {
         if (items.isEmpty()) return;
         Direction facing = getBlockState().getValue(ConveyorBlock.FACING);
@@ -198,9 +180,6 @@ public class ConveyorBlockEntity extends BlockEntity {
         syncClient();
     }
 
-    // ------------------------------------------------------------
-    //  NBT
-    // ------------------------------------------------------------
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
@@ -242,9 +221,6 @@ public class ConveyorBlockEntity extends BlockEntity {
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
-    // ------------------------------------------------------------
-    //  Внутренний класс предмета на конвейере
-    // ------------------------------------------------------------
     public static class ConveyorItem {
         public ItemStack stack;
         public double progress;

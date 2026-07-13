@@ -3,7 +3,6 @@ package com.trd.block.basic.industrial;
 import com.trd.block.entity.industrial.ConveyorBufferBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -40,10 +39,12 @@ public abstract class ConveyorBufferBlock extends BaseEntityBlock {
         builder.add(FACING);
     }
 
-    // БЕЗ .getOpposite() — front смотрит туда, куда смотрит игрок
+    // === ФИКС УСТАНОВКИ ===
+    // Front (cargo_port) теперь смотрит НА игрока, как печка.
+    // Без .getOpposite() front смотрел от игрока (как раздатчик).
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
-        return defaultBlockState().setValue(FACING, ctx.getNearestLookingDirection());
+        return defaultBlockState().setValue(FACING, ctx.getNearestLookingDirection().getOpposite());
     }
 
     @Override
@@ -56,11 +57,10 @@ public abstract class ConveyorBufferBlock extends BaseEntityBlock {
         return RenderShape.MODEL;
     }
 
-    // === ОТКРЫТИЕ GUI ЧЕРЕЗ FORGE (передаёт BlockPos в буфер) ===
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+        if (!level.isClientSide && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof ConveyorBufferBlockEntity buffer) {
                 NetworkHooks.openScreen(serverPlayer, buffer, buf -> buf.writeBlockPos(pos));
