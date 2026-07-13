@@ -43,6 +43,8 @@ public class ModMenuTypes {
     public static final RegistryObject<MenuType<SmallSmelterMenu>> SMALL_SMELTER_MENU =
             MENUS.register("small_smelter_menu", () -> IForgeMenuType.create(SmallSmelterMenu::create));
 
+    public static final RegistryObject<MenuType<ConveyorBufferMenu>> CONVEYOR_BUFFER =
+            MENUS.register("conveyor_buffer", () -> net.minecraftforge.common.extensions.IForgeMenuType.create(ConveyorBufferMenu::new));
 
     public static final RegistryObject<MenuType<SteelStorageMenu>> STEEL_STORAGE_MENU =
             MENUS.register("steel_storage_menu", () -> net.minecraftforge.common.extensions.IForgeMenuType.create(

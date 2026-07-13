@@ -11,13 +11,11 @@ import com.trd.block.basic.deco.BeamCollisionBlock;
 import com.trd.block.basic.deco.LampBlock;
 import com.trd.block.basic.deco.SteelPropsBlock;
 import com.trd.block.basic.direction.SideOBlock;
-import com.trd.block.basic.industrial.ConveyorBlock;
-import com.trd.block.basic.industrial.ElectricFurnaceBlock;
+import com.trd.block.basic.industrial.*;
 import com.trd.block.basic.industrial.fluids.FluidBarrelBlock;
 
 import com.trd.block.basic.industrial.fluids.FluidPipeBlock;
 
-import com.trd.block.basic.industrial.MillstoneBlock;
 import com.trd.block.basic.industrial.casting.CastingDescentBlock;
 import com.trd.block.basic.industrial.casting.CastingPotBlock;
 import com.trd.block.basic.industrial.casting.SmallSmelterBlock;
@@ -642,11 +640,11 @@ public class ModBlocks {
                     .noOcclusion()));
 
     public static final RegistryObject<Block> CONVEYOR_VSTAVSHIK = registerBlock("conveyor_vstavshik",
-            () -> new SideOBlock(BlockBehaviour.Properties.of()
+            () -> new ConveyorInserterBlock(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
     public static final RegistryObject<Block> CONVEYOR_IZVLEKATEL = registerBlock("conveyor_izvlekatel",
-            () -> new SideOBlock(BlockBehaviour.Properties.of()
+            () -> new ConveyorExtractorBlock(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
     //МУЛЬТИБЛОКИ

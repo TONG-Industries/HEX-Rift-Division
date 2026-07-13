@@ -24,8 +24,10 @@ import java.util.List;
 
 public class ConveyorBlockEntity extends BlockEntity {
 
-    public static final double SPEED = 1.5 / 20.0; // 1 блок за 20 тиков
-    public static final double ITEM_Y_OFFSET = 2 / 16.0; // высота над конвейером (конвейер на 8/16)
+    public static final double SPEED = 1.5 / 20.0;
+    public static final double ITEM_Y_OFFSET = 2 / 16.0;
+
+    private static final int MAX_ITEMS = 64; // Лимит предметов на конвейере
 
     // Серверные данные
     private final List<ConveyorItem> items = new ArrayList<>();
@@ -36,6 +38,13 @@ public class ConveyorBlockEntity extends BlockEntity {
 
     public ConveyorBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CONVEYOR_BE.get(), pos, state);
+    }
+
+    public boolean tryAcceptItem(ItemStack stack) {
+        if (items.size() >= MAX_ITEMS) return false;
+        items.add(new ConveyorItem(stack.copy(), 0.0));
+        syncClient();
+        return true;
     }
 
     public List<ConveyorItem> getClientItems() {
@@ -69,7 +78,7 @@ public class ConveyorBlockEntity extends BlockEntity {
             return;
         }
 
-        // 1. Захват предметов с земли (без лимита) – добавляем во временный список
+        // 1. Захват предметов с земли
         AABB box = new AABB(pos).inflate(0.1, 0.3, 0.1).move(0, 0.2, 0);
         List<ItemEntity> entities = level.getEntitiesOfClass(ItemEntity.class, box,
                 e -> !e.isRemoved() && e.getDeltaMovement().y <= 0.01);
@@ -92,11 +101,23 @@ public class ConveyorBlockEntity extends BlockEntity {
             if (ci.progress >= 1.0) {
                 BlockPos nextPos = pos.relative(facing);
                 BlockState nextState = level.getBlockState(nextPos);
+                BlockEntity nextBe = level.getBlockEntity(nextPos); // ← ОБЪЯВЛЕНО ДО ИСПОЛЬЗОВАНИЯ
+
+                // === ВСТАВЩИК ===
+                if (nextBe instanceof ConveyorBufferBlockEntity buffer && buffer.getMode() == ConveyorBufferBlockEntity.Mode.INSERTER) {
+                    if (buffer.tryAcceptItem(ci.stack.copy())) {
+                        iterator.remove();
+                        be.syncClient();
+                        continue;
+                    } else {
+                        ci.progress = 1.0 - 0.001; // задерживаем, буфер полон
+                        continue;
+                    }
+                }
+
                 if (nextState.getBlock() instanceof ConveyorBlock &&
                         nextState.getValue(ConveyorBlock.FACING) == facing) {
-                    BlockEntity nextBe = level.getBlockEntity(nextPos);
                     if (nextBe instanceof ConveyorBlockEntity nextConveyor) {
-                        // Передаём предмет
                         ConveyorItem transferred = new ConveyorItem(ci.stack);
                         transferred.progress = 0.0;
                         nextConveyor.items.add(transferred);
@@ -113,7 +134,7 @@ public class ConveyorBlockEntity extends BlockEntity {
             }
         }
 
-        // 3. Добавляем новые предметы (после итерации, чтобы избежать ConcurrentModification)
+        // 3. Добавляем новые предметы
         if (!newItems.isEmpty()) {
             be.items.addAll(newItems);
             be.syncClient();
@@ -226,7 +247,7 @@ public class ConveyorBlockEntity extends BlockEntity {
     // ------------------------------------------------------------
     public static class ConveyorItem {
         public ItemStack stack;
-        public double progress; // 0.0 – начало, 1.0 – конец блока
+        public double progress;
 
         public ConveyorItem(ItemStack stack) {
             this.stack = stack.copy();

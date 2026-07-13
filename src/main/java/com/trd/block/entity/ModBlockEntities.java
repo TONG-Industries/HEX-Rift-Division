@@ -4,6 +4,7 @@ import com.trd.api.energy.EnergyNetworkManager;
 import com.trd.block.entity.conglomerate.ConglomerateBlockEntity;
 import com.trd.block.entity.deco.BeamCollisionBlockEntity;
 import com.trd.block.entity.industrial.ConveyorBlockEntity;
+import com.trd.block.entity.industrial.ConveyorBufferBlockEntity;
 import com.trd.block.entity.industrial.ElectricFurnaceBlockEntity;
 import com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity;
 
@@ -93,7 +94,18 @@ public class ModBlockEntities {
                     () -> BlockEntityType.Builder.of(MissileTurretBlockEntity::new,
                             TROMBONE.get()).build(null));
 
-    // Добавь в ModBlockEntities.java:
+    public static final RegistryObject<BlockEntityType<ConveyorBufferBlockEntity>> CONVEYOR_BUFFER_BE =
+            BLOCK_ENTITIES.register("conveyor_buffer", () -> BlockEntityType.Builder.of(
+                    (pos, state) -> {
+                        if (state.is(ModBlocks.CONVEYOR_IZVLEKATEL.get()))
+                            return new ConveyorBufferBlockEntity(pos, state, ConveyorBufferBlockEntity.Mode.EXTRACTOR);
+                        return new ConveyorBufferBlockEntity(pos, state, ConveyorBufferBlockEntity.Mode.INSERTER);
+                    },
+                    ModBlocks.CONVEYOR_VSTAVSHIK.get(),
+                    ModBlocks.CONVEYOR_IZVLEKATEL.get()
+            ).build(null));
+
+
     public static final RegistryObject<BlockEntityType<ConveyorBlockEntity>> CONVEYOR_BE =
             BLOCK_ENTITIES.register("conveyor",
                     () -> BlockEntityType.Builder.of(ConveyorBlockEntity::new, ModBlocks.CONVEYOR.get()).build(null));
