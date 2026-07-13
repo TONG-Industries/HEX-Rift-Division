@@ -38,6 +38,8 @@ public class ModModels {
     public static final PartialModel JERNOVA_BASE = PartialModel.of(new ResourceLocation("trd", "block/jernova_2"));
     public static final PartialModel JERNOVA_TOP = PartialModel.of(new ResourceLocation("trd", "block/jernova_1"));
 
+    public static final PartialModel WATER_PUMP = PartialModel.of(new ResourceLocation("trd", "block/water_pump"));
+
     // Статический блок вызывается самым первым, как только Java видит этот класс!
     // Flywheel 100% получит эти модели вовремя.
     static {

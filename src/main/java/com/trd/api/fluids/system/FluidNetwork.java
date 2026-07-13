@@ -33,7 +33,7 @@ public class FluidNetwork {
     public void tick(ServerLevel level) {
         if (nodes.isEmpty()) return;
         nodes.removeIf(node -> !node.isValid(level) || node.getNetwork() != this);
-        if (nodes.size() < 2) return;
+        if (nodes.isEmpty()) return;
 
         List<IFluidHandler> pureProviders = new ArrayList<>();
         List<IFluidHandler> pureReceivers = new ArrayList<>();
