@@ -11,6 +11,7 @@ import com.trd.block.basic.deco.BeamCollisionBlock;
 import com.trd.block.basic.deco.LampBlock;
 import com.trd.block.basic.deco.SteelPropsBlock;
 import com.trd.block.basic.direction.SideOBlock;
+import com.trd.block.basic.industrial.ConveyorBlock;
 import com.trd.block.basic.industrial.ElectricFurnaceBlock;
 import com.trd.block.basic.industrial.fluids.FluidBarrelBlock;
 
@@ -632,9 +633,13 @@ public class ModBlocks {
             () -> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
+
     public static final RegistryObject<Block> CONVEYOR = registerBlock("conveyor",
-            () -> new SideOBlock(BlockBehaviour.Properties.of()
-                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
+            () -> new ConveyorBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion()));
 
 
     //МУЛЬТИБЛОКИ

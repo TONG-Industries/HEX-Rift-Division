@@ -4,6 +4,7 @@ import com.trd.api.fluids.system.FluidDropItem;
 import com.trd.api.fluids.ModFluids;
 import com.trd.api.metallurgy.system.ItemHeatColorRegistry;
 import com.trd.client.gecko.entity.mobs.DepthWormBrutalRenderer;
+import com.trd.client.render.ber.ConveyorRenderer;
 import com.trd.item.tools.FluidIdentifierItem;
 import com.trd.main.ResourceRegistry;
 import com.trd.block.basic.ModBlocks;
@@ -88,7 +89,7 @@ public class ClientModEvents {
                         return 0.0f;
                     });
         });
-
+        event.registerBlockEntityRenderer(ModBlockEntities.CONVEYOR_BE.get(), ConveyorRenderer::new);
         net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.STEEL_STORAGE_MENU.get(), SteelStorageScreen::new);
 
         MenuScreens.register(ModMenuTypes.ELECTRIC_FURNACE_MENU.get(), GUIElectricFurnace::new);

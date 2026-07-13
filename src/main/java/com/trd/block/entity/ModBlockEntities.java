@@ -3,6 +3,7 @@ package com.trd.block.entity;
 import com.trd.api.energy.EnergyNetworkManager;
 import com.trd.block.entity.conglomerate.ConglomerateBlockEntity;
 import com.trd.block.entity.deco.BeamCollisionBlockEntity;
+import com.trd.block.entity.industrial.ConveyorBlockEntity;
 import com.trd.block.entity.industrial.ElectricFurnaceBlockEntity;
 import com.trd.block.entity.industrial.fluids.FluidBarrelBlockEntity;
 
@@ -91,6 +92,11 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("missile_turret",
                     () -> BlockEntityType.Builder.of(MissileTurretBlockEntity::new,
                             TROMBONE.get()).build(null));
+
+    // Добавь в ModBlockEntities.java:
+    public static final RegistryObject<BlockEntityType<ConveyorBlockEntity>> CONVEYOR_BE =
+            BLOCK_ENTITIES.register("conveyor",
+                    () -> BlockEntityType.Builder.of(ConveyorBlockEntity::new, ModBlocks.CONVEYOR.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<MachineBatteryBlockEntity>> MACHINE_BATTERY_BE =
             BLOCK_ENTITIES.register("machine_battery_be", () -> {
