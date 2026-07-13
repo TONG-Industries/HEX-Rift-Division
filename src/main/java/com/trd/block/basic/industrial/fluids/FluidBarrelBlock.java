@@ -164,38 +164,36 @@ public class FluidBarrelBlock extends BaseEntityBlock {
         }
 
         net.minecraft.nbt.CompoundTag nbt = pStack.getTag();
-        if (nbt != null && nbt.contains("BlockEntityTag")) {
-            net.minecraft.nbt.CompoundTag beTag = nbt.getCompound("BlockEntityTag");
+        net.minecraft.nbt.CompoundTag beTag = (nbt != null && nbt.contains("BlockEntityTag")) ? nbt.getCompound("BlockEntityTag") : null;
 
-            if (beTag.contains("FluidName")) {
-                String fluidName = beTag.getString("FluidName");
-                int amount = beTag.getInt("Amount");
-                if (!fluidName.equals("minecraft:empty") && amount > 0) {
-                    net.minecraft.world.level.material.Fluid fluid = net.minecraftforge.registries.ForgeRegistries.FLUIDS.getValue(new net.minecraft.resources.ResourceLocation(fluidName));
-                    if (fluid != null) {
-                        String localizedName = net.minecraft.network.chat.Component.translatable(fluid.getFluidType().getDescriptionId()).getString();
-                        pTooltip.add(net.minecraft.network.chat.Component.literal("§bЖидкость: §f" + localizedName));
-                        pTooltip.add(net.minecraft.network.chat.Component.literal("§eОбъём: §f" + amount + " / " + tier.getCapacity() + " mB"));
-                    }
-                } else {
-                    pTooltip.add(net.minecraft.network.chat.Component.literal("§bЖидкость: §7Пусто"));
-                }
-            } else {
-                pTooltip.add(net.minecraft.network.chat.Component.literal("§bЖидкость: §7Пусто"));
-            }
+        // Что реально налито в бак
+        String fluidName = beTag != null ? beTag.getString("FluidName") : "";
+        int amount = beTag != null ? beTag.getInt("Amount") : 0;
+        boolean hasFluid = !fluidName.isEmpty() && !fluidName.equals("minecraft:empty") && amount > 0;
 
-            String filter = beTag.getString("FluidFilter");
-            if (filter != null && !filter.isEmpty() && !filter.equals("none")) {
-                net.minecraft.world.level.material.Fluid f = net.minecraftforge.registries.ForgeRegistries.FLUIDS.getValue(new net.minecraft.resources.ResourceLocation(filter));
-                if (f != null) {
-                    String fName = net.minecraft.network.chat.Component.translatable(f.getFluidType().getDescriptionId()).getString();
-                    pTooltip.add(net.minecraft.network.chat.Component.literal("§aФильтр: §f" + fName));
-                }
-            } else {
-                pTooltip.add(net.minecraft.network.chat.Component.literal("§aФильтр: §cЗакрыто"));
-            }
+        // Заданный тип (фильтр)
+        String filter = beTag != null ? beTag.getString("FluidFilter") : "";
+        boolean hasFilter = filter != null && !filter.isEmpty() && !filter.equals("none");
+
+        // Какую жидкость показывать: сначала содержимое, иначе заданный тип-фильтр
+        String displayId = hasFluid ? fluidName : (hasFilter ? filter : "");
+
+        if (!displayId.isEmpty()) {
+            net.minecraft.world.level.material.Fluid fluid = net.minecraftforge.registries.ForgeRegistries.FLUIDS.getValue(new net.minecraft.resources.ResourceLocation(displayId));
+            String localizedName = fluid != null ? net.minecraft.network.chat.Component.translatable(fluid.getFluidType().getDescriptionId()).getString() : displayId;
+            pTooltip.add(net.minecraft.network.chat.Component.literal("§bЖидкость: §f" + localizedName));
+            pTooltip.add(net.minecraft.network.chat.Component.literal("§eОбъём: §f" + amount + " / " + tier.getCapacity() + " mB"));
         } else {
             pTooltip.add(net.minecraft.network.chat.Component.literal("§bЖидкость: §7Пусто"));
+        }
+
+        // Строка типа (фильтра)
+        if (hasFilter) {
+            net.minecraft.world.level.material.Fluid f = net.minecraftforge.registries.ForgeRegistries.FLUIDS.getValue(new net.minecraft.resources.ResourceLocation(filter));
+            String fName = f != null ? net.minecraft.network.chat.Component.translatable(f.getFluidType().getDescriptionId()).getString() : filter;
+            pTooltip.add(net.minecraft.network.chat.Component.literal("§aФильтр: §f" + fName));
+        } else {
+            pTooltip.add(net.minecraft.network.chat.Component.literal("§aФильтр: §cЗакрыто"));
         }
     }
 }

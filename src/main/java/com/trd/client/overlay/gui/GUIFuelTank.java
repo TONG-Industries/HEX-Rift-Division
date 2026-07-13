@@ -70,7 +70,21 @@ public class GUIFuelTank extends AbstractContainerScreen<FuelTankMenu> {
             List<Component> tooltip = new ArrayList<>();
             FluidStack fluid = menu.getFluid();
             if (fluid.isEmpty()) {
-                tooltip.add(Component.literal("Пусто").withStyle(ChatFormatting.GRAY));
+                // ФИКС: если жидкости нет, но задан тип (фильтр) — показываем его имя и 0 / ёмкость
+                String filter = menu.blockEntity.fluidFilter;
+                net.minecraft.world.level.material.Fluid filterFluid = (filter == null || filter.equals("none"))
+                        ? null
+                        : net.minecraftforge.registries.ForgeRegistries.FLUIDS.getValue(new ResourceLocation(filter));
+                if (filterFluid != null && filterFluid != net.minecraft.world.level.material.Fluids.EMPTY) {
+                    FluidStack filterStack = new FluidStack(filterFluid, 1);
+                    MutableComponent filterName = filterStack.getDisplayName().copy();
+                    int filterTint = IClientFluidTypeExtensions.of(filterFluid).getTintColor() | 0xFF000000;
+                    filterName.setStyle(Style.EMPTY.withColor(TextColor.fromRgb(filterTint)));
+                    tooltip.add(filterName);
+                    tooltip.add(Component.literal("0 / " + menu.getCapacity() + " mB").withStyle(ChatFormatting.GRAY));
+                } else {
+                    tooltip.add(Component.literal("Пусто").withStyle(ChatFormatting.GRAY));
+                }
             } else {
                 MutableComponent fluidName = fluid.getDisplayName().copy();
                 int tint = IClientFluidTypeExtensions.of(fluid.getFluid()).getTintColor() | 0xFF000000;

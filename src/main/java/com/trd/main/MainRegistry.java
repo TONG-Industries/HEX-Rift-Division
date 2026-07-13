@@ -294,6 +294,7 @@ public class MainRegistry {
             }
 
             event.accept(ModBlocks.SWITCH);
+            event.accept(ModBlocks.VALVE);
             event.accept(ModBlocks.CONVERTER_BLOCK);
 
             event.accept(ModBlocks.ELECTRO_FURNACE);
@@ -309,6 +310,8 @@ public class MainRegistry {
             event.accept(ModItems.LEAD_BARREL_ITEM);
             event.accept(ModBlocks.FUEL_TANK_SMALL);
             event.accept(ModBlocks.FUEL_TANK_BIG);
+            event.accept(ModBlocks.PAINTABLE_PIPE);
+            event.accept(ModBlocks.PAINTABLE_WIRE);
 
           event.accept(ModItems.BOILER_ITEM);
         
@@ -346,6 +349,13 @@ public class MainRegistry {
             event.accept(ModItems.MOLD_INGOT.get());
             event.accept(ModItems.MOLD_BLOCK.get());
             event.accept(ModItems.MOLD_PICKAXE.get());
+
+
+            event.accept(ModBlocks.STEEL_STORAGE.get());
+
+            event.accept(ModBlocks.CONVEYOR_VSTAVSHIK.get());
+            event.accept(ModBlocks.CONVEYOR_IZVLEKATEL.get());
+            event.accept(ModBlocks.CONVEYOR.get());
         }
 
         if (event.getTab() == ModCreativeTabs.trd_WEAPONS_TAB.get()) {

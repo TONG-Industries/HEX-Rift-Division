@@ -11,12 +11,11 @@ import com.trd.block.basic.deco.BeamCollisionBlock;
 import com.trd.block.basic.deco.LampBlock;
 import com.trd.block.basic.deco.SteelPropsBlock;
 import com.trd.block.basic.direction.SideOBlock;
-import com.trd.block.basic.industrial.ElectricFurnaceBlock;
+import com.trd.block.basic.industrial.*;
 import com.trd.block.basic.industrial.fluids.FluidBarrelBlock;
 
 import com.trd.block.basic.industrial.fluids.FluidPipeBlock;
 
-import com.trd.block.basic.industrial.MillstoneBlock;
 import com.trd.block.basic.industrial.casting.CastingDescentBlock;
 import com.trd.block.basic.industrial.casting.CastingPotBlock;
 import com.trd.block.basic.industrial.casting.SmallSmelterBlock;
@@ -76,6 +75,9 @@ public class ModBlocks {
             () -> new WireBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
     public static final RegistryObject<Block> SWITCH = registerBlock("switch",
             () -> new SwitchBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)));
+    public static final RegistryObject<Block> VALVE = registerBlock("valve",
+            () -> new com.trd.block.basic.industrial.fluids.ValveBlock(
+                    BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
     public static final RegistryObject<Block> DROBITEL = registerBlock("drobitel",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion()));
 
@@ -632,6 +634,21 @@ public class ModBlocks {
             () -> new Block(BlockBehaviour.Properties.of()
                     .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
+
+    public static final RegistryObject<Block> CONVEYOR = registerBlock("conveyor",
+            () -> new ConveyorBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion()));
+
+    public static final RegistryObject<Block> CONVEYOR_VSTAVSHIK = registerBlock("conveyor_vstavshik",
+            () -> new ConveyorInserterBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> CONVEYOR_IZVLEKATEL = registerBlock("conveyor_izvlekatel",
+            () -> new ConveyorExtractorBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
     //МУЛЬТИБЛОКИ
     public static final RegistryObject<Block> MULTIBLOCK_PART = BLOCKS.register("multiblock_part",
