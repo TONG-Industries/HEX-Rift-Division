@@ -346,6 +346,10 @@ public class MainRegistry {
             event.accept(ModItems.MOLD_INGOT.get());
             event.accept(ModItems.MOLD_BLOCK.get());
             event.accept(ModItems.MOLD_PICKAXE.get());
+
+
+
+            event.accept(ModBlocks.CONVEYOR.get());
         }
 
         if (event.getTab() == ModCreativeTabs.trd_WEAPONS_TAB.get()) {
