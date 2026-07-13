@@ -293,6 +293,7 @@ public class MainRegistry {
             }
 
             event.accept(ModBlocks.SWITCH);
+            event.accept(ModBlocks.VALVE);
             event.accept(ModBlocks.CONVERTER_BLOCK);
 
             event.accept(ModBlocks.ELECTRO_FURNACE);
@@ -308,6 +309,8 @@ public class MainRegistry {
             event.accept(ModItems.LEAD_BARREL_ITEM);
             event.accept(ModBlocks.FUEL_TANK_SMALL);
             event.accept(ModBlocks.FUEL_TANK_BIG);
+            event.accept(ModBlocks.PAINTABLE_PIPE);
+            event.accept(ModBlocks.PAINTABLE_WIRE);
 
           event.accept(ModItems.BOILER_ITEM);
         

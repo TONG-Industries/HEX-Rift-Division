@@ -154,6 +154,12 @@ public class ModBlockEntities {
                     BlockEntityType.Builder.of(SwitchBlockEntity::new, ModBlocks.SWITCH.get())
                             .build(null));
 
+    public static final RegistryObject<BlockEntityType<com.trd.block.entity.industrial.fluids.ValveBlockEntity>> VALVE_BE =
+            BLOCK_ENTITIES.register("valve_be", () ->
+                    BlockEntityType.Builder.of(
+                            com.trd.block.entity.industrial.fluids.ValveBlockEntity::new,
+                            ModBlocks.VALVE.get()).build(null));
+
     public static final RegistryObject<BlockEntityType<CastingDescentBlockEntity>> CASTING_DESCENT = BLOCK_ENTITIES.register(
             "casting_descent",
             () -> BlockEntityType.Builder.of(CastingDescentBlockEntity::new, ModBlocks.CASTING_DESCENT.get()).build(null)

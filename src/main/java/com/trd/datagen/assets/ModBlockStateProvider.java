@@ -29,7 +29,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         this.existingFileHelper = exFileHelper;
 
         // !!! ВАЖНО: Инициализируем ResourceRegistry перед использованием !!!
-        ResourceRegistry.init();
     }
 
     @Override
@@ -138,6 +137,17 @@ public class ModBlockStateProvider extends BlockStateProvider {
          modLoc("block/waste_log_top"),
          modLoc("block/waste_log_top"));
 
+// Клапан: две модели — закрыт (красный) / открыт (зелёный)
+        ModelFile valveClosed = models().cubeAll("valve_off", modLoc("block/valve_off"));
+        ModelFile valveOpen   = models().cubeAll("valve_on",  modLoc("block/valve_on"));
+        getVariantBuilder(ModBlocks.VALVE.get()).forAllStates(state -> {
+            boolean open = state.getValue(com.trd.block.basic.industrial.fluids.ValveBlock.POWERED);
+            return net.minecraftforge.client.model.generators.ConfiguredModel.builder()
+                    .modelFile(open ? valveOpen : valveClosed)
+                    .build();
+        });
+// Модель предмета — закрытый (красный) вариант
+        simpleBlockItem(ModBlocks.VALVE.get(), valveClosed);
 
         //СТАТИЧНИЫЕ ПРОЗРАЧНЫЕ БЛОКИ, ПРИМЕР:
         // cutoutBlockWithItem(ModBlocks.REINFORCED_GLASS);
@@ -204,7 +214,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         fluidPipeBlock(ModBlocks.LEAD_FLUID_PIPE, "lead");
         fluidPipeBlock(ModBlocks.TUNGSTEN_FLUID_PIPE, "tungsten");
         fluidPipeBlock(ModBlocks.PIPE_SPOTS, "pipe_spots");
-
 
         //ПОВОРОТ ДЛЯ 3Д МОДЕЛИ, ПРИМЕР:
         // customModelBlockWithItem(ModBlocks.TURRET_BASE);
@@ -572,7 +581,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         simpleBlockItem(block.get(), model);
     }
 
-
     private void stairsAndSlabs(Block fullBlock, StairBlock stairs, SlabBlock slab) {
         ResourceLocation texture = blockTexture(fullBlock);
         stairsBlock(stairs, texture);
@@ -604,7 +612,6 @@ public class ModBlockStateProvider extends BlockStateProvider {
         }
         simpleBlockItem(block.get(), models().withExistingParent(baseName + "_inventory", mcLoc("block/snow_height2")).texture("texture", texture).texture("particle", texture));
     }
-
 
     // 1. Улучшенный метод для горизонтально-поворачиваемых блоков (печи, батареи)
     public void horizontalBlockWithItem(RegistryObject<Block> block, ResourceLocation side, ResourceLocation front, ResourceLocation back, ResourceLocation top, ResourceLocation bottom) {
