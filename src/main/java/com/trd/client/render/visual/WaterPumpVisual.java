@@ -62,7 +62,7 @@ public class WaterPumpVisual extends AbstractBlockEntityVisual<WaterPumpBlockEnt
             base.rotateY((float) Math.toRadians(180));
         }
 
-        base.translate(-0.5f + (1.0f / 16.0f), -1.5f, -0.5f);
+        base.translate(-0.5f + (0.6f / 16.0f), -1.5f, -0.5f);
         base.setChanged();
     }
 
