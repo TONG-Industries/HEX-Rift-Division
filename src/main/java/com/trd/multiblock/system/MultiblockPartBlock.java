@@ -20,10 +20,29 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public class MultiblockPartBlock extends BaseEntityBlock {
+public class MultiblockPartBlock extends BaseEntityBlock implements net.minecraft.world.level.block.SimpleWaterloggedBlock {
 
     public MultiblockPartBlock(Properties properties) {
         super(properties.strength(1.0f, 6.0f).noOcclusion());
+        this.registerDefaultState(this.stateDefinition.any().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED, false));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED);
+    }
+
+    @Override
+    public net.minecraft.world.level.material.FluidState getFluidState(BlockState state) {
+        return state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED) ? net.minecraft.world.level.material.Fluids.WATER.getSource(false) : super.getFluidState(state);
+    }
+
+    @Override
+    public BlockState updateShape(BlockState state, net.minecraft.core.Direction facing, BlockState facingState, net.minecraft.world.level.LevelAccessor level, BlockPos currentPos, BlockPos facingPos) {
+        if (state.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED)) {
+            level.scheduleTick(currentPos, net.minecraft.world.level.material.Fluids.WATER, net.minecraft.world.level.material.Fluids.WATER.getTickDelay(level));
+        }
+        return super.updateShape(state, facing, facingState, level, currentPos, facingPos);
     }
 
     @Override

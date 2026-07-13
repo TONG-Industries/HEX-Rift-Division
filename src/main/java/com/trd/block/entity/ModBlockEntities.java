@@ -238,6 +238,11 @@ public class ModBlockEntities {
                     () -> BlockEntityType.Builder.of(PaintableWireBlockEntity::new,
                             ModBlocks.PAINTABLE_WIRE.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<com.trd.block.entity.industrial.WaterPumpBlockEntity>> WATER_PUMP_BE =
+            BLOCK_ENTITIES.register("water_pump",
+                    () -> BlockEntityType.Builder.of(com.trd.block.entity.industrial.WaterPumpBlockEntity::new,
+                            ModBlocks.WATER_PUMP.get()).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

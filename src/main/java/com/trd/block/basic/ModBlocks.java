@@ -656,6 +656,11 @@ public class ModBlocks {
                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
 
+    public static final RegistryObject<Block> WATER_PUMP = registerBlockWithoutItem("water_pump",
+            () -> new com.trd.block.industrial.WaterPumpBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+    public static final RegistryObject<Item> WATER_PUMP_ITEM = ModItems.ITEMS.register("water_pump",
+            () -> new com.trd.multiblock.system.MultiblockBlockItem(WATER_PUMP.get(), new Item.Properties()));
+
     public static final RegistryObject<Block> TROMBONE = BLOCKS.register("trombone",
             () -> new MissileTurretBlock(BlockBehaviour.Properties.copy(Blocks.STONE)
                     .strength(5.0f, 6.0f).noOcclusion().requiresCorrectToolForDrops()));

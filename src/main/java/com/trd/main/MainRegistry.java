@@ -229,7 +229,7 @@ public class MainRegistry {
             event.accept(ModItems.FLUID_IDENTIFIER.get());
 
             event.accept(ModBlocks.STEEL_STORAGE.get());
-
+            event.accept(ModBlocks.WATER_PUMP_ITEM.get());
 
             //КИНЕТИКА
             event.accept(ModBlocks.SHAFT_LIGHT_IRON);

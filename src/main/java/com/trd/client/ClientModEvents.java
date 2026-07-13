@@ -157,6 +157,7 @@ public class ClientModEvents {
         // ModModels.init(); <--- УДАЛИ ЭТУ СТРОКУ ОТСЮДА! Она теперь в главном классе.
 
         // 2. Статика
+        event.register(new net.minecraft.resources.ResourceLocation("trd", "block/water_pump"));
         event.register(new net.minecraft.resources.ResourceLocation("trd", "block/half_shaft"));
         event.register(new net.minecraft.resources.ResourceLocation("trd", "block/electro_motor"));
         event.register(new net.minecraft.resources.ResourceLocation("trd", "block/bearing_shaft"));
@@ -269,6 +270,17 @@ public class ClientModEvents {
                     return true;
                 }
             });
+
+            VisualizerRegistry.setVisualizer(ModBlockEntities.WATER_PUMP_BE.get(), new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.trd.block.entity.industrial.WaterPumpBlockEntity>() {
+                @Override
+                public dev.engine_room.flywheel.api.visual.BlockEntityVisual<? super com.trd.block.entity.industrial.WaterPumpBlockEntity> createVisual(dev.engine_room.flywheel.api.visualization.VisualizationContext ctx, com.trd.block.entity.industrial.WaterPumpBlockEntity be, float partialTick) {
+                    return new com.trd.client.render.visual.WaterPumpVisual(ctx, be, partialTick);
+                }
+                @Override
+                public boolean skipVanillaRender(com.trd.block.entity.industrial.WaterPumpBlockEntity be) {
+                    return true;
+                }
+            });
         });
 
 
@@ -354,6 +366,7 @@ public class ClientModEvents {
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "stator_hud", StatorOverlay.HUD_STATOR);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "boiler_hud", com.trd.client.overlay.hud.BoilerOverlay.INSTANCE);
         event.registerAbove(VanillaGuiOverlay.CROSSHAIR.id(), "steam_engine_hud", com.trd.client.overlay.hud.SteamEngineOverlay.INSTANCE);
+        event.registerAboveAll("water_pump_hud", new com.trd.client.gui.WaterPumpHUD());
         MinecraftForge.EVENT_BUS.register(com.trd.client.overlay.hud.LowPressureSteamCondenserOverlay.class);
     }
 

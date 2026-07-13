@@ -288,8 +288,12 @@ public class MultiblockStructureHelper {
             if (worldPos.equals(controllerPos)) continue;
 
             BlockState partState = phantomBlockState.get();
-            if (partState.hasProperty(BlockStateProperties.AXIS)) {
-                partState = partState.setValue(BlockStateProperties.AXIS, axis);
+            if (partState.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.AXIS)) {
+                partState = partState.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.AXIS, axis);
+            }
+            if (partState.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED)) {
+                boolean isWater = level.getFluidState(worldPos).getType() == net.minecraft.world.level.material.Fluids.WATER;
+                partState = partState.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED, isWater);
             }
             level.setBlock(worldPos, partState, 3);
             allPlacedPositions.add(worldPos);
@@ -320,6 +324,10 @@ public class MultiblockStructureHelper {
             BlockState partState = phantomBlockState.get();
             if (partState.hasProperty(HorizontalDirectionalBlock.FACING)) {
                 partState = partState.setValue(HorizontalDirectionalBlock.FACING, facing);
+            }
+            if (partState.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED)) {
+                boolean isWater = level.getFluidState(worldPos).getType() == net.minecraft.world.level.material.Fluids.WATER;
+                partState = partState.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED, isWater);
             }
             level.setBlock(worldPos, partState, 3);
             allPlacedPositions.add(worldPos);
@@ -369,6 +377,10 @@ public class MultiblockStructureHelper {
             }
             if (partState.hasProperty(BlockStateProperties.AXIS)) {
                 partState = partState.setValue(BlockStateProperties.AXIS, axis);
+            }
+            if (partState.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED)) {
+                boolean isWater = level.getFluidState(worldPos).getType() == net.minecraft.world.level.material.Fluids.WATER;
+                partState = partState.setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED, isWater);
             }
             level.setBlock(worldPos, partState, 3);
             allPlacedPositions.add(worldPos);
