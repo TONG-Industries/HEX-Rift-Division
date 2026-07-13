@@ -162,6 +162,23 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 modLoc("block/det_miner_top")
         );
 
+        sixWayBlock(ModBlocks.CONVEYOR_VSTAVSHIK,
+                modLoc("block/adder_side"),
+                modLoc("block/cargo_port"),
+                modLoc("block/gear_port"),
+                modLoc("block/adder_top"),
+                modLoc("block/deco_steel")
+        );
+
+        sixWayBlock(ModBlocks.CONVEYOR_IZVLEKATEL,
+                modLoc("block/adder_side"),
+                modLoc("block/cargo_port"),
+                modLoc("block/gear_port"),
+                modLoc("block/adder_top_alt"),
+                modLoc("block/deco_steel")
+        );
+
+
         horizontalFurnaceBlockWithItem(ModBlocks.ELECTRO_FURNACE,
                 modLoc("block/electro_furnace_side"),
                 modLoc("block/electro_furnace_front"),      // выключена
@@ -658,6 +675,46 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 .texture("particle", side);
 
         simpleBlockItem(block.get(), modelItem);
+    }
+
+    /**
+     * Генерирует 6-направленный блок, где north текстура = front (лицо).
+     * FACING указывает куда смотрит лицо. Вращения честные, без сдвигов Forge.
+     */
+    public void sixWayBlock(RegistryObject<Block> block, ResourceLocation side,
+                            ResourceLocation front, ResourceLocation back,
+                            ResourceLocation top, ResourceLocation bottom) {
+        String name = block.getId().getPath();
+
+        ModelFile model = models().withExistingParent(name, "minecraft:block/cube")
+                .texture("particle", side)
+                .texture("up", top)
+                .texture("down", bottom)
+                .texture("north", front)   // лицо
+                .texture("south", back)    // зад
+                .texture("east", side)
+                .texture("west", side);
+
+        getVariantBuilder(block.get())
+                .forAllStates(state -> {
+                    Direction dir = state.getValue(BlockStateProperties.FACING);
+                    int rotX = 0, rotY = 0;
+                    switch (dir) {
+                        case UP    -> rotX = -90;
+                        case DOWN  -> rotX = 90;
+                        case NORTH -> rotY = 0;
+                        case SOUTH -> rotY = 180;
+                        case EAST  -> rotY = 90;
+                        case WEST  -> rotY = 270;
+                    }
+                    return ConfiguredModel.builder()
+                            .modelFile(model)
+                            .rotationX(rotX)
+                            .rotationY(rotY)
+                            .build();
+                });
+
+        simpleBlockItem(block.get(), model);
     }
 
     // 2. Метод для блоков, которые могут вращаться во всех 3 плоскостях (по 6 сторонам)

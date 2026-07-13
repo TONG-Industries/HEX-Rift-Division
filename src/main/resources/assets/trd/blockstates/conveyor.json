@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "trd:block/conveyor" },
+    "facing=east":  { "model": "trd:block/conveyor", "y": 90 },
+    "facing=south": { "model": "trd:block/conveyor", "y": 180 },
+    "facing=west":  { "model": "trd:block/conveyor", "y": 270 }
+  }
+}
