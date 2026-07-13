@@ -641,6 +641,13 @@ public class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .noOcclusion()));
 
+    public static final RegistryObject<Block> CONVEYOR_VSTAVSHIK = registerBlock("conveyor_vstavshik",
+            () -> new SideOBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> CONVEYOR_IZVLEKATEL = registerBlock("conveyor_izvlekatel",
+            () -> new SideOBlock(BlockBehaviour.Properties.of()
+                    .strength(0.5F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
     //МУЛЬТИБЛОКИ
     public static final RegistryObject<Block> MULTIBLOCK_PART = BLOCKS.register("multiblock_part",

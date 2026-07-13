@@ -162,6 +162,23 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 modLoc("block/det_miner_top")
         );
 
+        horizontalBlockWithItem(ModBlocks.CONVEYOR_VSTAVSHIK,
+                modLoc("block/adder_side"),
+                modLoc("block/cargo_port"),
+                modLoc("block/gear_port"),
+                modLoc("block/adder_top"),
+                modLoc("block/deco_steel")
+        );
+
+        horizontalBlockWithItem(ModBlocks.CONVEYOR_IZVLEKATEL,
+                modLoc("block/adder_side"),
+                modLoc("block/cargo_port"),
+                modLoc("block/gear_port"),
+                modLoc("block/adder_top_alt"),
+                modLoc("block/deco_steel")
+        );
+
+
         horizontalFurnaceBlockWithItem(ModBlocks.ELECTRO_FURNACE,
                 modLoc("block/electro_furnace_side"),
                 modLoc("block/electro_furnace_front"),      // выключена

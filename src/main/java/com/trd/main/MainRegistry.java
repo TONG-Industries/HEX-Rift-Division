@@ -228,7 +228,6 @@ public class MainRegistry {
             event.accept(ModItems.INFINITE_FLUID_BARREL);
             event.accept(ModItems.FLUID_IDENTIFIER.get());
 
-            event.accept(ModBlocks.STEEL_STORAGE.get());
 
 
             //КИНЕТИКА
@@ -348,7 +347,10 @@ public class MainRegistry {
             event.accept(ModItems.MOLD_PICKAXE.get());
 
 
+            event.accept(ModBlocks.STEEL_STORAGE.get());
 
+            event.accept(ModBlocks.CONVEYOR_VSTAVSHIK.get());
+            event.accept(ModBlocks.CONVEYOR_IZVLEKATEL.get());
             event.accept(ModBlocks.CONVEYOR.get());
         }
 
