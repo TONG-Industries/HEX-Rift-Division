@@ -24,8 +24,8 @@ import java.util.List;
 
 public class ConveyorBlockEntity extends BlockEntity {
 
-    public static final double SPEED = 1.0 / 20.0; // 1 блок за 20 тиков
-    public static final double ITEM_Y_OFFSET = 2.5 / 16.0; // высота над конвейером (конвейер на 8/16)
+    public static final double SPEED = 1.5 / 20.0; // 1 блок за 20 тиков
+    public static final double ITEM_Y_OFFSET = 2 / 16.0; // высота над конвейером (конвейер на 8/16)
 
     // Серверные данные
     private final List<ConveyorItem> items = new ArrayList<>();
@@ -46,6 +46,20 @@ public class ConveyorBlockEntity extends BlockEntity {
         return prevClientItems;
     }
 
+    // Синхронизация клиентских списков с серверными
+    private void syncClient() {
+        clientItems.clear();
+        prevClientItems.clear();
+        for (ConveyorItem ci : items) {
+            clientItems.add(new ConveyorItem(ci.stack, ci.progress));
+            prevClientItems.add(new ConveyorItem(ci.stack, ci.progress));
+        }
+        setChanged();
+        if (level != null) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 2);
+        }
+    }
+
     // ------------------------------------------------------------
     //  Тик
     // ------------------------------------------------------------
@@ -55,18 +69,20 @@ public class ConveyorBlockEntity extends BlockEntity {
             return;
         }
 
-        // 1. Захват предметов с земли (без лимита)
+        // 1. Захват предметов с земли (без лимита) – добавляем во временный список
         AABB box = new AABB(pos).inflate(0.1, 0.3, 0.1).move(0, 0.2, 0);
         List<ItemEntity> entities = level.getEntitiesOfClass(ItemEntity.class, box,
                 e -> !e.isRemoved() && e.getDeltaMovement().y <= 0.01);
+        List<ConveyorItem> newItems = new ArrayList<>();
         for (ItemEntity item : entities) {
-            be.items.add(new ConveyorItem(item.getItem()));
-            item.discard();
-            be.setChanged();
-            level.sendBlockUpdated(pos, state, state, 2);
+            ItemStack stack = item.getItem();
+            if (!stack.isEmpty()) {
+                newItems.add(new ConveyorItem(stack));
+                item.discard();
+            }
         }
 
-        // 2. Движение предметов
+        // 2. Движение и передача предметов
         Direction facing = state.getValue(ConveyorBlock.FACING);
         Iterator<ConveyorItem> iterator = be.items.iterator();
         while (iterator.hasNext()) {
@@ -80,24 +96,27 @@ public class ConveyorBlockEntity extends BlockEntity {
                         nextState.getValue(ConveyorBlock.FACING) == facing) {
                     BlockEntity nextBe = level.getBlockEntity(nextPos);
                     if (nextBe instanceof ConveyorBlockEntity nextConveyor) {
-                        // Передаём предмет (без лимита)
+                        // Передаём предмет
                         ConveyorItem transferred = new ConveyorItem(ci.stack);
                         transferred.progress = 0.0;
                         nextConveyor.items.add(transferred);
-                        nextConveyor.setChanged();
-                        level.sendBlockUpdated(nextPos, nextState, nextState, 2);
+                        nextConveyor.syncClient();
                         iterator.remove();
-                        be.setChanged();
-                        level.sendBlockUpdated(pos, state, state, 2);
+                        be.syncClient();
                         continue;
                     }
                 }
                 // Не удалось передать – выбрасываем
-                be.ejectItem(facing, ci.stack);
+                be.ejectItem(level, facing, ci.stack);
                 iterator.remove();
-                be.setChanged();
-                level.sendBlockUpdated(pos, state, state, 2);
+                be.syncClient();
             }
+        }
+
+        // 3. Добавляем новые предметы (после итерации, чтобы избежать ConcurrentModification)
+        if (!newItems.isEmpty()) {
+            be.items.addAll(newItems);
+            be.syncClient();
         }
     }
 
@@ -105,7 +124,6 @@ public class ConveyorBlockEntity extends BlockEntity {
     //  Клиентская симуляция с интерполяцией
     // ------------------------------------------------------------
     private void tickClient() {
-        // Сохраняем предыдущие значения для интерполяции
         prevClientItems.clear();
         for (ConveyorItem ci : clientItems) {
             prevClientItems.add(new ConveyorItem(ci.stack, ci.progress));
@@ -120,7 +138,7 @@ public class ConveyorBlockEntity extends BlockEntity {
     // ------------------------------------------------------------
     //  Выброс предмета
     // ------------------------------------------------------------
-    private void ejectItem(Direction facing, ItemStack stack) {
+    private void ejectItem(Level level, Direction facing, ItemStack stack) {
         if (stack.isEmpty()) return;
 
         Vec3 ejectPos = Vec3.atCenterOf(worldPosition)
@@ -134,6 +152,29 @@ public class ConveyorBlockEntity extends BlockEntity {
         );
         itemEntity.setPickUpDelay(15);
         level.addFreshEntity(itemEntity);
+    }
+
+    // ------------------------------------------------------------
+    //  Взятие предмета игроком (ПКМ пустой рукой)
+    // ------------------------------------------------------------
+    public ItemStack popItem() {
+        if (items.isEmpty()) return ItemStack.EMPTY;
+        ConveyorItem ci = items.remove(items.size() - 1);
+        syncClient();
+        return ci.stack;
+    }
+
+    // ------------------------------------------------------------
+    //  Выброс всех предметов при разрушении блока
+    // ------------------------------------------------------------
+    public void dropAllItems(Level level, BlockPos pos) {
+        if (items.isEmpty()) return;
+        Direction facing = getBlockState().getValue(ConveyorBlock.FACING);
+        for (ConveyorItem ci : items) {
+            ejectItem(level, facing, ci.stack);
+        }
+        items.clear();
+        syncClient();
     }
 
     // ------------------------------------------------------------
@@ -164,13 +205,7 @@ public class ConveyorBlockEntity extends BlockEntity {
             ConveyorItem ci = new ConveyorItem(stack, progress);
             items.add(ci);
         }
-        // Копируем в клиентские списки
-        clientItems.clear();
-        prevClientItems.clear();
-        for (ConveyorItem ci : items) {
-            clientItems.add(new ConveyorItem(ci.stack, ci.progress));
-            prevClientItems.add(new ConveyorItem(ci.stack, ci.progress));
-        }
+        syncClient();
     }
 
     @Override

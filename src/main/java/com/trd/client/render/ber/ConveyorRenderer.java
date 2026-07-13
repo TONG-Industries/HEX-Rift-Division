@@ -34,8 +34,6 @@ public class ConveyorRenderer implements BlockEntityRenderer<ConveyorBlockEntity
 
         Direction facing = be.getBlockState().getValue(ConveyorBlock.FACING);
 
-        // Проходим по текущим предметам. Если в предыдущем списке нет такого же (по индексу или по стеку) – используем текущий прогресс как есть.
-        // Упростим: предполагаем, что порядок предметов сохраняется. Если нет – можно сопоставлять по стеку, но для простоты используем индекс.
         int size = Math.min(currentItems.size(), prevItems.size());
         for (int i = 0; i < currentItems.size(); i++) {
             ConveyorBlockEntity.ConveyorItem curr = currentItems.get(i);
@@ -46,10 +44,10 @@ public class ConveyorRenderer implements BlockEntityRenderer<ConveyorBlockEntity
 
             // Интерполяция прогресса
             double progress = prev.progress + (curr.progress - prev.progress) * partialTick;
-            // Ограничение [0, 1]
             progress = Math.max(0.0, Math.min(1.0, progress));
 
-            double offset = (progress - 0.5) * 0.9; // чуть больше отступ, чтобы не вылезать
+            // Позиция: центрируем по ширине, смещаем по направлению движения
+            double offset = (progress - 0.5) * 0.9; // от -0.45 до +0.45
             float x = 0.5f + facing.getStepX() * (float) offset;
             float z = 0.5f + facing.getStepZ() * (float) offset;
             float y = 0.5f + (float) ConveyorBlockEntity.ITEM_Y_OFFSET; // 0.65625
@@ -57,22 +55,20 @@ public class ConveyorRenderer implements BlockEntityRenderer<ConveyorBlockEntity
             poseStack.pushPose();
             poseStack.translate(x, y, z);
 
-            // Поворот по направлению конвейера
+            // Поворот по направлению конвейера, затем кладём плашмя
             float rotY = facing.toYRot();
             poseStack.mulPose(Axis.YP.rotationDegrees(-rotY + 90));
-
-            // Укладываем плашмя, как в литейном котле
             poseStack.mulPose(Axis.XP.rotationDegrees(90));
 
-            // Увеличение размера в 2.5 раза: базовый 0.35 * 2.5 = 0.875
-            float scale = 0.875f;
+            // Увеличиваем размер (было 0.875 → теперь 1.0)
+            float scale = 1.0f;
             poseStack.scale(scale, scale, scale);
 
             BakedModel model = itemRenderer.getModel(stack, be.getLevel(), null, 0);
             itemRenderer.render(stack, ItemDisplayContext.GROUND, false, poseStack, buffer,
                     packedLight, packedOverlay, model);
 
-            // Дополнительные спрайты для стака (>1)
+            // Дополнительные предметы для стака > 1
             int count = stack.getCount();
             if (count > 1) {
                 int copies = Math.min(count - 1, 3);

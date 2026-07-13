@@ -4,6 +4,10 @@ import com.trd.block.entity.ModBlockEntities;
 import com.trd.block.entity.industrial.ConveyorBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -17,6 +21,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -65,5 +70,35 @@ public class ConveyorBlock extends BaseEntityBlock {
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new ConveyorBlockEntity(pos, state);
+    }
+
+    // 4. Возможность забрать предмет ПКМ пустой рукой
+    @Override
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!level.isClientSide) {
+            if (player.getItemInHand(hand).isEmpty()) {
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof ConveyorBlockEntity conveyor) {
+                    ItemStack stack = conveyor.popItem();
+                    if (!stack.isEmpty()) {
+                        player.setItemInHand(hand, stack);
+                        return InteractionResult.SUCCESS;
+                    }
+                }
+            }
+        }
+        return InteractionResult.PASS;
+    }
+
+    // 5. При разрушении конвейера все предметы выпадают
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof ConveyorBlockEntity conveyor) {
+                conveyor.dropAllItems(level, pos);
+            }
+            super.onRemove(state, level, pos, newState, isMoving);
+        }
     }
 }
