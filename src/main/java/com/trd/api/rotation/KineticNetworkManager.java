@@ -143,6 +143,11 @@ public class KineticNetworkManager extends SavedData {
             newNet.recalculate(level);
         } else if (neighborNetworks.size() == 1) {
             KineticNetwork existingNet = neighborNetworks.iterator().next();
+            
+            double oldMomentum = existingNet.getSpeed() * existingNet.getTotalInertia();
+            double newInertia = existingNet.getTotalInertia() + node.getInertiaContribution();
+            long newSpeed = newInertia > 0 ? (long) (oldMomentum / newInertia) : 0;
+            
             registerBlockToNetwork(pos, existingNet);
 
             boolean valid = recalculateNetworkSigns(existingNet);
@@ -183,6 +188,7 @@ public class KineticNetworkManager extends SavedData {
                 return;
             }
 
+            existingNet.setCurrentSpeed(newSpeed);
             existingNet.recalculate(level);
         } else {
             if (!mergeNetworks(neighborNetworks, pos)) {
@@ -352,6 +358,21 @@ public class KineticNetworkManager extends SavedData {
     }
 
     private boolean mergeNetworks(Set<KineticNetwork> networks, BlockPos connectorPos) {
+        double totalAngularMomentum = 0;
+        double totalCombinedInertia = 0;
+
+        for (KineticNetwork net : networks) {
+            totalAngularMomentum += net.getSpeed() * net.getTotalInertia();
+            totalCombinedInertia += net.getTotalInertia();
+        }
+
+        BlockEntity be = level.getBlockEntity(connectorPos);
+        if (be instanceof Rotational node) {
+            totalCombinedInertia += node.getInertiaContribution();
+        }
+
+        long newSpeed = totalCombinedInertia > 0 ? (long) (totalAngularMomentum / totalCombinedInertia) : 0;
+
         KineticNetwork mainNet = networks.iterator().next();
         networks.remove(mainNet);
 
@@ -374,6 +395,7 @@ public class KineticNetworkManager extends SavedData {
         if (!valid) {
             return false;
         }
+        mainNet.setCurrentSpeed(newSpeed);
         mainNet.recalculate(level);
         return true;
     }
