@@ -76,6 +76,9 @@ public class ModBlocks {
             () -> new WireBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
     public static final RegistryObject<Block> SWITCH = registerBlock("switch",
             () -> new SwitchBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)));
+    public static final RegistryObject<Block> VALVE = registerBlock("valve",
+            () -> new com.trd.block.basic.industrial.fluids.ValveBlock(
+                    BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
     public static final RegistryObject<Block> DROBITEL = registerBlock("drobitel",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE).noOcclusion()));
 

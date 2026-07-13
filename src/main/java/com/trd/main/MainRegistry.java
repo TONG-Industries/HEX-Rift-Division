@@ -294,6 +294,7 @@ public class MainRegistry {
             }
 
             event.accept(ModBlocks.SWITCH);
+            event.accept(ModBlocks.VALVE);
             event.accept(ModBlocks.CONVERTER_BLOCK);
 
             event.accept(ModBlocks.ELECTRO_FURNACE);

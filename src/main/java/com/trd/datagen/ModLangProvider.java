@@ -192,6 +192,7 @@ public class ModLangProvider extends LanguageProvider {
                 add(ModBlocks.CONVERTER_BLOCK.get(), "Energy converter");
                 add(ModBlocks.WIRE_COATED.get(), "Copper wire");
                 add(ModBlocks.SWITCH.get(), "Switch");
+                add(ModBlocks.VALVE.get(), "Valve");
                 add(ModBlocks.TURRET_LIGHT_PLACER.get(), "Light landing turret 'Nagual' ");
 
                 // Нэкроз
@@ -387,6 +388,7 @@ public class ModLangProvider extends LanguageProvider {
                 add(ModBlocks.CONVERTER_BLOCK.get(), "Энергетический конвертер");
                 add(ModBlocks.WIRE_COATED.get(), "Провод из красной меди");
                 add(ModBlocks.SWITCH.get(), "Рубильник");
+                add(ModBlocks.VALVE.get(), "Клапан");
 
                 // Лытье
                 add(ModItems.MOLD_INGOT.get(), "Форма для слитка");
@@ -623,6 +625,7 @@ public class ModLangProvider extends LanguageProvider {
                 add(ModBlocks.CONVERTER_BLOCK.get(), "Конвертер");
                 add(ModBlocks.WIRE_COATED.get(), "Ізольований дріт");
                 add(ModBlocks.SWITCH.get(), "Вимикач");
+                add(ModBlocks.VALVE.get(), "Клапан");
                 add(ModBlocks.TURRET_LIGHT_PLACER.get(), "Легка турель");
                 add(ModBlocks.CONNECTOR.get(), "Конектор");
                 add(ModBlocks.MEDIUM_CONNECTOR.get(), "Середній конектор");
