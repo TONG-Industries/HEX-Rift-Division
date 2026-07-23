@@ -228,8 +228,6 @@ public class MainRegistry {
             event.accept(ModItems.INFINITE_FLUID_BARREL);
             event.accept(ModItems.FLUID_IDENTIFIER.get());
 
-            event.accept(ModBlocks.STEEL_STORAGE.get());
-            event.accept(ModBlocks.WATER_PUMP_ITEM.get());
 
             //КИНЕТИКА
             event.accept(ModBlocks.SHAFT_LIGHT_IRON);
@@ -310,12 +308,7 @@ public class MainRegistry {
             event.accept(ModItems.LEAD_BARREL_ITEM);
             event.accept(ModBlocks.FUEL_TANK_SMALL);
             event.accept(ModBlocks.FUEL_TANK_BIG);
-            event.accept(ModBlocks.PAINTABLE_PIPE);
-            event.accept(ModBlocks.PAINTABLE_WIRE);
 
-          event.accept(ModItems.BOILER_ITEM);
-        
-          event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
             event.accept(ModItems.PROTECTOR_STEEL);
             event.accept(ModItems.PROTECTOR_LEAD);
             event.accept(ModItems.PROTECTOR_TUNGSTEN);
@@ -324,9 +317,14 @@ public class MainRegistry {
             event.accept(ModBlocks.STEEL_FLUID_PIPE);
             event.accept(ModBlocks.LEAD_FLUID_PIPE);
             event.accept(ModBlocks.TUNGSTEN_FLUID_PIPE);
+
             event.accept(ModBlocks.PAINTABLE_PIPE);
 
             event.accept(ModItems.BOILER_ITEM);
+
+            event.accept(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get());
+            event.accept(ModBlocks.WATER_PUMP_ITEM.get());
+
 
             for (var entry : com.trd.api.fluids.ModFluids.getAllFluidDrops().values()) {
                 event.accept(entry.get());
@@ -336,7 +334,6 @@ public class MainRegistry {
 
 
             //ПЛАВИЛЬНИ
-            event.accept(ModBlocks.JERNOVA);
             event.accept(ModBlocks.SMALL_SMELTER);
 
             event.accept(ModItems.HEATER_ITEM);
@@ -350,7 +347,7 @@ public class MainRegistry {
             event.accept(ModItems.MOLD_BLOCK.get());
             event.accept(ModItems.MOLD_PICKAXE.get());
 
-
+            event.accept(ModBlocks.JERNOVA);
             event.accept(ModBlocks.STEEL_STORAGE.get());
 
             event.accept(ModBlocks.CONVEYOR_VSTAVSHIK.get());
