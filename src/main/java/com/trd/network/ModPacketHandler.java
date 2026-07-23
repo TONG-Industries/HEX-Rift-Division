@@ -4,6 +4,7 @@ package com.trd.network;
 import com.trd.network.packet.fluids.*;
 //import com.trd.network.packet.rotation.PacketToggleRetractMode;
 import com.trd.network.packet.turrets.*;
+import com.trd.network.packet.rotation.ScrollHandCrankPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -177,6 +178,10 @@ public class ModPacketHandler {
                 com.trd.network.packet.energy.SyncMotorRpmPacket::decode,
                 com.trd.network.packet.energy.SyncMotorRpmPacket::handle
         );
+        INSTANCE.registerMessage(id++, ScrollHandCrankPacket.class,
+                ScrollHandCrankPacket::toBytes,
+                ScrollHandCrankPacket::new,
+                (msg, ctx) -> { msg.handle(ctx); ctx.get().setPacketHandled(true); });
         INSTANCE.registerMessage(id++, PacketToggleExtraButton.class,
                 PacketToggleExtraButton::toBytes,
                 PacketToggleExtraButton::new,

@@ -16,6 +16,7 @@ import com.trd.block.entity.industrial.fluids.LowPressureSteamCondenserBlockEnti
 import com.trd.block.entity.industrial.fluids.PaintablePipeBlockEntity;
 import com.trd.block.entity.industrial.rotation.BearingBlockEntity;
 import com.trd.block.entity.industrial.rotation.MotorElectroBlockEntity;
+import com.trd.block.entity.industrial.rotation.HandCrankBlockEntity;
 import com.trd.block.entity.industrial.rotation.ShaftBlockEntity;
 import com.trd.block.entity.weapons.MissileTurretBlockEntity;
 import com.trd.multiblock.industrial.*;
@@ -201,6 +202,10 @@ public class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<MotorElectroBlockEntity>> MOTOR_ELECTRO_BE =
             BLOCK_ENTITIES.register("motor_electro",
                     () -> BlockEntityType.Builder.of(MotorElectroBlockEntity::new, ModBlocks.MOTOR_ELECTRO.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<HandCrankBlockEntity>> HAND_CRANK_BE =
+            BLOCK_ENTITIES.register("hand_crank",
+                    () -> BlockEntityType.Builder.of(HandCrankBlockEntity::new, ModBlocks.HAND_CRANK_BLOCK.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<com.trd.block.entity.industrial.rotation.StatorBlockEntity>> STATOR_BE =
             BLOCK_ENTITIES.register("stator",
