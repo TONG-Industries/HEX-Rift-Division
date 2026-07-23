@@ -25,6 +25,7 @@ import com.trd.block.basic.industrial.fluids.LowPressureSteamCondenserBlock;
 import com.trd.block.basic.industrial.fluids.PaintablePipeBlock;
 import com.trd.block.basic.industrial.rotation.BearingBlock;
 import com.trd.block.basic.industrial.rotation.MotorElectroBlock;
+import com.trd.block.basic.industrial.rotation.HandCrankBlock;
 import com.trd.block.basic.industrial.rotation.ShaftBlock;
 import com.trd.block.basic.necrosis.hive.HiveRootsBlock;
 
@@ -506,6 +507,9 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> MOTOR_ELECTRO = registerBlock("motor_electro",
             () -> new MotorElectroBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
+    public static final RegistryObject<Block> HAND_CRANK_BLOCK = registerBlock("hand_crank",
+            () -> new HandCrankBlock());
 
     public static final RegistryObject<Block> STATOR_BLOCK = BLOCKS.register("stator",
             () -> new com.trd.block.basic.industrial.rotation.StatorBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK)

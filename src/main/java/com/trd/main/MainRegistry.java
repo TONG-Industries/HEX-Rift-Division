@@ -232,6 +232,8 @@ public class MainRegistry {
             event.accept(ModBlocks.WATER_PUMP_ITEM.get());
 
             //КИНЕТИКА
+            event.accept(ModBlocks.HAND_CRANK_BLOCK.get());
+            
             event.accept(ModBlocks.SHAFT_LIGHT_IRON);
             event.accept(ModBlocks.SHAFT_MEDIUM_IRON);
 

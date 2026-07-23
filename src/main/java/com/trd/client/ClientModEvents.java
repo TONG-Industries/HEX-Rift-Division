@@ -283,6 +283,17 @@ public class ClientModEvents {
                     return true;
                 }
             });
+
+            VisualizerRegistry.setVisualizer(ModBlockEntities.HAND_CRANK_BE.get(), new dev.engine_room.flywheel.api.visualization.BlockEntityVisualizer<com.trd.block.entity.industrial.rotation.HandCrankBlockEntity>() {
+                @Override
+                public dev.engine_room.flywheel.api.visual.BlockEntityVisual<? super com.trd.block.entity.industrial.rotation.HandCrankBlockEntity> createVisual(dev.engine_room.flywheel.api.visualization.VisualizationContext ctx, com.trd.block.entity.industrial.rotation.HandCrankBlockEntity be, float partialTick) {
+                    return new com.trd.client.render.visual.HandCrankVisual(ctx, be, partialTick);
+                }
+                @Override
+                public boolean skipVanillaRender(com.trd.block.entity.industrial.rotation.HandCrankBlockEntity be) {
+                    return true;
+                }
+            });
         });
 
 
