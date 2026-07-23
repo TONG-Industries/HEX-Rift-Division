@@ -61,4 +61,19 @@ public class LampBlock extends Block {
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
         return getShape(state, level, pos, ctx);
     }
+
+    @Override
+    public boolean canSurvive(BlockState state, net.minecraft.world.level.LevelReader level, BlockPos pos) {
+        Direction direction = state.getValue(FACING);
+        BlockPos supportPos = pos.relative(direction);
+        return level.getBlockState(supportPos).isFaceSturdy(level, supportPos, direction.getOpposite());
+    }
+
+    @Override
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, net.minecraft.world.level.LevelAccessor level, BlockPos currentPos, BlockPos neighborPos) {
+        if (!state.canSurvive(level, currentPos)) {
+            return net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
+        }
+        return super.updateShape(state, direction, neighborState, level, currentPos, neighborPos);
+    }
 }
