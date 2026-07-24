@@ -11,15 +11,15 @@ import javax.annotation.Nullable;
 
 public class ModLangProvider extends LanguageProvider {
 
-        protected final String locale;
+    protected final String locale;
 
-        public ModLangProvider(PackOutput output, String locale) {
-                super(output, MainRegistry.MOD_ID, locale);
-                this.locale = locale;
+    public ModLangProvider(PackOutput output, String locale) {
+        super(output, MainRegistry.MOD_ID, locale);
+        this.locale = locale;
 
-                // !!! ВАЖНО: Инициализируем ResourceRegistry !!!
-                ResourceRegistry.init();
-        }
+        // !!! ВАЖНО: Инициализируем ResourceRegistry !!!
+        ResourceRegistry.init();
+    }
 
     /**
      * Универсальная регистрация перевода для жидкости, её капли и ключа fluid.*
@@ -35,13 +35,6 @@ public class ModLangProvider extends LanguageProvider {
                 add("fluid.trd." + fluidId, nameRu);
                 add("item.trd.fluid_drop_" + fluidId, nameRu);
                 break;
-            case "uk_ua":
-                if (nameUa != null) {
-                    add("fluid_type.trd." + fluidId, nameUa);
-                    add("fluid.trd." + fluidId, nameUa);
-                    add("item.trd.fluid_drop_" + fluidId, nameUa);
-                }
-                break;
             case "en_us":
                 if (nameEn != null) {
                     add("fluid_type.trd." + fluidId, nameEn);
@@ -54,823 +47,793 @@ public class ModLangProvider extends LanguageProvider {
     }
 
     @Override
-        protected void addTranslations() {
-                // Сначала автоматические переводы для ресурсов
-                ResourceDatagenHelper.generateTranslations(this, locale);
+    protected void addTranslations() {
+        // Сначала автоматические переводы для ресурсов
+        ResourceDatagenHelper.generateTranslations(this, locale);
 
-                // Затем ручные переводы
-                if (locale.equals("ru_ru")) {
-                        addRussian();
-                } else if (locale.equals("uk_ua")) {
-                        addUkrainian();
-                } else {
-                        addEnglish();
-                }
+        // Затем ручные переводы
+        if (locale.equals("ru_ru")) {
+            addRussian();
+        } else {
+            addEnglish();
         }
-
-        private void addEnglish() {
-                // транслейт бай марко_поло , плиз донт аск ми ебаут проблемс
-                // Вкладки креатива (SNM_WEAPONS_TAB)
-                add("itemGroup.trd.trd_build_tab", "Building Blocks");
-                add("itemGroup.trd.trd_tech_tab", "Technology");
-                add("itemGroup.trd.trd_weapons_tab", " Arsenal");
-                add("itemGroup.trd.trd_recourses_tab", "Recourses");
-                add("itemGroup.trd.trd_nature_tab", "Nature");
-
-
-                // Fluid Pipes
-                add(ModBlocks.BRONZE_FLUID_PIPE.get(), "Bronze Fluid Pipe");
-                add(ModBlocks.STEEL_FLUID_PIPE.get(), "Steel Fluid Pipe");
-                add(ModBlocks.LEAD_FLUID_PIPE.get(), "Lead Fluid Pipe");
-                add(ModBlocks.TUNGSTEN_FLUID_PIPE.get(), "Tungsten Fluid Pipe");
-
-
-
-                add("tooltip.trd.detminer.desc", "Breaks blocks in a natural blast pattern");
-                add("tooltip.trd.detminer.hardness", "Only affects blocks with hardness < 30");
-                add("tooltip.trd.detminer.conglomerate", "Has a chance to extract resources from conglomerate");
-
-                // Conglomerate drops
-                add("item.trd.conglomerate_chunk", "Conglomerate Chunk");
-                add("item.trd.hard_rock", "Hard Rock");
-
-            // Основные строки
-            add("item.trd.fluid_identifier", "Fluid Identifier");
-            add("message.trd.selected_fluid", "Selected");
-            add("tooltip.trd.no_fluid", "No fluid selected");
-
-            add("gui.trd.heater.tier0", "Tier 0");
-            add( "gui.trd.heater.tier1", "Tier I");
-            add("gui.trd.heater.tier2", "Tier II");
-            add( "gui.trd.heater.tier3", "Tier III");
-            add( "gui.trd.heater.tier4", "Tier IV");
-            add( "gui.trd.heater.tier5", "Tier V");
-
-            addFluidTranslations("hydrogen_peroxide", "Пероксид водорода", null, "Hydrogen Peroxide");
-            addFluidTranslations("sulfuric_acid", "Серная кислота", null, "Sulfuric Acid");
-            addFluidTranslations("natural_gas", "Природный газ", null, "Natural Gas");
-            addFluidTranslations("steam", "Пар", null, "Steam");
-            addFluidTranslations("low_pressure_steam", "Пар низкого давления", null, "Low Pressure Steam");
-// Для ванильных жидкостей можно тоже добавить (если нужно переопределить):
-            addFluidTranslations("water", "Вода", "Вода", "Water");
-            addFluidTranslations("lava", "Лава", "Лава", "Lava");
-
-            // Shaft Tooltips
-            add("tooltip.trd.shaft_material", "Material");
-            add("tooltip.trd.max_speed", "Max Speed");
-            add("tooltip.trd.max_torque", "Max Torque");
-            add("tooltip.trd.inertia", "Inertia");
-
-            // Messages
-            add("message.trd.too_far_from_support", "Unsupported span! Max distance from support for this diameter: %s blocks.");
-
-            // Metals
-                add("metal.trd.gold", "Gold");
-                add("metal.trd.iron", "Iron");
-                add("metal.trd.copper", "Copper");
-                add("metal.trd.netherite", "Netherite");
-                add("metal.trd.steel", "Steel");
-                add("metal.trd.aluminum", "Aluminum");
-                add("metal.trd.bronze", "Bronze");
-                add("metal.trd.tin", "Tin");
-                add("metal.trd.zinc", "Zinc");
-                add("metal.trd.titanium", "Titanium");
-                add("metal.trd.lead", "Lead");
-                add("metal.trd.beryllium", "Beryllium");
-                add("metal.trd.industrial_copper", "Industrial Copper");
-                add("metal.trd.tungsten", "Tungsten");
-                add("metal.trd.neodymium", "Neodymium");
-
-                add("jei.category.trd.smelting", "Smelting");
-                add("jei.category.trd.casting", "Casting");
-                add("jei.category.trd.alloying", "Alloying");
-                add("jei.category.trd.millstone", "Millstone");
-                add(ModItems.LIQUID_METAL.get(), "Liquid metal");
-
-                // Molds
-                add(ModItems.MOLD_INGOT.get(), "Ingot Mold");
-                add(ModItems.MOLD_PICKAXE.get(), "Pickaxe Mold");
-                add(ModItems.MOLD_EMPTY.get(), "Empty Mold");
-                add(ModItems.MOLD_NUGGET.get(), "Nugget Mold");
-                add(ModItems.MOLD_BLOCK.get(), "Block Mold");
-
-                // Секвойя
-                add(ModBlocks.SEQUOIA_BARK.get(), "Sequoia bark");
-                add(ModBlocks.SEQUOIA_HEARTWOOD.get(), "Sequoia heartwood");
-                add(ModBlocks.SEQUOIA_PLANKS.get(), "Sequoia planks");
-                add(ModBlocks.SEQUOIA_ROOTS.get(), "Sequoia roots");
-                add(ModBlocks.SEQUOIA_ROOTS_MOSSY.get(), "Mossy sequoia roots");
-
-                add(ModBlocks.SEQUOIA_BARK_DARK.get(), "Dark sequoia bark");
-                add(ModBlocks.SEQUOIA_BARK_MOSSY.get(), "Sequoia bark with moss");
-                add(ModBlocks.SEQUOIA_BARK_LIGHT.get(), "Light sequoia bark");
-                add(ModBlocks.SEQUOIA_DOOR.get(), "Sequoia door");
-                add(ModBlocks.SEQUOIA_BIOME_MOSS.get(), "Dark moss");
-                add(ModBlocks.SEQUOIA_LEAVES.get(), "Sequoia leaves");
-
-                // Протекторы
-                add(ModItems.PROTECTOR_LEAD.get(), "Lead Protector");
-                add(ModItems.PROTECTOR_STEEL.get(), "Steel Protector");
-                add(ModItems.PROTECTOR_TUNGSTEN.get(), "Tungsten Protector");
-
-                //
-                add(ModBlocks.SMALL_SMELTER.get(), "Small Smelter");
-                add(ModBlocks.SMELTER.get(), "Smelter");
-                add(ModBlocks.JERNOVA.get(), "Millstone");
-                add(ModBlocks.CASTING_DESCENT.get(), "Casting Descent");
-                add(ModBlocks.CASTING_POT.get(), "Casting Pot");
-                add(ModBlocks.HEATER.get(), "Heater");
-
-                // Электроника
-                add(ModItems.ENERGY_CELL_BASIC.get(), "Energy cell");
-                add(ModItems.CREATIVE_BATTERY.get(), "Creative battery");
-                add(ModItems.BATTERY.get(), "Battery");
-                add(ModItems.BATTERY_ADVANCED.get(), "Advanced battery");
-                add(ModItems.BATTERY_LITHIUM.get(), "Lithium battery");
-                add(ModItems.BATTERY_TRIXITE.get(), "Trixite Battery");
-                add(ModBlocks.MACHINE_BATTERY.get(), "Module energy storage");
-                add(ModBlocks.CONVERTER_BLOCK.get(), "Energy converter");
-                add(ModBlocks.WIRE_COATED.get(), "Copper wire");
-                add(ModBlocks.SWITCH.get(), "Switch");
-                add(ModBlocks.VALVE.get(), "Valve");
-                add(ModBlocks.TURRET_LIGHT_PLACER.get(), "Light landing turret 'Nagual' ");
-
-                // Нэкроз
-                add(ModBlocks.DEPTH_WORM_NEST.get(), "Depth worm nest");
-                add(ModBlocks.HIVE_SOIL.get(), "Depth worm hive flesh");
-
-                // кырпичы
-                add(ModItems.SLAG.get(), "Slag");
-                add(ModItems.FIREBRICK.get(), "Firebrick");
-                add(ModItems.REINFORCEDBRICK.get(), "Reinforced Brick");
-                add(ModItems.WOODEN_HANDLE.get(), "Wooden Handle");
-                add(ModItems.ROPE.get(), "Rope");
-                add(ModItems.BEAM_PLACER.get(), "Beam Placer");
-                add(ModItems.POKER.get(), "Poker");
-
-                // Блоки
-                add(ModBlocks.CRATE.get(), "Crate");
-                add(ModBlocks.CRATE_AMMO.get(), "Ammo crate");
-                add(ModBlocks.CONCRETE.get(), "Concrete");
-                add(ModBlocks.CONCRETE_RED.get(), "Red concrete");
-                add(ModBlocks.CONCRETE_BLUE.get(), "Blue concrete");
-                add(ModBlocks.CONCRETE_GREEN.get(), "Green concrete");
-                add(ModBlocks.CONCRETE_HAZARD_NEW.get(), "New hazard concrete");
-                add(ModBlocks.CONCRETE_HAZARD_OLD.get(), "Old hazard concrete");
-                add(ModBlocks.NECROSIS_TEST.get(), "Necrosis test block");
-                add(ModBlocks.NECROSIS_TEST2.get(), "Necrosis test block 2");
-                add(ModBlocks.NECROSIS_TEST3.get(), "Necrosis test block 3");
-                add(ModBlocks.NECROSIS_TEST4.get(), "Necrosis test block 4");
-                add(ModBlocks.NECROSIS_PORTAL.get(), "Necrosis portal");
-                add(ModBlocks.WASTE_LOG.get(), "Waste log");
-                add(ModBlocks.CONCRETE_STAIRS.get(), "Concrete stairs");
-                add(ModBlocks.CONCRETE_SLAB.get(), "Concrete slab");
-                add(ModBlocks.CONCRETE_RED_STAIRS.get(), "Red concrete stairs");
-                add(ModBlocks.CONCRETE_RED_SLAB.get(), "Red concrete slab");
-                add(ModBlocks.CONCRETE_BLUE_STAIRS.get(), "Blue concrete stairs");
-                add(ModBlocks.CONCRETE_BLUE_SLAB.get(), "Blue concrete slab");
-                add(ModBlocks.CONCRETE_GREEN_STAIRS.get(), "Green concrete stairs");
-                add(ModBlocks.CONCRETE_GREEN_SLAB.get(), "Green concrete slab");
-                add(ModBlocks.CONCRETE_HAZARD_NEW_STAIRS.get(), "New hazard concrete stairs");
-                add(ModBlocks.CONCRETE_HAZARD_NEW_SLAB.get(), "New hazard concrete slab");
-                add(ModBlocks.CONCRETE_HAZARD_OLD_STAIRS.get(), "Old hazard concrete stairs");
-                add(ModBlocks.CONCRETE_HAZARD_OLD_SLAB.get(), "Old hazard concrete slab");
-                add(ModBlocks.SEQUOIA_TRAPDOOR.get(), "Sequoia trapdoor");
-                add(ModBlocks.BEAM_BLOCK.get(), "Beam Block");
-                add(ModBlocks.STEEL_PROPS.get(), "Steel Props");
-                add(ModBlocks.DECO_STEEL.get(), "Decorative Steel");
-                add(ModBlocks.DECO_STEEL_DARK.get(), "Dark Decorative Steel");
-                add(ModBlocks.DECO_LEAD.get(), "Decorative Lead");
-                add(ModBlocks.DIRT_ROUGH.get(), "Rough Dirt");
-
-                // Валы
-                // add(ModBlocks.DRILL_HEAD.get(), "Drill head");
-                // add(ModBlocks.MOTOR_ELECTRO.get(), "Electric motor");
-                // add(ModBlocks.WIND_GEN_FLUGER.get(), "Wind generator vane");
-                // add(ModBlocks.SHAFT_IRON.get(), "Iron shaft");
-                // add(ModBlocks.SHAFT_WOODEN.get(), "Wooden shaft");
-                // add(ModBlocks.GEAR_PORT.get(), "Gear port");
-                // add(ModBlocks.STOPPER.get(), "Stopper");
-                // add(ModBlocks.ADDER.get(), "Adder");
-                // add(ModBlocks.TACHOMETER.get(), "Tachometer");
-                // add(ModBlocks.ROTATION_METER.get(), "Rotation meter");
-                // add(ModBlocks.RCONVERTER.get(), "RtoE converter");
-                // add(ModBlocks.SHAFT_PLACER.get(), "Shaft placer");
-                // add(ModBlocks.MINING_PORT.get(), "Mining port");
-                add(ModItems.GEAR1_STEEL.get(), "Small Steel Gear");
-                add(ModItems.GEAR2_STEEL.get(), "Medium Steel Gear");
-                add(ModBlocks.BEARING_BLOCK.get(), "Bearing");
-                add(ModBlocks.SHAFT_LIGHT_STEEL.get(), "Light Steel Shaft");
-                add(ModBlocks.SHAFT_MEDIUM_STEEL.get(), "Medium Steel Shaft");
-                add(ModBlocks.SHAFT_HEAVY_STEEL.get(), "Heavy Steel Shaft");
-
-                // Другие предметы
-                add(ModBlocks.DET_MINER.get(), "Mining charge");
-                add(ModItems.DEPTH_WORM_SPAWN_EGG.get(), "Depth worm spawn egg");
-                add(ModItems.SCREWDRIVER.get(), "Screwdriver");
-                add(ModItems.CROWBAR.get(), "Crowbar");
-                add(ModItems.RANGE_DETONATOR.get(), "Long-Range detonator");
-                add(ModItems.MULTI_DETONATOR.get(), "Multi-Detonator");
-                add(ModItems.DETONATOR.get(), "Detonator");
-                add(ModItems.MACHINEGUN.get(), "'A.P. 17'");
-                add(ModItems.TURRET_CHIP.get(), "Turret chip");
-                add(ModItems.TURRET_LIGHT_PORTATIVE_PLACER.get(), "Portable light turret");
-                add(ModItems.AMMO_TURRET.get(), "20mm Turret ammo");
-                add(ModItems.AMMO_TURRET_PIERCING.get(), "20mm Armor-Piercing turret ammo");
-                add(ModItems.AMMO_TURRET_HOLLOW.get(), "20mm Hollow-Point turret ammo");
-                add(ModItems.AMMO_TURRET_FIRE.get(), "20mm Incendiary turret ammo");
-                add(ModItems.AMMO_TURRET_RADIO.get(), "20mm Turret ammo with radio-exploder");
-                add(ModItems.GRENADE.get(), "Grenade");
-                add(ModItems.GRENADEHE.get(), "High explosive grenade");
-                add(ModItems.GRENADEFIRE.get(), "Incendiary grenade");
-                add(ModItems.GRENADESLIME.get(), "Slime grenade");
-                add(ModItems.GRENADESMART.get(), "Smart grenade");
-                add(ModItems.GRENADE_IF.get(), "Impact grenade");
-                add(ModItems.GRENADE_IF_HE.get(), "HE Impact grenade");
-                add(ModItems.GRENADE_IF_SLIME.get(), "Slime impact grenade");
-                add(ModItems.GRENADE_IF_FIRE.get(), "Incendiary impact grenade");
-                add(ModItems.GRENADE_NUC.get(), "Nuclear grenade");
-
-                // Энтити
-                add("entity.trd.turret_light", "Light turret");
-                add("entity.trd.turret_light_linked", "Linked light turret");
-                add("entity.trd.turret_bullet", "Turret bullet");
-                add("entity.trd.depth_worm", "Depth worm");
-                add("entity.trd.grenade_projectile", "Grenade");
-                add("entity.trd.grenadehe_projectile", "HE Grenade");
-                add("entity.trd.grenadefire_projectile", "Incendiary grenade");
-                add("entity.trd.grenadesmart_projectile", "Smart grenade");
-                add("entity.trd.grenadeslime_projectile", "Slime grenade");
-                add("entity.trd.grenade_if_projectile", "Impact grenade");
-                add("entity.trd.grenade_if_fire_projectile", "Incendiary Impact grenade");
-                add("entity.trd.grenade_if_slime_projectile", "Slime impact grenade");
-                add("entity.trd.grenade_if_he_projectile", "HE Impact grenade");
-                add("entity.trd.grenade_nuc_projectile", "Nuclear grenade");
-
-                add(ModItems.GRENADIER_GOGGLES.get(), "Grenadier Goggles");
-                add(ModItems.FLYWHEEL_LIGHT.get(), "Light Flywheel");
-                // Яйца призыва
-                add(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG.get(), "Brutal Depth Worm Spawn Egg");
-                add(ModItems.GRENADIER_ZOMBIE_SPAWN_EGG.get(), "Grenadier Zombie Spawn Egg");
-
-        }
-
-        private void addRussian() {
-                // Секвойя
-                add("jei.category.trd.boiling", "Бойлер");
-                add("jei.category.trd.steam_engine", "Паровой двигатель");
-                add("jei.category.trd.condensing", "Конденсация");
-                add("jei.category.trd.electric_furnace", "Электро-печь");
-                add("item.trd.cast_pickaxe_iron", "Литая железная кирка");
-                add("item.trd.cast_pickaxe_steel", "Литая стальная кирка");
-
-                add("item.trd.cast_pickaxe.desc.charge", "§7Зажмите ПКМ для мощного удара");
-                add("item.trd.cast_pickaxe.desc.mining_power", "§6Мощность: %s");
-                add("item.trd.cast_pickaxe.desc.vein_miner_info", "Жилковый майнер: %s");
-                add("item.trd.cast_pickaxe.desc.tunnel_miner", "Туннельный майнер: %s");
-
-                add(ModItems.GRENADIER_GOGGLES.get(), "Очки гренадёра");
-                add(ModItems.FLYWHEEL_LIGHT.get(), "Легкий маховик");
-                add("item.trd.grenadier_goggles.desc.explosion_resist", "Защита от взрывов: +%s%%");
-
-                // Протекторы
-                add(ModItems.PROTECTOR_LEAD.get(), "Свинцовый протектор");
-                add(ModItems.PROTECTOR_STEEL.get(), "Стальной протектор");
-                add(ModItems.PROTECTOR_TUNGSTEN.get(), "Вольфрамовый протектор");
-
-                // Металлы
-                add("metal.trd.gold", "Золото");
-                add("metal.trd.iron", "Железо");
-                add("metal.trd.copper", "Медь");
-                add("metal.trd.netherite", "Незерит");
-                add("metal.trd.steel", "Сталь");
-                add("metal.trd.aluminum", "Алюминий");
-                add("metal.trd.bronze", "Бронза");
-                add("metal.trd.tin", "Олово");
-                add("metal.trd.zinc", "Цинк");
-                add("metal.trd.titanium", "Титан");
-                add("metal.trd.industrial_copper", "Промышленная медь");
-                add("metal.trd.lead", "Свинец");
-                add("metal.trd.beryllium", "Бериллий");
-                add("metal.trd.tungsten", "Вольфрам");
-                add("metal.trd.neodymium", "Неодим");
-
-            add("gui.trd.heater.tier0", "Тир 0");
-            add( "gui.trd.heater.tier1", "Тир I");
-            add("gui.trd.heater.tier2", "Тир II");
-            add( "gui.trd.heater.tier3", "Тир III");
-            add( "gui.trd.heater.tier4", "Тир IV");
-            add( "gui.trd.heater.tier5", "Тир V");
-
-                add("item.trd.hot_ingot.tooltip", "§6§lРАСКАЛЁННЫЙ! §r§7(%s%%)");
-                add(ModBlocks.SEQUOIA_BARK.get(), "Кора секвойи");
-                add(ModBlocks.SEQUOIA_HEARTWOOD.get(), "Бревно секвойи");
-                add(ModBlocks.SEQUOIA_PLANKS.get(), "Доски из секвойи");
-                add(ModBlocks.SEQUOIA_ROOTS.get(), "Корни секвойи");
-                add(ModBlocks.SEQUOIA_ROOTS_MOSSY.get(), "Корни секвойи с мхом");
-
-                add(ModBlocks.SEQUOIA_BARK_DARK.get(), "Тёмная кора секвойи");
-                add(ModBlocks.SEQUOIA_BARK_MOSSY.get(), "Кора секвойи с мхом");
-                add(ModBlocks.SEQUOIA_BARK_LIGHT.get(), "Светлая кора секвойи");
-                add(ModBlocks.SEQUOIA_DOOR.get(), "Дверь из секвойи");
-                add(ModBlocks.SEQUOIA_BIOME_MOSS.get(), "Тёмный мох");
-                add(ModBlocks.SEQUOIA_LEAVES.get(), "Листья секвойи");
-                add(ModBlocks.SEQUOIA_TRAPDOOR.get(), "Люк из секвойи");
-
-                // Электроника
-                add(ModItems.ENERGY_CELL_BASIC.get(), "Энергетическая ячейка");
-                add(ModItems.CREATIVE_BATTERY.get(), "Бесконечный аккумулятор");
-                add(ModItems.BATTERY.get(), "Батарея");
-                add(ModItems.BATTERY_ADVANCED.get(), "Улучшенный аккумулятор");
-                add(ModItems.BATTERY_LITHIUM.get(), "Литий-ионный аккумулятор");
-                add(ModItems.BATTERY_TRIXITE.get(), "Продвинутый аккумулятор");
-                add(ModBlocks.MACHINE_BATTERY.get(), "Модульное энергохранилище");
-                add(ModBlocks.CONVERTER_BLOCK.get(), "Энергетический конвертер");
-                add(ModBlocks.WIRE_COATED.get(), "Провод из красной меди");
-                add(ModBlocks.SWITCH.get(), "Рубильник");
-                add(ModBlocks.VALVE.get(), "Клапан");
-
-                // Лытье
-                add(ModItems.MOLD_INGOT.get(), "Форма для слитка");
-                add(ModItems.MOLD_PICKAXE.get(), "Форма для кирки");
-                add(ModItems.MOLD_EMPTY.get(), "Пустая форма");
-                add(ModItems.MOLD_NUGGET.get(), "Форма для самородка");
-                add(ModItems.MOLD_BLOCK.get(), "Форма для блока");
-                add(ModBlocks.SMALL_SMELTER.get(), "Малый плавильник");
-                add(ModBlocks.SMELTER.get(), "Плавильник");
-                add(ModBlocks.JERNOVA.get(), "Жернова");
-                add(ModBlocks.CASTING_DESCENT.get(), "Литейный спуск");
-                add(ModBlocks.CASTING_POT.get(), "Литейный котел");
-                add(ModBlocks.HEATER.get(), "Нагреватель");
-
-                add(ModBlocks.TURRET_LIGHT_PLACER.get(), "Лёгкая десантная турель 'Нагваль'");
-
-                // Нэкроз
-                add(ModBlocks.DEPTH_WORM_NEST.get(), "Ядро улья глубинного червя");
-                add(ModBlocks.HIVE_SOIL.get(), "Плоть улья глубинного червя");
-
-                // Блоки
-                add(ModBlocks.CRATE.get(), "Ящик");
-                add(ModBlocks.CRATE_AMMO.get(), "Ящик с патронами");
-                add(ModBlocks.CONCRETE.get(), "Бетон");
-                add(ModBlocks.CONCRETE_RED.get(), "Красный бетон");
-                add(ModBlocks.CONCRETE_BLUE.get(), "Синий бетон");
-                add(ModBlocks.CONCRETE_GREEN.get(), "Зелёный бетон");
-                add(ModBlocks.CONCRETE_HAZARD_NEW.get(), "Бетон 'в полоску'");
-                add(ModBlocks.CONCRETE_HAZARD_OLD.get(), "Изношенный бетон 'в полоску'");
-                add(ModBlocks.NECROSIS_TEST.get(), "Тестовый блок Некроза");
-                add(ModBlocks.NECROSIS_TEST2.get(), "Тестовый блок Некроза 2");
-                add(ModBlocks.NECROSIS_TEST3.get(), "Тестовый блок Некроза 3");
-                add(ModBlocks.NECROSIS_TEST4.get(), "Тестовый блок Некроза 4");
-                add(ModBlocks.NECROSIS_PORTAL.get(), "Портал Некроза");
-                add(ModBlocks.WASTE_LOG.get(), "Обугленное бревно");
-                add(ModBlocks.CONCRETE_STAIRS.get(), "Бетонные ступени");
-                add(ModBlocks.CONCRETE_SLAB.get(), "Бетонная плита");
-                add(ModBlocks.CONCRETE_RED_STAIRS.get(), "Лестница из красного бетона");
-                add(ModBlocks.CONCRETE_RED_SLAB.get(), "Плита из красного бетона");
-                add(ModBlocks.CONCRETE_BLUE_STAIRS.get(), "Лестница из синего бетона");
-                add(ModBlocks.CONCRETE_BLUE_SLAB.get(), "Плита из синего бетона");
-                add(ModBlocks.CONCRETE_GREEN_STAIRS.get(), "Ступени из зелёного бетона");
-                add(ModBlocks.CONCRETE_GREEN_SLAB.get(), "Плита из зелёного бетона");
-                add(ModBlocks.CONCRETE_HAZARD_NEW_STAIRS.get(), "Ступени из бетона 'в полоску'");
-                add(ModBlocks.CONCRETE_HAZARD_NEW_SLAB.get(), "Плита из бетона 'в полоску'");
-                add(ModBlocks.CONCRETE_HAZARD_OLD_STAIRS.get(), "Ступени из изношенного бетона 'в полоску'");
-                add(ModBlocks.CONCRETE_HAZARD_OLD_SLAB.get(), "Плита из изношенного бетона 'в полоску'");
-                add(ModBlocks.BEAM_BLOCK.get(), "Балка");
-                add(ModBlocks.STEEL_PROPS.get(), "Стальные подпорки");
-                add(ModBlocks.DECO_STEEL.get(), "Декоративная сталь");
-                add(ModBlocks.DECO_LEAD.get(), "Декоративный свинец");
-                add(ModBlocks.DIRT_ROUGH.get(), "Грубая земля");
-
-                // Валы
-                // add(ModBlocks.DRILL_HEAD.get(), "Головка бура");
-                // add(ModBlocks.MOTOR_ELECTRO.get(), "Электромотор");
-                // add(ModBlocks.SHAFT_IRON.get(), "Железный вал");
-                // add(ModBlocks.SHAFT_WOODEN.get(), "Деревянный вал");
-                // add(ModBlocks.GEAR_PORT.get(), "Трансмиттер вращения");
-                // add(ModBlocks.STOPPER.get(), "Стопор");
-                // add(ModBlocks.ADDER.get(), "Сумматор");
-                // add(ModBlocks.TACHOMETER.get(), "Тахометр");
-                // add(ModBlocks.ROTATION_METER.get(), "Измеритель вращения");
-                // add(ModBlocks.RCONVERTER.get(), "Преобразователь вращения в энергию");
-                // add(ModBlocks.SHAFT_PLACER.get(), "Установщик валов");
-                // add(ModBlocks.MINING_PORT.get(), "Сборочный порт");
-
-                add(ModItems.GEAR1_STEEL.get(), "Стальная шестерня (малая)");
-                add(ModItems.GEAR2_STEEL.get(), "Стальная шестерня (средняя)");
-                add(ModBlocks.BEARING_BLOCK.get(), "Подшипник");
-                add(ModBlocks.SHAFT_MEDIUM_STEEL.get(), "Средний стальной вал");
-
-                add("jei.category.trd.smelting", "Плавка");
-                add("jei.category.trd.casting", "Отлив");
-                add("jei.category.trd.alloying", "Сплав");
-                add("jei.category.trd.millstone", "Жернова");
-                add(ModItems.LIQUID_METAL.get(), "Жидкий металл");
-
-                // Другие предметы
-                add(ModBlocks.DET_MINER.get(), "Шахтёрский заряд");
-                add(ModItems.RANGE_DETONATOR.get(), "Детонатор дальнего действия");
-                add(ModItems.DEPTH_WORM_SPAWN_EGG.get(), "Яйцо призыва глубинного червя");
-                add(ModItems.SCREWDRIVER.get(), "Отвёртка");
-                add(ModItems.CROWBAR.get(), "Монтировка");
-                add(ModItems.MULTI_DETONATOR.get(), "Мульти-детонатор");
-                add(ModItems.DETONATOR.get(), "Детонатор");
-                add(ModItems.MACHINEGUN.get(), "'А.П. 17'");
-                add(ModItems.TURRET_CHIP.get(), "Чип турели");
-                add(ModItems.TURRET_LIGHT_PORTATIVE_PLACER.get(), "Портативная лёгкая десантная турель 'Нагваль'");
-                add(ModItems.SLAG.get(), "Шлак");
-                add(ModItems.FIREBRICK.get(), "Огнеупорный кирпич");
-                add(ModItems.REINFORCEDBRICK.get(), "Армированный кирпич");
-                add(ModItems.WOODEN_HANDLE.get(), "Деревянная рукоять");
-                add(ModItems.BEAM_PLACER.get(), "Установщик балок");
-                add(ModItems.POKER.get(), "Кочерга");
-                // add(ModItems.WIND_GEN_FLUGER.get(), "Ветряной генератор вращения");
-                add(ModItems.AMMO_TURRET_PIERCING.get(), "20мм турельный боеприпас");
-                add(ModItems.AMMO_TURRET_HOLLOW.get(), "20мм экспансивный турельный боеприпас");
-                add(ModItems.AMMO_TURRET_FIRE.get(), "20мм зажигательный турельный боеприпас");
-                add(ModItems.AMMO_TURRET_RADIO.get(), "20мм турельный боеприпас с радио-взрывателем");
-                add(ModItems.GRENADE.get(), "Граната");
-                add(ModItems.GRENADEHE.get(), "Фугасная граната");
-                add(ModItems.GRENADEFIRE.get(), "Зажигательная граната");
-                add(ModItems.GRENADESLIME.get(), "Граната в слизи");
-                add(ModItems.GRENADESMART.get(), "УМная граната");
-                add(ModItems.GRENADE_IF.get(), "Ударная граната");
-                add(ModItems.GRENADE_IF_HE.get(), "Фугасная ударная граната");
-                add(ModItems.GRENADE_IF_SLIME.get(), "Ударная граната в слизи");
-                add(ModItems.GRENADE_IF_FIRE.get(), "Зажигательная ударная граната");
-                add(ModItems.GRENADE_NUC.get(), "Водородная граната");
-
-                // Вкладка креатива
-                add("itemGroup.trd.trd_build_tab", "Строительные блоки");
-                add("itemGroup.trd.trd_tech_tab", "Технологии");
-                add("itemGroup.trd.trd_weapons_tab", "Арсенал");
-                add("itemGroup.trd.trd_recourses_tab", "Ресурсы");
-                add("itemGroup.trd.trd_nature_tab", "Природа");
-
-
-
-                // Трубы для жижкостей
-                add(ModBlocks.BRONZE_FLUID_PIPE.get(), "Бронзовая жидкостная труба");
-                add(ModBlocks.STEEL_FLUID_PIPE.get(), "Стальная жидкостная труба");
-                add(ModBlocks.LEAD_FLUID_PIPE.get(), "Свинцовая жидкостная труба");
-                add(ModBlocks.TUNGSTEN_FLUID_PIPE.get(), "Вольфрамовая жидкостная труба");
-
-            // Основные строки
-            add("item.trd.fluid_identifier", "Жидкостный Идентификатор");
-            add("message.trd.selected_fluid", "Выбрано");
-            add("tooltip.trd.no_fluid", "Жидкость не выбрана");
-
-            // Shaft Tooltips
-            add("tooltip.trd.shaft_material", "Материал");
-            add("tooltip.trd.max_speed", "Макс. скорость");
-            add("tooltip.trd.max_torque", "Макс. момент");
-            add("tooltip.trd.inertia", "Инерция");
-
-            // Сообщения
-            add("message.trd.too_far_from_support", "Слишком длинный пролет! Макс. расстояние от опоры для этого диаметра: %s бл.");
-
-            addFluidTranslations("hydrogen_peroxide", "Пероксид водорода", null, null);
-            addFluidTranslations("sulfuric_acid", "Серная кислота", null, null);
-            addFluidTranslations("natural_gas", "Природный газ", null, null);
-            addFluidTranslations("steam", "Пар", null, null);
-
-            // Энтити
-                add("entity.trd.turret_light", "Лёгкая турель");
-                add("entity.trd.turret_light_linked", "Связанная лёгкая турель");
-                add("entity.trd.turret_bullet", "Пуля турели");
-                add("entity.trd.depth_worm", "Глубинный червь");
-                add("entity.trd.grenade_projectile", "Граната");
-                add("entity.trd.grenadehe_projectile", "Фугасная граната");
-                add("entity.trd.grenadefire_projectile", "Зажигательная граната");
-                add("entity.trd.grenadesmart_projectile", "Умная граната");
-                add("entity.trd.grenadeslime_projectile", "Желатиновая граната");
-                add("entity.trd.grenade_if_projectile", "Ударная граната");
-                add("entity.trd.grenade_if_fire_projectile", "Зажигательная ударная граната");
-                add("entity.trd.grenade_if_slime_projectile", "Желатиновая ударная граната");
-                add("entity.trd.grenade_if_he_projectile", "Фугасная ударная граната");
-                add("entity.trd.grenade_nuc_projectile", "Ядерная граната");
-
-                // Яйца призыва
-                add(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG.get(), "Яйцо призыва жестокого глубинного червя");
-                add(ModItems.GRENADIER_ZOMBIE_SPAWN_EGG.get(), "Яйцо призыва зомби-гренадера");
-        }
-
-        private void addUkrainian() {
-                // Вкладки креативу
-                add("itemGroup.trd.trd_build_tab", "Будівельні блоки");
-                add("itemGroup.trd.trd_tech_tab", "Технології");
-                add("itemGroup.trd.trd_weapons_tab", "Арсенал");
-                add("itemGroup.trd.trd_tools_tab", "Інструменти");
-                add("itemGroup.trd.trd_nature_tab", "Природа");
-                add("itemGroup.trd.trd_recourses_tab", "Ресурси");
-
-            addFluidTranslations("hydrogen_peroxide", "Пероксид водорода", "Перекис водню", null);
-            addFluidTranslations("sulfuric_acid", "Серная кислота", "Сірчана кислота", null);
-            addFluidTranslations("natural_gas", "Природный газ", "Природний газ", null);
-            addFluidTranslations("steam", "Пар", "Пара", null);
-
-                // Рідини
-                add("item.trd.fluid_identifier", "Ідентифікатор рідин");
-                add("fluid.trd.none", "Нічого");
-                add("tooltip.trd.fluid.unknown", "Невідома рідина");
-                add("tooltip.trd.fluid.invalid", "Недійсна рідина");
-
-
-                // Труби для рідин
-                add(ModBlocks.BRONZE_FLUID_PIPE.get(), "Бронзова труба для рідин");
-                add(ModBlocks.STEEL_FLUID_PIPE.get(), "Сталева труба для рідин");
-                add(ModBlocks.LEAD_FLUID_PIPE.get(), "Свинцева труба для рідин");
-                add(ModBlocks.TUNGSTEN_FLUID_PIPE.get(), "Вольфрамова труба для рідин");
-
-                // Форми для відливання
-                add(ModItems.MOLD_INGOT.get(), "Форма для зливка");
-                add(ModItems.MOLD_PICKAXE.get(), "Форма для кайла");
-                add(ModItems.MOLD_EMPTY.get(), "Порожня форма");
-                add(ModItems.MOLD_NUGGET.get(), "Форма для самородка");
-                add(ModItems.MOLD_BLOCK.get(), "Форма для блоку");
-
-                // Захисники (протектори)
-                add(ModItems.PROTECTOR_LEAD.get(), "Свинцевий протектор");
-                add(ModItems.PROTECTOR_STEEL.get(), "Сталевий протектор");
-                add(ModItems.PROTECTOR_TUNGSTEN.get(), "Вольфрамовий протектор");
-
-                // Підказки
-                add("tooltip.trd.detminer.line1", "Видобуває блоки в радіусі вибуху");
-                add("tooltip.trd.detminer.line2", "Не завдає шкоди істотам");
-
-                // Секвойя
-                add(ModBlocks.SEQUOIA_BARK.get(), "Кора секвої");
-                add(ModBlocks.SEQUOIA_HEARTWOOD.get(), "Колода секвої");
-                add(ModBlocks.SEQUOIA_PLANKS.get(), "Дошки з секвої");
-                add(ModBlocks.SEQUOIA_ROOTS.get(), "Коріння секвої");
-                add(ModBlocks.SEQUOIA_ROOTS_MOSSY.get(), "Коріння секвої з мохом");
-                add(ModBlocks.SEQUOIA_BARK_DARK.get(), "Темна кора секвої");
-                add(ModBlocks.SEQUOIA_BARK_MOSSY.get(), "Кора секвої з мохом");
-                add(ModBlocks.SEQUOIA_BARK_LIGHT.get(), "Світла кора секвої");
-                add(ModBlocks.SEQUOIA_DOOR.get(), "Двері з секвої");
-                add(ModBlocks.SEQUOIA_TRAPDOOR.get(), "Люк з секвої");
-                add(ModBlocks.SEQUOIA_BIOME_MOSS.get(), "Темний мох");
-                add(ModBlocks.SEQUOIA_LEAVES.get(), "Листя секвої");
-                add(ModBlocks.SEQUOIA_SLAB.get(), "Плита з секвої");
-                add(ModBlocks.SEQUOIA_STAIRS.get(), "Сходи з секвої");
-
-                // Електроніка
-                add(ModItems.ENERGY_CELL_BASIC.get(), "Базова енергетична комірка");
-                add(ModItems.CREATIVE_BATTERY.get(), "Батарея творчого режиму");
-                add(ModItems.BATTERY.get(), "Батарея");
-                add(ModItems.BATTERY_ADVANCED.get(), "Покращена батарея");
-                add(ModItems.BATTERY_LITHIUM.get(), "Літієва батарея");
-                add(ModItems.BATTERY_TRIXITE.get(), "Тріксітова батарея");
-                add(ModBlocks.MACHINE_BATTERY.get(), "Машинна батарея");
-                add(ModBlocks.CONVERTER_BLOCK.get(), "Конвертер");
-                add(ModBlocks.WIRE_COATED.get(), "Ізольований дріт");
-                add(ModBlocks.SWITCH.get(), "Вимикач");
-                add(ModBlocks.VALVE.get(), "Клапан");
-                add(ModBlocks.TURRET_LIGHT_PLACER.get(), "Легка турель");
-                add(ModBlocks.CONNECTOR.get(), "Конектор");
-                add(ModBlocks.MEDIUM_CONNECTOR.get(), "Середній конектор");
-                add(ModBlocks.LARGE_CONNECTOR.get(), "Великий конектор");
-
-                // Некроз
-                add(ModBlocks.DEPTH_WORM_NEST.get(), "Гніздо глибинного черв'яка");
-                add(ModBlocks.HIVE_SOIL.get(), "Ґрунт вулика");
-                add(ModBlocks.DEPTH_WORM_NEST_DEAD.get(), "Мертве гніздо глибинного черв'яка");
-                add(ModBlocks.HIVE_SOIL_DEAD.get(), "Мертвий ґрунт вулика");
-                add(ModBlocks.HIVE_ROOTS.get(), "Корені вулика");
-
-                // Блоки
-                add(ModBlocks.CRATE.get(), "Ящик");
-                add(ModBlocks.CRATE_AMMO.get(), "Ящик з набоями");
-                add(ModBlocks.CONCRETE.get(), "Бетон");
-                add(ModBlocks.CONCRETE_RED.get(), "Червоний бетон");
-                add(ModBlocks.CONCRETE_BLUE.get(), "Синій бетон");
-                add(ModBlocks.CONCRETE_GREEN.get(), "Зелений бетон");
-                add(ModBlocks.CONCRETE_HAZARD_NEW.get(), "Новий небезпечний бетон");
-                add(ModBlocks.CONCRETE_HAZARD_OLD.get(), "Старий небезпечний бетон");
-                add(ModBlocks.NECROSIS_TEST.get(), "Тестовий блок некрозу");
-                add(ModBlocks.NECROSIS_TEST2.get(), "Тестовий блок некрозу 2");
-                add(ModBlocks.NECROSIS_TEST3.get(), "Тестовий блок некрозу 3");
-                add(ModBlocks.NECROSIS_TEST4.get(), "Тестовий блок некрозу 4");
-                add(ModBlocks.NECROSIS_PORTAL.get(), "Портал некрозу");
-                add(ModBlocks.WASTE_LOG.get(), "Заражена колода");
-                add(ModBlocks.CONCRETE_STAIRS.get(), "Бетонні сходи");
-                add(ModBlocks.CONCRETE_SLAB.get(), "Бетонна плита");
-                add(ModBlocks.CONCRETE_RED_STAIRS.get(), "Сходи з червоного бетону");
-                add(ModBlocks.CONCRETE_RED_SLAB.get(), "Плита з червоного бетону");
-                add(ModBlocks.CONCRETE_BLUE_STAIRS.get(), "Сходи з синього бетону");
-                add(ModBlocks.CONCRETE_BLUE_SLAB.get(), "Плита з синього бетону");
-                add(ModBlocks.CONCRETE_GREEN_STAIRS.get(), "Сходи з зеленого бетону");
-                add(ModBlocks.CONCRETE_GREEN_SLAB.get(), "Плита з зеленого бетону");
-                add(ModBlocks.CONCRETE_HAZARD_NEW_STAIRS.get(), "Сходи з нового небезпечного бетону");
-                add(ModBlocks.CONCRETE_HAZARD_NEW_SLAB.get(), "Плита з нового небезпечного бетону");
-                add(ModBlocks.CONCRETE_HAZARD_OLD_STAIRS.get(), "Сходи зі старого небезпечного бетону");
-                add(ModBlocks.CONCRETE_HAZARD_OLD_SLAB.get(), "Плита зі старого небезпечного бетону");
-                add(ModBlocks.SMALL_SMELTER.get(), "Малий плавильник");
-                add(ModBlocks.SMELTER.get(), "Плавильник");
-                add(ModBlocks.JERNOVA.get(), "Жорна");
-                add(ModBlocks.CASTING_DESCENT.get(), "Ливарний спуск");
-                add(ModBlocks.CASTING_POT.get(), "Ливарний казан");
-                add(ModBlocks.HEATER.get(), "Нагрівач");
-                add(ModBlocks.BEAM_BLOCK.get(), "Балка");
-                add(ModBlocks.STEEL_PROPS.get(), "Сталеві підпори");
-                add(ModBlocks.DECO_STEEL.get(), "Декоративна сталь");
-                add(ModBlocks.DECO_STEEL_DARK.get(), "Темна декоративна сталь");
-                add(ModBlocks.DECO_STEEL_SMOG.get(), "Закіптявіла декоративна сталь");
-                add(ModBlocks.DECO_LEAD.get(), "Декоративний свинець");
-                add(ModBlocks.DECO_BEAM.get(), "Декоративна балка");
-                add(ModBlocks.DIRT_ROUGH.get(), "Груба земля");
-
-                // Мінерали та подібне
-                add(ModBlocks.BASALT_ROUGH.get(), "Груба базальтова порода");
-                add(ModBlocks.DOLOMITE.get(), "Доломіт");
-                add(ModBlocks.DOLOMITE_TILE.get(), "Доломітова плитка");
-                add(ModBlocks.LIMESTONE.get(), "Вапняк");
-                add(ModBlocks.BAUXITE.get(), "Боксит");
-                add(ModBlocks.MINERAL1.get(), "Мінерал 1");
-                add(ModBlocks.MINERAL2.get(), "Мінерал 2");
-                add(ModBlocks.MINERAL3.get(), "Мінерал 3");
-                add(ModBlocks.MINERAL_BLOCK1.get(), "Мінеральний блок");
-                add(ModBlocks.MINERAL_BLOCK2.get(), "Мінеральний блок 2");
-                add(ModBlocks.MINERAL_TILE.get(), "Мінеральна плитка");
-                add(ModBlocks.CONGLOMERATE.get(), "Конгломерат");
-                add(ModBlocks.DEPLETED_CONGLOMERATE.get(), "Виснажений конгломерат");
-
-                // Цегла
-                add(ModBlocks.FIREBRICK_BLOCK.get(), "Блок вогнетривкої цегли");
-                add(ModBlocks.REINFORCEDBRICK_BLOCK.get(), "Блок армованої цегли");
-                add(ModBlocks.FIREBRICK_STAIRS.get(), "Сходи з вогнетривкої цегли");
-                add(ModBlocks.FIREBRICK_SLAB.get(), "Плита з вогнетривкої цегли");
-                add(ModBlocks.REINFORCEDBRICK_STAIRS.get(), "Сходи з армованої цегли");
-                add(ModBlocks.REINFORCEDBRICK_SLAB.get(), "Плита з армованої цегли");
-
-                // Нові типи бетону
-                add(ModBlocks.CONCRETE_TILE.get(), "Бетонна плитка");
-                add(ModBlocks.CONCRETE_TILE_STAIRS.get(), "Сходи з бетонної плитки");
-                add(ModBlocks.CONCRETE_TILE_SLAB.get(), "Плита з бетонної плитки");
-                add(ModBlocks.CONCRETE_TILE_ALT.get(), "Альтернативна бетонна плитка");
-                add(ModBlocks.CONCRETE_TILE_ALT_STAIRS.get(), "Сходи з альтернативної бетонної плитки");
-                add(ModBlocks.CONCRETE_TILE_ALT_SLAB.get(), "Плита з альтернативної бетонної плитки");
-                add(ModBlocks.CONCRETE_TILE_ALT_BLUE.get(), "Синя альтернативна бетонна плитка");
-                add(ModBlocks.CONCRETE_TILE_ALT_BLUE_STAIRS.get(), "Сходи з синьої альтернативної бетонної плитки");
-                add(ModBlocks.CONCRETE_TILE_ALT_BLUE_SLAB.get(), "Плита з синьої альтернативної бетонної плитки");
-                add(ModBlocks.CONCRETE_REINFORCED.get(), "Армований бетон");
-                add(ModBlocks.CONCRETE_REINFORCED_STAIRS.get(), "Сходи з армованого бетону");
-                add(ModBlocks.CONCRETE_REINFORCED_SLAB.get(), "Плита з армованого бетону");
-                add(ModBlocks.CONCRETE_REINFORCED_HEAVY.get(), "Важкий армований бетон");
-                add(ModBlocks.CONCRETE_REINFORCED_HEAVY_STAIRS.get(), "Сходи з важкого армованого бетону");
-                add(ModBlocks.CONCRETE_REINFORCED_HEAVY_SLAB.get(), "Плита з важкого армованого бетону");
-                add(ModBlocks.CONCRETE_STRIPPED.get(), "Обшитий бетон");
-                add(ModBlocks.CONCRETE_STRIPPED_STAIRS.get(), "Сходи з обшитого бетону");
-                add(ModBlocks.CONCRETE_STRIPPED_SLAB.get(), "Плита з обшитого бетону");
-                add(ModBlocks.CONCRETE_ARMED_GLASS.get(), "Армоване бетонне скло");
-                add(ModBlocks.CONCRETE_NET.get(), "Бетонна сітка");
-                add(ModBlocks.TILE_LIGHT.get(), "Світла плитка");
-
-                add(ModBlocks.MORY_BLOCK.get(), "Блок Морі");
-                add(ModBlocks.ANTON_CHIGUR.get(), "Антон Чигур");
-
-                // Конгломерати
-                add(ModItems.CONGLOMERATE_CHUNK.get(), "Шматок конгломерату");
-                add(ModItems.HARD_ROCK.get(), "Тверда порода");
-                add(ModItems.DOLOMITE_SMES.get(), "Доломітова суміш");
-                add(ModItems.FIRE_SMES.get(), "Вогнетривка суміш");
-                add(ModItems.LIMESTONE_CHUNK.get(), "Шматок вапняку");
-                add(ModItems.LIMESTONE_POWDER.get(), "Порошок вапняку");
-                add(ModItems.BAUXITE_CHUNK.get(), "Шматок бокситу");
-                add(ModItems.BAUXITE_POWDER.get(), "Порошок бокситу");
-                add(ModItems.DOLOMITE_CHUNK.get(), "Шматок доломіту");
-                add(ModItems.DOLOMITE_POWDER.get(), "Порошок доломіту");
-
-                // Шестерні
-                add(ModItems.GEAR1_STEEL.get(), "Сталева шестерня (мала)");
-                add(ModItems.GEAR2_STEEL.get(), "Сталева шестерня (середня)");
-                add(ModBlocks.BEARING_BLOCK.get(), "Підшипник");
-                add(ModBlocks.MOTOR_ELECTRO.get(), "Електромотор");
-                add(ModBlocks.SHAFT_LIGHT_IRON.get(), "Легкий залізний вал");
-                add(ModBlocks.SHAFT_MEDIUM_IRON.get(), "Середній залізний вал");
-                add(ModBlocks.SHAFT_HEAVY_IRON.get(), "Важкий залізний вал");
-
-                add(ModBlocks.SHAFT_LIGHT_DURALUMIN.get(), "Легкий дюралюмінієвий вал");
-                add(ModBlocks.SHAFT_MEDIUM_DURALUMIN.get(), "Середній дюралюмінієвий вал");
-                add(ModBlocks.SHAFT_HEAVY_DURALUMIN.get(), "Важкий дюралюмінієвий вал");
-                add(ModBlocks.SHAFT_LIGHT_STEEL.get(), "Легкий сталевий вал");
-                add(ModBlocks.SHAFT_MEDIUM_STEEL.get(), "Середній сталевий вал");
-                add(ModBlocks.SHAFT_HEAVY_STEEL.get(), "Важкий сталевий вал");
-                add(ModBlocks.SHAFT_LIGHT_TITANIUM.get(), "Легкий титановий вал");
-                add(ModBlocks.SHAFT_MEDIUM_TITANIUM.get(), "Середній титановий вал");
-                add(ModBlocks.SHAFT_HEAVY_TITANIUM.get(), "Важкий титановий вал");
-                add(ModBlocks.SHAFT_LIGHT_TUNGSTEN_CARBIDE.get(), "Легкий вал з карбіду вольфраму");
-                add(ModBlocks.SHAFT_MEDIUM_TUNGSTEN_CARBIDE.get(), "Середній вал з карбіду вольфраму");
-                add(ModBlocks.SHAFT_HEAVY_TUNGSTEN_CARBIDE.get(), "Важкий вал з карбіду вольфраму");
-
-                // Їжа
-                add(ModItems.MORY_FOOD.get(), "Їжа Морі");
-                add(ModItems.COFFEE.get(), "Кава");
-                add(ModItems.MORY_LAH.get(), "Морі-Лах");
-
-                // Гарячі предмети
-                add("item.trd.hot_ingot.tooltip", "§6§lРОЗПЕЧЕНИЙ! §r§7(%s%%)");
-
-                // Литі кайла
-                add("item.trd.cast_pickaxe.desc.charge", "§7Затисніть ПКМ для потужного удару");
-                add("item.trd.cast_pickaxe.desc.mining_power", "§6Потужність: %s");
-                add("item.trd.cast_pickaxe.desc.vein_miner_info", "Жильний майнер: %s");
-                add(ModItems.CAST_PICKAXE_IRON.get(), "Лите залізне кайло");
-                add(ModItems.CAST_PICKAXE_STEEL.get(), "Лите сталеве кайло");
-                add(ModItems.CAST_PICKAXE_IRON_BASE.get(), "Основа литого залізного кайла");
-                add(ModItems.CAST_PICKAXE_STEEL_BASE.get(), "Основа литого сталевого кайла");
-
-                // JEI категорії
-                add("jei.category.trd.smelting", "Плавка");
-                add("jei.category.trd.casting", "Відлив");
-                add("jei.category.trd.alloying", "Сплав");
-                add("jei.category.trd.millstone", "Жорна");
-                add(ModItems.LIQUID_METAL.get(), "Рідкий метал");
-
-                // Метали
-                add("metal.trd.gold", "Золото");
-                add("metal.trd.iron", "Залізо");
-                add("metal.trd.copper", "Мідь");
-                add("metal.trd.netherite", "Незерит");
-                add("metal.trd.steel", "Сталь");
-                add("metal.trd.aluminum", "Алюміній");
-                add("metal.trd.bronze", "Бронза");
-                add("metal.trd.tin", "Олово");
-                add("metal.trd.zinc", "Цинк");
-
-                // Вали
-                // add(ModBlocks.DRILL_HEAD.get(), "Бурова головка");
-                // add(ModBlocks.MOTOR_ELECTRO.get(), "Електромотор");
-                // add(ModItems.WIND_GEN_FLUGER.get(), "Флюгер вітрогенератора");
-                // add(ModBlocks.SHAFT_IRON.get(), "Залізний вал");
-                // add(ModBlocks.SHAFT_WOODEN.get(), "Дерев'яний вал");
-                // add(ModBlocks.GEAR_PORT.get(), "Редукторний порт");
-                // add(ModBlocks.STOPPER.get(), "Стопор");
-                // add(ModBlocks.ADDER.get(), "Суматор");
-                // add(ModBlocks.TACHOMETER.get(), "Тахометр");
-                // add(ModBlocks.ROTATION_METER.get(), "Датчик обертання");
-                // add(ModBlocks.RCONVERTER.get(), "Обертальний перетворювач");
-                // add(ModBlocks.SHAFT_PLACER.get(), "Розміщувач валів");
-                // add(ModBlocks.MINING_PORT.get(), "Шахтарський порт");
-
-                // Матеріали та заготовки
-                add(ModItems.SLAG.get(), "Шлак");
-                add(ModItems.FIREBRICK.get(), "Вогнетривка цегла");
-                add(ModItems.REINFORCEDBRICK.get(), "Армована цегла");
-                add(ModItems.WOODEN_HANDLE.get(), "Дерев'яна рукоять");
-                add(ModItems.ROPE.get(), "Мотузка");
-                add(ModItems.FUEL_ASH.get(), "Зола");
-                add(ModItems.WIRE_COIL.get(), "Котушка дроту");
-                add(ModItems.BEAM_PLACER.get(), "Установник балок");
-                add(ModItems.INFINITE_FLUID_BARREL.get(), "Нескінченна бочка для рідин");
-
-                // Зброя та інструменти
-                add(ModBlocks.DET_MINER.get(), "Шахтарський заряд");
-                add(ModItems.SCREWDRIVER.get(), "Викрутка");
-                add(ModItems.CROWBAR.get(), "Цвяходер");
-                add(ModItems.RANGE_DETONATOR.get(), "Детонатор дальньої дії");
-                add(ModItems.MULTI_DETONATOR.get(), "Мульти-детонатор");
-                add(ModItems.DETONATOR.get(), "Детонатор");
-                add(ModItems.MACHINEGUN.get(), "'А.П. 17'");
-                add(ModItems.TURRET_CHIP.get(), "Чіп турелі");
-                add(ModItems.TURRET_LIGHT_PORTATIVE_PLACER.get(), "Портативна легка десантна турель 'Нагваль'");
-                add(ModItems.POKER.get(), "Кочерга");
-                add(ModItems.AMMO_TURRET.get(), "20мм набої для турелі");
-                add(ModItems.AMMO_TURRET_PIERCING.get(), "Бронебійні набої для турелі");
-                add(ModItems.AMMO_TURRET_HOLLOW.get(), "Експансивні набої для турелі");
-                add(ModItems.AMMO_TURRET_FIRE.get(), "Запальні набої для турелі");
-                add(ModItems.AMMO_TURRET_RADIO.get(), "Радіоактивні набої для турелі");
-                add(ModItems.GRENADE.get(), "Граната");
-                add(ModItems.GRENADEHE.get(), "Фугасна граната");
-                add(ModItems.GRENADEFIRE.get(), "Запальна граната");
-                add(ModItems.GRENADESLIME.get(), "Слизова граната");
-                add(ModItems.GRENADESMART.get(), "Розумна граната");
-                add(ModItems.GRENADE_IF.get(), "Ударна граната");
-                add(ModItems.GRENADE_IF_HE.get(), "Фугасна ударна граната");
-                add(ModItems.GRENADE_IF_SLIME.get(), "Слизова ударна граната");
-                add(ModItems.GRENADE_IF_FIRE.get(), "Запальна ударна граната");
-                add(ModItems.GRENADE_NUC.get(), "Ядерна граната");
-
-                // Яйця призову
-                add(ModItems.DEPTH_WORM_SPAWN_EGG.get(), "Яйце призову глибинного черв'яка");
-                add(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG.get(), "Яйце призову жорстокого глибинного черв'яка");
-                add(ModItems.GRENADIER_ZOMBIE_SPAWN_EGG.get(), "Яйце призову зомбі-гренадера");
-                add(ModItems.FLYWHEEL_LIGHT.get(), "Легкий маховик");
-
-                // Сутності
-                add("entity.trd.turret_light", "Легка турель");
-                add("entity.trd.turret_light_linked", "Зв'язана легка турель");
-                add("entity.trd.turret_bullet", "Куля турелі");
-                add("entity.trd.depth_worm", "Глибинний черв'як");
-                add("entity.trd.grenade_projectile", "Граната");
-                add("entity.trd.grenadehe_projectile", "Фугасна граната");
-                add("entity.trd.grenadefire_projectile", "Запальна граната");
-                add("entity.trd.grenadesmart_projectile", "Розумна граната");
-                add("entity.trd.grenadeslime_projectile", "Слизова граната");
-                add("entity.trd.grenade_if_projectile", "Ударна граната");
-                add("entity.trd.grenade_if_fire_projectile", "Запальна ударна граната");
-                add("entity.trd.grenade_if_slime_projectile", "Слизова ударна граната");
-                add("entity.trd.grenade_if_he_projectile", "Фугасна ударна граната");
-                add("entity.trd.grenade_nuc_projectile", "Ядерна граната");
-        }
+    }
+
+    private void addEnglish() {
+        // Creative Tabs
+        add("itemGroup.trd.trd_build_tab", "Building Blocks");
+        add("itemGroup.trd.trd_tech_tab", "Technology");
+        add("itemGroup.trd.trd_weapons_tab", "Arsenal");
+        add("itemGroup.trd.trd_recourses_tab", "Resources");
+        add("itemGroup.trd.trd_nature_tab", "Nature");
+
+
+        // Tooltips & Messages
+        add("tooltip.trd.detminer.desc", "Breaks blocks in a natural blast pattern");
+        add("tooltip.trd.detminer.hardness", "Only affects blocks with hardness < 30");
+        add("tooltip.trd.detminer.conglomerate", "Has a chance to extract resources from conglomerate");
+        add("item.trd.fluid_identifier", "Fluid Identifier");
+        add("message.trd.selected_fluid", "Selected");
+        add("tooltip.trd.no_fluid", "No fluid selected");
+        add("tooltip.trd.shaft_material", "Material");
+        add("tooltip.trd.max_speed", "Max Speed");
+        add("tooltip.trd.max_torque", "Max Torque");
+        add("tooltip.trd.inertia", "Inertia");
+        add("message.trd.too_far_from_support", "Unsupported span! Max distance from support for this diameter: %s blocks.");
+
+        // Heater Tiers
+        add("gui.trd.heater.tier0", "Tier 0");
+        add("gui.trd.heater.tier1", "Tier I");
+        add("gui.trd.heater.tier2", "Tier II");
+        add("gui.trd.heater.tier3", "Tier III");
+        add("gui.trd.heater.tier4", "Tier IV");
+        add("gui.trd.heater.tier5", "Tier V");
+
+        // Fluids
+        addFluidTranslations("hydrogen_peroxide", "Пероксид водорода", null, "Hydrogen Peroxide");
+        addFluidTranslations("sulfuric_acid", "Серная кислота", null, "Sulfuric Acid");
+        addFluidTranslations("natural_gas", "Природный газ", null, "Natural Gas");
+        addFluidTranslations("steam", "Пар", null, "Steam");
+        addFluidTranslations("low_pressure_steam", "Пар низкого давления", null, "Low Pressure Steam");
+        addFluidTranslations("water", "Вода", "Вода", "Water");
+        addFluidTranslations("lava", "Лава", "Лава", "Lava");
+
+        // JEI Categories
+        add("jei.category.trd.smelting", "Smelting");
+        add("jei.category.trd.casting", "Casting");
+        add("jei.category.trd.alloying", "Alloying");
+        add("jei.category.trd.millstone", "Millstone");
+        add("jei.category.trd.boiling", "Boiler");
+        add("jei.category.trd.steam_engine", "Steam Engine");
+        add("jei.category.trd.condensing", "Condensing");
+        add("jei.category.trd.electric_furnace", "Electric Furnace");
+
+        // Metals
+        add("metal.trd.gold", "Gold");
+        add("metal.trd.iron", "Iron");
+        add("metal.trd.copper", "Copper");
+        add("metal.trd.netherite", "Netherite");
+        add("metal.trd.steel", "Steel");
+        add("metal.trd.aluminum", "Aluminum");
+        add("metal.trd.bronze", "Bronze");
+        add("metal.trd.tin", "Tin");
+        add("metal.trd.zinc", "Zinc");
+        add("metal.trd.titanium", "Titanium");
+        add("metal.trd.lead", "Lead");
+        add("metal.trd.beryllium", "Beryllium");
+        add("metal.trd.industrial_copper", "Industrial Copper");
+        add("metal.trd.tungsten", "Tungsten");
+        add("metal.trd.neodymium", "Neodymium");
+
+        // Cast Pickaxe Tooltips
+        add("item.trd.cast_pickaxe.desc.charge", "§7Hold RMB for a powerful strike");
+        add("item.trd.cast_pickaxe.desc.mining_power", "§6Power: %s");
+        add("item.trd.cast_pickaxe.desc.vein_miner_info", "Vein Miner: %s");
+        add("item.trd.cast_pickaxe.desc.tunnel_miner", "Tunnel Miner: %s");
+
+
+        // Sequoia
+        add(ModBlocks.SEQUOIA_BARK.get(), "Sequoia Bark");
+        add(ModBlocks.SEQUOIA_HEARTWOOD.get(), "Sequoia Heartwood");
+        add(ModBlocks.SEQUOIA_PLANKS.get(), "Sequoia Planks");
+        add(ModBlocks.SEQUOIA_ROOTS.get(), "Sequoia Roots");
+        add(ModBlocks.SEQUOIA_ROOTS_MOSSY.get(), "Mossy Sequoia Roots");
+        add(ModBlocks.SEQUOIA_BARK_DARK.get(), "Dark Sequoia Bark");
+        add(ModBlocks.SEQUOIA_BARK_MOSSY.get(), "Mossy Sequoia Bark");
+        add(ModBlocks.SEQUOIA_BARK_LIGHT.get(), "Light Sequoia Bark");
+        add(ModBlocks.SEQUOIA_DOOR.get(), "Sequoia Door");
+        add(ModBlocks.SEQUOIA_TRAPDOOR.get(), "Sequoia Trapdoor");
+        add(ModBlocks.SEQUOIA_BIOME_MOSS.get(), "Dark Moss");
+        add(ModBlocks.SEQUOIA_LEAVES.get(), "Sequoia Leaves");
+        add(ModBlocks.SEQUOIA_SLAB.get(), "Sequoia Slab");
+        add(ModBlocks.SEQUOIA_STAIRS.get(), "Sequoia Stairs");
+
+
+        // Smelting & Casting
+        add(ModBlocks.SMALL_SMELTER.get(), "Small Smelter");
+        add(ModBlocks.SMELTER.get(), "Smelter");
+        add(ModBlocks.CASTING_DESCENT.get(), "Casting Trough");
+        add(ModBlocks.CASTING_POT.get(), "Casting Pot");
+        add(ModItems.HEATER_ITEM.get(), "Heater");
+        add(ModItems.LIQUID_METAL.get(), "Liquid Metal");
+
+        // Electronics & Energy
+        add(ModItems.ENERGY_CELL_BASIC.get(), "Energy Cell");
+        add(ModItems.CREATIVE_BATTERY.get(), "Creative Battery");
+        add(ModItems.BATTERY.get(), "Battery");
+        add(ModItems.BATTERY_ADVANCED.get(), "Advanced Battery");
+        add(ModItems.BATTERY_LITHIUM.get(), "Lithium Battery");
+        add(ModItems.BATTERY_TRIXITE.get(), "Trixite Battery");
+        add(ModBlocks.MACHINE_BATTERY.get(), "Modular Energy Storage");
+        add(ModBlocks.CONVERTER_BLOCK.get(), "Energy Converter");
+        add(ModBlocks.WIRE_COATED.get(), "Coated Copper Wire");
+        add(ModBlocks.PAINTABLE_WIRE.get(), "Paintable Wire");
+        add(ModBlocks.MEDIUM_CONNECTOR.get(), "Medium Connector");
+        add(ModBlocks.LARGE_CONNECTOR.get(), "Large Connector");
+        add(ModBlocks.SWITCH.get(), "Switch");
+        add(ModBlocks.VALVE.get(), "Valve");
+        add(ModBlocks.TURRET_LIGHT_PLACER.get(), "Light Landing Turret \'Nagual\'");
+
+        // Concrete Variants
+        add(ModBlocks.CONCRETE.get(), "Concrete");
+        add(ModBlocks.CONCRETE_SLAB.get(), "Concrete Slab");
+        add(ModBlocks.CONCRETE_STAIRS.get(), "Concrete Stairs");
+        add(ModBlocks.CONCRETE_RED.get(), "Red Concrete");
+        add(ModBlocks.CONCRETE_RED_SLAB.get(), "Red Concrete Slab");
+        add(ModBlocks.CONCRETE_RED_STAIRS.get(), "Red Concrete Stairs");
+        add(ModBlocks.CONCRETE_BLUE.get(), "Blue Concrete");
+        add(ModBlocks.CONCRETE_BLUE_SLAB.get(), "Blue Concrete Slab");
+        add(ModBlocks.CONCRETE_BLUE_STAIRS.get(), "Blue Concrete Stairs");
+        add(ModBlocks.CONCRETE_GREEN.get(), "Green Concrete");
+        add(ModBlocks.CONCRETE_GREEN_SLAB.get(), "Green Concrete Slab");
+        add(ModBlocks.CONCRETE_GREEN_STAIRS.get(), "Green Concrete Stairs");
+        add(ModBlocks.CONCRETE_HAZARD_NEW.get(), "New Hazard Concrete");
+        add(ModBlocks.CONCRETE_HAZARD_NEW_SLAB.get(), "New Hazard Concrete Slab");
+        add(ModBlocks.CONCRETE_HAZARD_NEW_STAIRS.get(), "New Hazard Concrete Stairs");
+        add(ModBlocks.CONCRETE_HAZARD_OLD.get(), "Old Hazard Concrete");
+        add(ModBlocks.CONCRETE_HAZARD_OLD_SLAB.get(), "Old Hazard Concrete Slab");
+        add(ModBlocks.CONCRETE_HAZARD_OLD_STAIRS.get(), "Old Hazard Concrete Stairs");
+        add(ModBlocks.CONCRETE_TILE.get(), "Concrete Tile");
+        add(ModBlocks.CONCRETE_TILE_SLAB.get(), "Concrete Tile Slab");
+        add(ModBlocks.CONCRETE_TILE_STAIRS.get(), "Concrete Tile Stairs");
+        add(ModBlocks.CONCRETE_TILE_ALT.get(), "Faceted Concrete Tile");
+        add(ModBlocks.CONCRETE_TILE_ALT_SLAB.get(), "Faceted Concrete Tile Slab");
+        add(ModBlocks.CONCRETE_TILE_ALT_STAIRS.get(), "Faceted Concrete Tile Stairs");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE.get(), "Painted Faceted Concrete Tile");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE_SLAB.get(), "Painted Faceted Concrete Tile Slab");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE_STAIRS.get(), "Painted Faceted Concrete Tile Stairs");
+        add(ModBlocks.CONCRETE_STRIPPED.get(), "Light Textured Concrete");
+        add(ModBlocks.CONCRETE_STRIPPED_SLAB.get(), "Light Textured Concrete Slab");
+        add(ModBlocks.CONCRETE_STRIPPED_STAIRS.get(), "Light Textured Concrete Stairs");
+        add(ModBlocks.CONCRETE_REINFORCED.get(), "Gray Textured Concrete");
+        add(ModBlocks.CONCRETE_REINFORCED_SLAB.get(), "Gray Textured Concrete Slab");
+        add(ModBlocks.CONCRETE_REINFORCED_STAIRS.get(), "Gray Textured Concrete Stairs");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY.get(), "Dark Textured Concrete");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY_SLAB.get(), "Dark Textured Concrete Slab");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY_STAIRS.get(), "Dark Textured Concrete Stairs");
+        add(ModBlocks.CONCRETE_NET.get(), "Reinforced Concrete");
+
+        // Bricks
+        add(ModBlocks.FIREBRICK_BLOCK.get(), "Firebrick Block");
+        add(ModBlocks.FIREBRICK_SLAB.get(), "Firebrick Slab");
+        add(ModBlocks.FIREBRICK_STAIRS.get(), "Firebrick Stairs");
+        add(ModBlocks.REINFORCEDBRICK_BLOCK.get(), "Dolomite Brick Block");
+        add(ModBlocks.REINFORCEDBRICK_SLAB.get(), "Dolomite Brick Slab");
+        add(ModBlocks.REINFORCEDBRICK_STAIRS.get(), "Dolomite Brick Stairs");
+        add(ModItems.FIREBRICK.get(), "Firebrick");
+
+        // Decorative Blocks
+        add(ModBlocks.CRATE.get(), "Crate");
+        add(ModBlocks.CRATE_AMMO.get(), "Ammo Crate");
+        add(ModBlocks.BEAM_BLOCK.get(), "Beam Block");
+        add(ModBlocks.STEEL_PROPS.get(), "Steel Props");
+        add(ModBlocks.DIRT_ROUGH.get(), "Rough Dirt");
+        add(ModBlocks.ROUND_LAMP.get(), "Round Lamp");
+        add(ModBlocks.MORY_BLOCK.get(), "Mory Block");
+        add(ModBlocks.DOLOMITE_TILE.get(), "Dolomite Tile");
+        add(ModBlocks.TILE_LIGHT.get(), "Light Tile");
+        add(ModBlocks.SULFUR_TILE.get(), "Sulfur Tile");
+        add(ModBlocks.SULFUR_BRICKS.get(), "Sulfur Bricks");
+        add(ModBlocks.NECROSIS_TEST.get(), "Necrosis Test Block");
+        add(ModBlocks.NECROSIS_TEST2.get(), "Necrosis Test Block 2");
+        add(ModBlocks.NECROSIS_TEST3.get(), "Necrosis Test Block 3");
+        add(ModBlocks.NECROSIS_TEST4.get(), "Necrosis Test Block 4");
+        add(ModBlocks.NECROSIS_PORTAL.get(), "Necrosis Portal");
+        add(ModBlocks.WASTE_LOG.get(), "Waste Log");
+
+        // Kinetic & Shafts
+        add(ModBlocks.HAND_CRANK_BLOCK.get(), "Hand Crank");
+        add(ModBlocks.SHAFT_LIGHT_IRON.get(), "Light Iron Shaft");
+        add(ModBlocks.SHAFT_MEDIUM_IRON.get(), "Medium Iron Shaft");
+        add(ModBlocks.SHAFT_HEAVY_IRON.get(), "Heavy Iron Shaft");
+        add(ModBlocks.SHAFT_LIGHT_DURALUMIN.get(), "Light Duralumin Shaft");
+        add(ModBlocks.SHAFT_MEDIUM_DURALUMIN.get(), "Medium Duralumin Shaft");
+        add(ModBlocks.SHAFT_HEAVY_DURALUMIN.get(), "Heavy Duralumin Shaft");
+        add(ModBlocks.SHAFT_LIGHT_STEEL.get(), "Light Steel Shaft");
+        add(ModBlocks.SHAFT_MEDIUM_STEEL.get(), "Medium Steel Shaft");
+        add(ModBlocks.SHAFT_HEAVY_STEEL.get(), "Heavy Steel Shaft");
+        add(ModBlocks.SHAFT_LIGHT_TITANIUM.get(), "Light Titanium Shaft");
+        add(ModBlocks.SHAFT_MEDIUM_TITANIUM.get(), "Medium Titanium Shaft");
+        add(ModBlocks.SHAFT_HEAVY_TITANIUM.get(), "Heavy Titanium Shaft");
+        add(ModBlocks.SHAFT_LIGHT_TUNGSTEN_CARBIDE.get(), "Light Tungsten Carbide Shaft");
+        add(ModBlocks.SHAFT_MEDIUM_TUNGSTEN_CARBIDE.get(), "Medium Tungsten Carbide Shaft");
+        add(ModBlocks.SHAFT_HEAVY_TUNGSTEN_CARBIDE.get(), "Heavy Tungsten Carbide Shaft");
+        add(ModItems.BEVEL_GEAR.get(), "Bevel Gear");
+        add(ModItems.GEAR1_STEEL.get(), "Small Steel Gear");
+        add(ModItems.GEAR2_STEEL.get(), "Medium Steel Gear");
+        add(ModItems.PULLEY.get(), "Pulley");
+        add(ModItems.FLYWHEEL_LIGHT.get(), "Light Flywheel");
+        add(ModItems.COPPER_ROTOR.get(), "Copper Rotor");
+        add(ModBlocks.BEARING_BLOCK.get(), "Bearing");
+        add(ModBlocks.MOTOR_ELECTRO.get(), "Electric Motor");
+        add(ModBlocks.TACHOMETER.get(), "Tachometer");
+        add(ModItems.STEAM_ENGINE_ITEM.get(), "Steam Engine");
+        add(ModBlocks.DROBITEL.get(), "Crusher");
+        add(ModBlocks.STATOR_BLOCK.get(), "Stator");
+
+        // Barrels, Tanks & Fluids
+        add(ModItems.CORRUPTED_BARREL_ITEM.get(), "Corrupted Barrel");
+        add(ModItems.LEAKING_BARREL_ITEM.get(), "Leaking Barrel");
+        add(ModItems.IRON_BARREL_ITEM.get(), "Iron Barrel");
+        add(ModItems.STEEL_BARREL_ITEM.get(), "Steel Barrel");
+        add(ModItems.LEAD_BARREL_ITEM.get(), "Lead Barrel");
+        add(ModItems.INFINITE_FLUID_BARREL.get(), "Infinite Fluid Barrel");
+        add(ModBlocks.FUEL_TANK_SMALL.get(), "Small Fuel Tank");
+        add(ModBlocks.FUEL_TANK_BIG.get(), "Big Fuel Tank");
+        add(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get(), "Low Pressure Steam Condenser");
+
+        // Conveyors & Storage
+        add(ModBlocks.CONVEYOR_VSTAVSHIK.get(), "Conveyor Inserter");
+        add(ModBlocks.CONVEYOR_IZVLEKATEL.get(), "Conveyor Extractor");
+        add(ModBlocks.CONVEYOR.get(), "Conveyor");
+        add(ModBlocks.STEEL_STORAGE.get(), "Steel Storage");
+
+        // Weapons & Ammo
+        add(ModItems.CAST_PICKAXE_IRON.get(), "Cast Iron Pickaxe");
+        add(ModItems.CAST_PICKAXE_STEEL.get(), "Cast Steel Pickaxe");
+        add(ModItems.GRENADIER_GOGGLES.get(), "Grenadier Goggles");
+        add(ModBlocks.DET_MINER.get(), "Mining Charge");
+        add(ModItems.DETONATOR.get(), "Detonator");
+        add(ModItems.MULTI_DETONATOR.get(), "Multi-Detonator");
+        add(ModItems.RANGE_DETONATOR.get(), "Long-Range Detonator");
+        add(ModItems.TURRET_LIGHT_PORTATIVE_PLACER.get(), "Portable Light Turret");
+        add(ModItems.MACHINEGUN.get(), "\'A.P. 17\'");
+        add(ModItems.AMMO_TURRET.get(), "20mm Turret Round");
+        add(ModItems.AMMO_TURRET_PIERCING.get(), "20mm Armor-Piercing Turret Round");
+        add(ModItems.AMMO_TURRET_HOLLOW.get(), "20mm Hollow-Point Turret Round");
+        add(ModItems.AMMO_TURRET_FIRE.get(), "20mm Incendiary Turret Round");
+        add(ModItems.AMMO_TURRET_RADIO.get(), "20mm Turret Round with Radio Fuze");
+        add(ModItems.MISSILE_100MM_HE.get(), "100mm HE Missile");
+        add(ModItems.MISSILE_100MM_FIRE.get(), "100mm Incendiary Missile");
+
+        // Resources & Materials
+        add(ModItems.IRON_PLATE.get(), "Iron Plate");
+        add(ModItems.TITANIUM_PLATE.get(), "Titanium Plate");
+        add(ModItems.STEEL_PLATE.get(), "Steel Plate");
+        add(ModItems.TUNGSTEN_PLATE.get(), "Tungsten Plate");
+        add(ModItems.LEAD_PLATE.get(), "Lead Plate");
+        add(ModItems.ALUMINUM_PLATE.get(), "Aluminum Plate");
+        add(ModItems.INDUSTRIAL_COPPER_PLATE.get(), "Industrial Copper Plate");
+        add(ModItems.GOLD_PLATE.get(), "Gold Plate");
+        add(ModItems.CAST_PICKAXE_IRON_BASE.get(), "Cast Iron Pickaxe Base");
+        add(ModItems.CAST_PICKAXE_STEEL_BASE.get(), "Cast Steel Pickaxe Base");
+        add(ModItems.ROPE.get(), "Rope");
+        add(ModItems.WOODEN_HANDLE.get(), "Wooden Handle");
+        add(ModItems.FIRE_SMES.get(), "Fireproof Mixture");
+        add(ModItems.DOLOMITE_SMES.get(), "Dolomite Mixture");
+        add(ModItems.CONGLOMERATE_CHUNK.get(), "Conglomerate Chunk");
+        add(ModItems.HARD_ROCK.get(), "Hard Rock");
+        add(ModItems.DOLOMITE_CHUNK.get(), "Dolomite Chunk");
+        add(ModItems.LIMESTONE_CHUNK.get(), "Limestone Chunk");
+        add(ModItems.BAUXITE_CHUNK.get(), "Bauxite Chunk");
+        add(ModItems.ASBESTOS.get(), "Asbestos");
+        add(ModItems.CINNABAR.get(), "Cinnabar");
+        add(ModItems.LIGNITE.get(), "Lignite");
+        add(ModItems.FLUORITE.get(), "Fluorite");
+        add(ModItems.SULFUR.get(), "Sulfur");
+        add(ModItems.CONGLOMERATE_POWDER.get(), "Conglomerate Powder");
+        add(ModItems.DOLOMITE_POWDER.get(), "Dolomite Powder");
+        add(ModItems.LIMESTONE_POWDER.get(), "Limestone Powder");
+        add(ModItems.BAUXITE_POWDER.get(), "Bauxite Powder");
+        add(ModItems.FUEL_ASH.get(), "Fuel Ash");
+        add(ModItems.TRASH.get(), "Trash");
+        add(ModItems.SLAG.get(), "Slag");
+        add(ModItems.BELT.get(), "Belt");
+        add(ModItems.BEAM_PLACER.get(), "Beam Placer");
+        add(ModItems.POKER.get(), "Poker");
+        add(ModItems.SCREWDRIVER.get(), "Screwdriver");
+        add(ModItems.CROWBAR.get(), "Crowbar");
+        add(ModBlocks.LIGNITE_BLOCK.get(), "Lignite Block");
+
+        // Ores & nature (updated)
+        add(ModBlocks.ASBESOTS_ORE.get(), "Asbestos Ore");
+        add(ModBlocks.LIGNITE_ORE.get(), "Lignite Ore");
+        add(ModBlocks.CINNABAR_ORE.get(), "Cinnabar Ore");
+        add(ModBlocks.CINNABAR_ORE_DEEPSLATE.get(), "Deepslate Cinnabar Ore");
+        add(ModBlocks.FLUORITE_ORE.get(), "Fluorite Ore");
+        add(ModBlocks.FLUORITE_ORE_DEEPSLATE.get(), "Deepslate Fluorite Ore");
+        add(ModBlocks.SEQUESTRUM_ORE.get(), "Saltpeter Ore");
+
+        add(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE.get(), "Deepslate Sequestrum Ore");
+        add(ModBlocks.SULFUR_ORE.get(), "Sulfur Ore");
+        add(ModBlocks.SULFUR_ORE_DEEPSLATE.get(), "Deepslate Sulfur Ore");
+        add(ModBlocks.CONGLOMERATE.get(), "Conglomerate");
+        add(ModBlocks.DEPLETED_CONGLOMERATE.get(), "Depleted Conglomerate");
+        add(ModBlocks.DOLOMITE.get(), "Unrefined Dolomite Deposit");
+        add(ModBlocks.LIMESTONE.get(), "Unrefined Limestone Deposit");
+        add(ModBlocks.SULFUR_CLUSTER.get(), "Unrefined Sulfur Deposit");
+        add(ModBlocks.BAUXITE.get(), "Unrefined Bauxite Deposit");
+        add(ModBlocks.MINERAL1.get(), "Sapphire-Bearing Cluster");
+        add(ModBlocks.MINERAL3.get(), "Deep Sapphire-Bearing Cluster");
+        add(ModBlocks.BASALT_ROUGH.get(), "Rough Basalt");
+
+        // Spawn Eggs
+        add(ModItems.DEPTH_WORM_SPAWN_EGG.get(), "Depth Worm Spawn Egg");
+        add(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG.get(), "Brutal Depth Worm Spawn Egg");
+        add(ModItems.GRENADIER_ZOMBIE_SPAWN_EGG.get(), "Grenadier Zombie Spawn Egg");
+
+
+        add(ModBlocks.ANTON_CHIGUR.get(), "Anton Chigur Block");
+        add(ModBlocks.MINERAL_BLOCK2.get(), "Depth Sapphire Decorative Block");
+        add(ModBlocks.MINERAL_TILE.get(), "Depth Sapphire Tile");
+        add(ModBlocks.DECO_STEEL.get(), "Decorative Steel Block");
+        add(ModBlocks.DECO_STEEL_DARK.get(), "Dark Decorative Steel Block");
+        add(ModBlocks.DECO_STEEL_SMOG.get(), "Sooty Decorative Steel Block");
+        add(ModBlocks.DECO_LEAD.get(), "Decorative Lead Block");
+        add(ModBlocks.DECO_BEAM.get(), "Decorative Industrial Block");
+        add(ModItems.WIRE_COIL.get(), "Copper Wire Spool");
+        add(ModItems.COPPER_COIL.get(), "Stator Copper Coil");
+        add(ModBlocks.CONNECTOR.get(), "Small Connector");
+        add(ModBlocks.ELECTRO_FURNACE.get(), "Electric Furnace");
+        add(ModItems.PROTECTOR_LEAD.get(), "Lead Internal Wall Protector");
+        add(ModItems.PROTECTOR_STEEL.get(), "Steel Internal Wall Protector");
+        add(ModItems.PROTECTOR_TUNGSTEN.get(), "Tungsten Internal Wall Protector");
+
+        // Fluid pipes
+        add(ModBlocks.BRONZE_FLUID_PIPE.get(), "Bronze Fluid Pipe");
+        add(ModBlocks.STEEL_FLUID_PIPE.get(), "Steel Fluid Pipe");
+        add(ModBlocks.LEAD_FLUID_PIPE.get(), "Lead Fluid Pipe");
+        add(ModBlocks.TUNGSTEN_FLUID_PIPE.get(), "Tungsten Fluid Pipe");
+        add(ModBlocks.PAINTABLE_PIPE.get(), "Paintable Fluid Pipe");
+
+        // Machines
+        add(ModItems.BOILER_ITEM.get(), "Copper Liquid Boiler");
+        add(ModBlocks.WATER_PUMP_ITEM.get(), "Liquid Pump");
+
+        // Casting molds
+        add(ModItems.MOLD_INGOT.get(), "Ingot Casting Mold");
+        add(ModItems.MOLD_PICKAXE.get(), "Pickaxe Casting Mold");
+        add(ModItems.MOLD_EMPTY.get(), "Empty Casting Mold");
+        add(ModItems.MOLD_NUGGET.get(), "Nugget Casting Mold");
+        add(ModItems.MOLD_BLOCK.get(), "Block Casting Mold");
+        add(ModItems.MOLD_PLATE.get(), "Plate Casting Mold");
+
+        // Misc blocks & items
+        add(ModBlocks.JERNOVA.get(), "Stone Millstone");
+        add(ModItems.MORY_LAH.get(), "Inconceivably Suspicious Artifact Possessing the Power of a Thousand Suns");
+        add(ModItems.GRENADE.get(), "Grenade");
+        add(ModItems.GRENADEHE.get(), "High Explosive Grenade");
+        add(ModItems.GRENADEFIRE.get(), "Incendiary Grenade");
+        add(ModItems.GRENADESMART.get(), "Smart Grenade");
+        add(ModItems.GRENADESLIME.get(), "Sticky Grenade");
+        add(ModItems.GRENADE_IF.get(), "Impact Grenade");
+        add(ModItems.GRENADE_IF_HE.get(), "HE Impact Grenade");
+        add(ModItems.GRENADE_IF_SLIME.get(), "Sticky Impact Grenade");
+        add(ModItems.GRENADE_IF_FIRE.get(), "Incendiary Impact Grenade");
+        add(ModItems.GRENADE_NUC.get(), "Hydrogen-Cremating Grenade");
+        add(ModItems.TURRET_CHIP.get(), "Turret Combat Chip");
+        add(ModItems.GRAVITY_GRENADE.get(), "Gravi-Grenade");
+        add(ModItems.MISSILE_100MM.get(), "100mm Missile (Small Charge)");
+        add(ModBlocks.TROMBONE.get(), "Stationary Rocket Launcher 'Trombone'");
+        add(ModItems.REINFORCEDBRICK.get(), "Dolomite Brick");
+        add(ModItems.SEQUESTRUM.get(), "Saltpeter");
+
+
+        // Necrosis
+        add(ModBlocks.DEPTH_WORM_NEST.get(), "Depth Worm Hive Node");
+        add(ModBlocks.HIVE_SOIL.get(), "Depth Worm Hive Flesh");
+        add(ModBlocks.HIVE_ROOTS.get(), "Depth Worm Hive Nerve Endings");
+
+        // Entities
+        add("entity.trd.turret_light", "Light Turret");
+        add("entity.trd.turret_light_linked", "Linked Light Turret");
+        add("entity.trd.turret_bullet", "Turret Bullet");
+        add("entity.trd.depth_worm", "Depth Worm");
+        add("entity.trd.grenade_projectile", "Grenade");
+        add("entity.trd.grenadehe_projectile", "HE Grenade");
+        add("entity.trd.grenadefire_projectile", "Incendiary Grenade");
+        add("entity.trd.grenadesmart_projectile", "Smart Grenade");
+        add("entity.trd.grenadeslime_projectile", "Slime Grenade");
+        add("entity.trd.grenade_if_projectile", "Impact Grenade");
+        add("entity.trd.grenade_if_fire_projectile", "Incendiary Impact Grenade");
+        add("entity.trd.grenade_if_slime_projectile", "Slime Impact Grenade");
+        add("entity.trd.grenade_if_he_projectile", "HE Impact Grenade");
+        add("entity.trd.grenade_nuc_projectile", "Nuclear Grenade");
+
+        // Misc Tooltips
+        add("item.trd.hot_ingot.tooltip", "§6§lHOT! §r§7(%s%%)");
+        add("item.trd.grenadier_goggles.desc.explosion_resist", "Explosion Resistance: +%s%%");
+    }
+
+    private void addRussian() {
+        // Вкладки креатива
+        add("itemGroup.trd.trd_build_tab", "Строительные блоки");
+        add("itemGroup.trd.trd_tech_tab", "Технологии");
+        add("itemGroup.trd.trd_weapons_tab", "Арсенал");
+        add("itemGroup.trd.trd_recourses_tab", "Ресурсы");
+        add("itemGroup.trd.trd_nature_tab", "Природа");
+
+        // JEI Категории
+        add("jei.category.trd.smelting", "Плавка");
+        add("jei.category.trd.casting", "Литьё");
+        add("jei.category.trd.alloying", "Сплавление");
+        add("jei.category.trd.millstone", "Жернов");
+        add("jei.category.trd.boiling", "Бойлер");
+        add("jei.category.trd.steam_engine", "Паровой двигатель");
+        add("jei.category.trd.condensing", "Конденсация");
+        add("jei.category.trd.electric_furnace", "Электропечь");
+
+        // Литые кирки
+
+        add("item.trd.cast_pickaxe.desc.charge", "§7Зажмите ПКМ для мощного удара");
+        add("item.trd.cast_pickaxe.desc.mining_power", "§6Мощность: %s");
+        add("item.trd.cast_pickaxe.desc.vein_miner_info", "Жильный майнер: %s");
+        add("item.trd.cast_pickaxe.desc.tunnel_miner", "Туннельный майнер: %s");
+
+        // Гренадёр
+        add(ModItems.GRENADIER_GOGGLES.get(), "Очки гренадёра");
+        add(ModItems.FLYWHEEL_LIGHT.get(), "Лёгкий маховик");
+        add("item.trd.grenadier_goggles.desc.explosion_resist", "Защита от взрывов: +%s%%");
+
+        // Металлы
+        add("metal.trd.gold", "Золото");
+        add("metal.trd.iron", "Железо");
+        add("metal.trd.copper", "Медь");
+        add("metal.trd.netherite", "Незерит");
+        add("metal.trd.steel", "Сталь");
+        add("metal.trd.aluminum", "Алюминий");
+        add("metal.trd.bronze", "Бронза");
+        add("metal.trd.tin", "Олово");
+        add("metal.trd.zinc", "Цинк");
+        add("metal.trd.titanium", "Титан");
+        add("metal.trd.lead", "Свинец");
+        add("metal.trd.beryllium", "Бериллий");
+        add("metal.trd.industrial_copper", "Промышленная медь");
+        add("metal.trd.tungsten", "Вольфрам");
+        add("metal.trd.neodymium", "Неодим");
+
+        // Уровни нагревателя
+        add("gui.trd.heater.tier0", "Уровень 0");
+        add("gui.trd.heater.tier1", "Уровень I");
+        add("gui.trd.heater.tier2", "Уровень II");
+        add("gui.trd.heater.tier3", "Уровень III");
+        add("gui.trd.heater.tier4", "Уровень IV");
+        add("gui.trd.heater.tier5", "Уровень V");
+
+        add("item.trd.hot_ingot.tooltip", "§6§lРАСКАЛЁННЫЙ! §r§7(%s%%)");
+
+        // Секвойя
+        add(ModBlocks.SEQUOIA_BARK.get(), "Кора секвойи");
+        add(ModBlocks.SEQUOIA_HEARTWOOD.get(), "Бревно секвойи");
+        add(ModBlocks.SEQUOIA_PLANKS.get(), "Доски из секвойи");
+        add(ModBlocks.SEQUOIA_ROOTS.get(), "Корни секвойи");
+        add(ModBlocks.SEQUOIA_ROOTS_MOSSY.get(), "Корни секвойи с мхом");
+        add(ModBlocks.SEQUOIA_BARK_DARK.get(), "Тёмная кора секвойи");
+        add(ModBlocks.SEQUOIA_BARK_MOSSY.get(), "Кора секвойи с мхом");
+        add(ModBlocks.SEQUOIA_BARK_LIGHT.get(), "Светлая кора секвойи");
+        add(ModBlocks.SEQUOIA_DOOR.get(), "Дверь из секвойи");
+        add(ModBlocks.SEQUOIA_TRAPDOOR.get(), "Люк из секвойи");
+        add(ModBlocks.SEQUOIA_BIOME_MOSS.get(), "Тёмный мох");
+        add(ModBlocks.SEQUOIA_LEAVES.get(), "Листья секвойи");
+        add(ModBlocks.SEQUOIA_SLAB.get(), "Плита из секвойи");
+        add(ModBlocks.SEQUOIA_STAIRS.get(), "Ступени из секвойи");
+
+        // Электроника
+        add(ModItems.ENERGY_CELL_BASIC.get(), "Энергетическая ячейка");
+        add(ModItems.CREATIVE_BATTERY.get(), "Бесконечный аккумулятор");
+        add(ModItems.BATTERY.get(), "Аккумулятор");
+        add(ModItems.BATTERY_ADVANCED.get(), "Улучшенный аккумулятор");
+        add(ModItems.BATTERY_LITHIUM.get(), "Литий-ионный аккумулятор");
+        add(ModItems.BATTERY_TRIXITE.get(), "Продвинутый аккумулятор");
+        add(ModBlocks.MACHINE_BATTERY.get(), "Модульное энергохранилище");
+        add(ModBlocks.CONVERTER_BLOCK.get(), "Энергетический конвертер");
+        add(ModBlocks.WIRE_COATED.get(), "Провод из красной меди");
+        add(ModBlocks.PAINTABLE_WIRE.get(), "Окрашиваемый провод");
+        add(ModBlocks.CONNECTOR.get(), "Малый коннектор");
+        add(ModBlocks.MEDIUM_CONNECTOR.get(), "Средний коннектор");
+        add(ModBlocks.LARGE_CONNECTOR.get(), "Большой коннектор");
+        add(ModBlocks.SWITCH.get(), "Рубильник");
+        add(ModBlocks.VALVE.get(), "Жидкостный клапан");
+        add(ModBlocks.ELECTRO_FURNACE.get(), "Электро-печь");
+        add(ModBlocks.TURRET_LIGHT_PLACER.get(), "Лёгкая десантная турель \'Нагваль\'");
+
+        // Формы
+        add(ModItems.MOLD_INGOT.get(), "Литейная форма слитка");
+        add(ModItems.MOLD_PICKAXE.get(), "Литейная форма кирки");
+        add(ModItems.MOLD_EMPTY.get(), "Пустая литейная форма");
+        add(ModItems.MOLD_NUGGET.get(), "Литейная форма самородка");
+        add(ModItems.MOLD_BLOCK.get(), "Литейная форма блока");
+        add(ModItems.MOLD_PLATE.get(), "Литейная форма пластины");
+
+        // Плавильные установки
+        add(ModBlocks.SMALL_SMELTER.get(), "Малая плавильня");
+        add(ModBlocks.SMELTER.get(), "Плавильня");
+        add(ModBlocks.JERNOVA.get(), "Каменные жернова");
+        add(ModBlocks.CASTING_DESCENT.get(), "Литейный желоб");
+        add(ModBlocks.CASTING_POT.get(), "Литейный котёл");
+        add(ModItems.HEATER_ITEM.get(), "Нагреватель");
+        add(ModItems.LIQUID_METAL.get(), "Жидкий металл");
+
+        // Некроз
+        add(ModBlocks.DEPTH_WORM_NEST.get(), "Узел улья глубинного червя");
+        add(ModBlocks.HIVE_SOIL.get(), "Плоть улья глубинного червя");
+        add(ModBlocks.HIVE_ROOTS.get(), "Нервные окончания улья глубинного червя");
+
+        // Варианты бетона
+        add(ModBlocks.CONCRETE.get(), "Бетон");
+        add(ModBlocks.CONCRETE_SLAB.get(), "Бетонная плита");
+        add(ModBlocks.CONCRETE_STAIRS.get(), "Бетонные ступени");
+        add(ModBlocks.CONCRETE_RED.get(), "Красный бетон");
+        add(ModBlocks.CONCRETE_RED_SLAB.get(), "Плита из красного бетона");
+        add(ModBlocks.CONCRETE_RED_STAIRS.get(), "Ступени из красного бетона");
+        add(ModBlocks.CONCRETE_BLUE.get(), "Синий бетон");
+        add(ModBlocks.CONCRETE_BLUE_SLAB.get(), "Плита из синего бетона");
+        add(ModBlocks.CONCRETE_BLUE_STAIRS.get(), "Ступени из синего бетона");
+        add(ModBlocks.CONCRETE_GREEN.get(), "Зелёный бетон");
+        add(ModBlocks.CONCRETE_GREEN_SLAB.get(), "Плита из зелёного бетона");
+        add(ModBlocks.CONCRETE_GREEN_STAIRS.get(), "Ступени из зелёного бетона");
+        add(ModBlocks.CONCRETE_HAZARD_NEW.get(), "Бетон с разметкой");
+        add(ModBlocks.CONCRETE_HAZARD_NEW_SLAB.get(), "Плита из бетона с разметкой");
+        add(ModBlocks.CONCRETE_HAZARD_NEW_STAIRS.get(), "Ступени из бетона с разметкой");
+        add(ModBlocks.CONCRETE_HAZARD_OLD.get(), "Изношенный бетон с разметкой");
+        add(ModBlocks.CONCRETE_HAZARD_OLD_SLAB.get(), "Плита из изношенного бетона с разметкой");
+        add(ModBlocks.CONCRETE_HAZARD_OLD_STAIRS.get(), "Ступени из изношенного бетона с разметкой");
+        add(ModBlocks.CONCRETE_TILE.get(), "Бетонная плитка");
+        add(ModBlocks.CONCRETE_TILE_SLAB.get(), "Плита из бетонной плитки");
+        add(ModBlocks.CONCRETE_TILE_STAIRS.get(), "Ступени из бетонной плитки");
+        add(ModBlocks.CONCRETE_TILE_ALT.get(), "Гранённая бетонная плитка");
+        add(ModBlocks.CONCRETE_TILE_ALT_SLAB.get(), "Плита из гранённой бетонной плитки");
+        add(ModBlocks.CONCRETE_TILE_ALT_STAIRS.get(), "Ступени из гранённой бетонной плитки");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE.get(), "Окрашенная гранённая бетонная плитка");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE_SLAB.get(), "Плита из окрашенной гранённой бетонной плитки");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE_STAIRS.get(), "Ступени из окрашенной гранённой бетонной плитки");
+        add(ModBlocks.CONCRETE_STRIPPED.get(), "Светлый текстурированный бетон");
+        add(ModBlocks.CONCRETE_STRIPPED_SLAB.get(), "Плита из светлого текстурированного бетона");
+        add(ModBlocks.CONCRETE_STRIPPED_STAIRS.get(), "Ступени из светлого текстурированного бетона");
+        add(ModBlocks.CONCRETE_REINFORCED.get(), "Серый текстурированный бетон");
+        add(ModBlocks.CONCRETE_REINFORCED_SLAB.get(), "Плита из серого текстурированного бетона");
+        add(ModBlocks.CONCRETE_REINFORCED_STAIRS.get(), "Ступени из серого текстурированного бетона");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY.get(), "Тёмный текстурированный бетон");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY_SLAB.get(), "Плита из тёмного текстурированного бетона");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY_STAIRS.get(), "Ступени из тёмного текстурированного бетона");
+        add(ModBlocks.CONCRETE_NET.get(), "Усиленный бетон");
+
+        // Кирпичи
+        add(ModBlocks.FIREBRICK_BLOCK.get(), "Блок огнеупорного кирпича");
+        add(ModBlocks.FIREBRICK_SLAB.get(), "Плита из огнеупорного кирпича");
+        add(ModBlocks.FIREBRICK_STAIRS.get(), "Ступени из огнеупорного кирпича");
+        add(ModBlocks.REINFORCEDBRICK_BLOCK.get(), "Блок доломитового кирпича");
+        add(ModBlocks.REINFORCEDBRICK_SLAB.get(), "Плита из доломитового кирпича");
+        add(ModBlocks.REINFORCEDBRICK_STAIRS.get(), "Ступени из доломитового кирпича");
+        add(ModItems.FIREBRICK.get(), "Огнеупорный кирпич");
+        add(ModItems.REINFORCEDBRICK.get(), "Доломитовый кирпич");
+
+        // Декоративные блоки
+        add(ModBlocks.CRATE.get(), "Ящик");
+        add(ModBlocks.CRATE_AMMO.get(), "Ящик с патронами");
+        add(ModBlocks.BEAM_BLOCK.get(), "Балка");
+        add(ModBlocks.STEEL_PROPS.get(), "Стальные подпорки");
+        add(ModBlocks.DECO_STEEL.get(), "Декоративный стальной блок");
+        add(ModBlocks.DECO_STEEL_DARK.get(), "Тёмный декоративный стальной блок");
+        add(ModBlocks.DECO_STEEL_SMOG.get(), "Закоптелый декоративный стальной блок");
+        add(ModBlocks.DECO_LEAD.get(), "Декоративный свинцовый блок");
+        add(ModBlocks.DECO_BEAM.get(), "Декоративный индустриальный блок");
+        add(ModBlocks.DIRT_ROUGH.get(), "Грубая земля");
+        add(ModBlocks.ROUND_LAMP.get(), "Круглая лампа");
+        add(ModBlocks.MORY_BLOCK.get(), "Блок Мори");
+        add(ModBlocks.ANTON_CHIGUR.get(), "Блок Антона Чигура");
+        add(ModBlocks.MINERAL_BLOCK2.get(), "Декоративный блок из глубинного сапфира");
+        add(ModBlocks.MINERAL_TILE.get(), "Плитка из глубинного сапфира");
+        add(ModBlocks.DOLOMITE_TILE.get(), "Доломитовая плитка");
+        add(ModBlocks.TILE_LIGHT.get(), "Асбестовая плитка");
+        add(ModBlocks.SULFUR_TILE.get(), "Серная плитка");
+        add(ModBlocks.SULFUR_BRICKS.get(), "Серные кирпичи");
+        add(ModBlocks.NECROSIS_TEST.get(), "Тестовый блок Некроза");
+        add(ModBlocks.NECROSIS_TEST2.get(), "Тестовый блок Некроза 2");
+        add(ModBlocks.NECROSIS_TEST3.get(), "Тестовый блок Некроза 3");
+        add(ModBlocks.NECROSIS_TEST4.get(), "Тестовый блок Некроза 4");
+        add(ModBlocks.NECROSIS_PORTAL.get(), "Портал Некроза");
+        add(ModBlocks.WASTE_LOG.get(), "Обугленное бревно");
+
+        // Кинетика и валы
+        add(ModBlocks.HAND_CRANK_BLOCK.get(), "Ручной привод");
+        add(ModBlocks.SHAFT_LIGHT_IRON.get(), "Лёгкий железный вал");
+        add(ModBlocks.SHAFT_MEDIUM_IRON.get(), "Средний железный вал");
+        add(ModBlocks.SHAFT_HEAVY_IRON.get(), "Тяжёлый железный вал");
+        add(ModBlocks.SHAFT_LIGHT_DURALUMIN.get(), "Лёгкий дюралюминиевый вал");
+        add(ModBlocks.SHAFT_MEDIUM_DURALUMIN.get(), "Средний дюралюминиевый вал");
+        add(ModBlocks.SHAFT_HEAVY_DURALUMIN.get(), "Тяжёлый дюралюминиевый вал");
+        add(ModBlocks.SHAFT_LIGHT_STEEL.get(), "Лёгкий стальной вал");
+        add(ModBlocks.SHAFT_MEDIUM_STEEL.get(), "Средний стальной вал");
+        add(ModBlocks.SHAFT_HEAVY_STEEL.get(), "Тяжёлый стальной вал");
+        add(ModBlocks.SHAFT_LIGHT_TITANIUM.get(), "Лёгкий титановый вал");
+        add(ModBlocks.SHAFT_MEDIUM_TITANIUM.get(), "Средний титановый вал");
+        add(ModBlocks.SHAFT_HEAVY_TITANIUM.get(), "Тяжёлый титановый вал");
+        add(ModBlocks.SHAFT_LIGHT_TUNGSTEN_CARBIDE.get(), "Лёгкий вал из карбида вольфрама");
+        add(ModBlocks.SHAFT_MEDIUM_TUNGSTEN_CARBIDE.get(), "Средний вал из карбида вольфрама");
+        add(ModBlocks.SHAFT_HEAVY_TUNGSTEN_CARBIDE.get(), "Тяжёлый вал из карбида вольфрама");
+        add(ModItems.BEVEL_GEAR.get(), "Коническая шестерня");
+        add(ModItems.GEAR1_STEEL.get(), "Стальная шестерня (малая)");
+        add(ModItems.GEAR2_STEEL.get(), "Стальная шестерня (средняя)");
+        add(ModItems.PULLEY.get(), "Шкив");
+        add(ModItems.COPPER_ROTOR.get(), "Медный ротор");
+        add(ModItems.COPPER_COIL.get(), "Медная катушка статора");
+        add(ModBlocks.BEARING_BLOCK.get(), "Подшипник");
+        add(ModBlocks.MOTOR_ELECTRO.get(), "Электромотор");
+        add(ModBlocks.TACHOMETER.get(), "Тахометр");
+        add(ModItems.STEAM_ENGINE_ITEM.get(), "Паровой двигатель");
+        add(ModBlocks.DROBITEL.get(), "Дробитель");
+        add(ModBlocks.STATOR_BLOCK.get(), "Статор");
+
+        // Бочки, баки и жидкости
+        add(ModItems.CORRUPTED_BARREL_ITEM.get(), "Выжженная бочка");
+        add(ModItems.LEAKING_BARREL_ITEM.get(), "Протекающая бочка");
+        add(ModItems.IRON_BARREL_ITEM.get(), "Железная бочка");
+        add(ModItems.STEEL_BARREL_ITEM.get(), "Стальная бочка");
+        add(ModItems.LEAD_BARREL_ITEM.get(), "Свинцовая бочка");
+        add(ModItems.INFINITE_FLUID_BARREL.get(), "Бесконечный жидкостный источник");
+        add(ModBlocks.FUEL_TANK_SMALL.get(), "Малая жидкостная цистерна");
+        add(ModBlocks.FUEL_TANK_BIG.get(), "Большая жидкостная цистерна");
+        add(ModItems.BOILER_ITEM.get(), "Медный жидкостный бойлер");
+        add(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get(), "Конденсатор пара низкого давления");
+        add(ModBlocks.WATER_PUMP_ITEM.get(), "Жидкостная помпа");
+        add(ModItems.PROTECTOR_LEAD.get(), "Свинцовый протектор внутренних стенок");
+        add(ModItems.PROTECTOR_STEEL.get(), "Стальной протектор внутренних стенок");
+        add(ModItems.PROTECTOR_TUNGSTEN.get(), "Вольфрамовый протектор внутренних стенок");
+        add(ModBlocks.BRONZE_FLUID_PIPE.get(), "Бронзовая жидкостная труба");
+        add(ModBlocks.STEEL_FLUID_PIPE.get(), "Стальная жидкостная труба");
+        add(ModBlocks.LEAD_FLUID_PIPE.get(), "Свинцовая жидкостная труба");
+        add(ModBlocks.TUNGSTEN_FLUID_PIPE.get(), "Вольфрамовая жидкостная труба");
+        add(ModBlocks.PAINTABLE_PIPE.get(), "Окрашиваемая жидкостная труба");
+
+        // Конвейеры и хранилища
+        add(ModBlocks.CONVEYOR_VSTAVSHIK.get(), "Конвейерный вставщик");
+        add(ModBlocks.CONVEYOR_IZVLEKATEL.get(), "Конвейерный извлекатель");
+        add(ModBlocks.CONVEYOR.get(), "Конвейер");
+        add(ModBlocks.STEEL_STORAGE.get(), "Стальное хранилище");
+
+        // Оружие и боеприпасы
+        add(ModItems.CAST_PICKAXE_IRON.get(), "Литая железная кирка");
+        add(ModItems.CAST_PICKAXE_STEEL.get(), "Литая стальная кирка");
+        add(ModItems.GRAVITY_GRENADE.get(), "Грави-граната");
+        add(ModBlocks.DET_MINER.get(), "Шахтёрский заряд");
+        add(ModItems.DETONATOR.get(), "Детонатор");
+        add(ModItems.MULTI_DETONATOR.get(), "Мульти-детонатор");
+        add(ModItems.RANGE_DETONATOR.get(), "Детонатор дальнего действия");
+        add(ModItems.MORY_LAH.get(), "Невообразимо подозрительное изделие обладающее силой тысяч Солнц");
+        add(ModItems.GRENADE.get(), "Граната");
+        add(ModItems.GRENADEHE.get(), "Фугасная граната");
+        add(ModItems.GRENADEFIRE.get(), "Зажигательная граната");
+        add(ModItems.GRENADESMART.get(), "УМная граната");
+        add(ModItems.GRENADESLIME.get(), "Липкая граната");
+        add(ModItems.GRENADE_IF.get(), "Ударная граната");
+        add(ModItems.GRENADE_IF_HE.get(), "Фугасная ударная граната");
+        add(ModItems.GRENADE_IF_SLIME.get(), "Ударная липкая граната");
+        add(ModItems.GRENADE_IF_FIRE.get(), "Зажигательная ударная граната");
+        add(ModItems.GRENADE_NUC.get(), "Водород-кремирующая граната");
+        add(ModItems.TURRET_CHIP.get(), "Турельный боевой чип");
+        add(ModItems.TURRET_LIGHT_PORTATIVE_PLACER.get(), "Портативная лёгкая десантная турель \'Нагваль\'");
+        add(ModItems.MACHINEGUN.get(), "'А.П. 17'");
+        add(ModBlocks.TROMBONE.get(), "Стационарная ракетная установка 'Тромбон'");
+        add(ModItems.AMMO_TURRET.get(), "20-мм турельный боеприпас");
+        add(ModItems.AMMO_TURRET_PIERCING.get(), "20-мм бронебойный боеприпас для турели");
+        add(ModItems.AMMO_TURRET_HOLLOW.get(), "20-мм экспансивный боеприпас для турели");
+        add(ModItems.AMMO_TURRET_FIRE.get(), "20-мм зажигательный боеприпас для турели");
+        add(ModItems.AMMO_TURRET_RADIO.get(), "20-мм боеприпас для турели с радиовзрывателем");
+        add(ModItems.MISSILE_100MM.get(), "100-мм ракета (малый заряд)");
+        add(ModItems.MISSILE_100MM_HE.get(), "100-мм фугасная ракета");
+        add(ModItems.MISSILE_100MM_FIRE.get(), "100-мм зажигательная ракета");
+
+        // Ресурсы и материалы
+        add(ModItems.IRON_PLATE.get(), "Железная пластина");
+        add(ModItems.TITANIUM_PLATE.get(), "Титановая пластина");
+        add(ModItems.STEEL_PLATE.get(), "Стальная пластина");
+        add(ModItems.TUNGSTEN_PLATE.get(), "Вольфрамовая пластина");
+        add(ModItems.LEAD_PLATE.get(), "Свинцовая пластина");
+        add(ModItems.ALUMINUM_PLATE.get(), "Алюминиевая пластина");
+        add(ModItems.INDUSTRIAL_COPPER_PLATE.get(), "Промышленномедная пластина");
+        add(ModItems.GOLD_PLATE.get(), "Золотая пластина");
+        add(ModItems.CAST_PICKAXE_IRON_BASE.get(), "Основа литой железной кирки");
+        add(ModItems.CAST_PICKAXE_STEEL_BASE.get(), "Основа литой стальной кирки");
+        add(ModItems.ROPE.get(), "Верёвка");
+        add(ModItems.WOODEN_HANDLE.get(), "Деревянная рукоять");
+        add(ModItems.FIRE_SMES.get(), "Огнеупорная смесь");
+        add(ModItems.DOLOMITE_SMES.get(), "Доломитовая смесь");
+        add(ModItems.CONGLOMERATE_CHUNK.get(), "Кусок конгломерата");
+        add(ModItems.HARD_ROCK.get(), "Твёрдая порода");
+        add(ModItems.DOLOMITE_CHUNK.get(), "Кусок доломита");
+        add(ModItems.LIMESTONE_CHUNK.get(), "Кусок известняка");
+        add(ModItems.BAUXITE_CHUNK.get(), "Кусок боксита");
+        add(ModItems.ASBESTOS.get(), "Асбест");
+        add(ModItems.CINNABAR.get(), "Киноварь");
+        add(ModItems.LIGNITE.get(), "Лигнит");
+        add(ModItems.FLUORITE.get(), "Флюорит");
+        add(ModItems.SEQUESTRUM.get(), "Селитра");
+        add(ModItems.SULFUR.get(), "Сера");
+        add(ModItems.CONGLOMERATE_POWDER.get(), "Порошок конгломерата");
+        add(ModItems.DOLOMITE_POWDER.get(), "Порошок доломита");
+        add(ModItems.LIMESTONE_POWDER.get(), "Порошок известняка");
+        add(ModItems.BAUXITE_POWDER.get(), "Порошок боксита");
+        add(ModItems.FUEL_ASH.get(), "Топливный пепел");
+        add(ModItems.TRASH.get(), "Мусор");
+        add(ModItems.SLAG.get(), "Шлак");
+        add(ModItems.BELT.get(), "Ремень");
+        add(ModItems.WIRE_COIL.get(), "Катушка медного провода");
+        add(ModItems.BEAM_PLACER.get(), "Установщик балок");
+        add(ModItems.POKER.get(), "Кочерга");
+        add(ModItems.SCREWDRIVER.get(), "Отвёртка");
+        add(ModItems.CROWBAR.get(), "Монтировка");
+        add(ModBlocks.LIGNITE_BLOCK.get(), "Блок лигнита");
+
+        // Природа и руды
+        add(ModBlocks.ASBESOTS_ORE.get(), "Асбестовая руда");
+        add(ModBlocks.LIGNITE_ORE.get(), "Лигнитовая руда");
+        add(ModBlocks.CINNABAR_ORE.get(), "Киноварная руда");
+        add(ModBlocks.CINNABAR_ORE_DEEPSLATE.get(), "Киновароносный глубинный сланец");
+        add(ModBlocks.FLUORITE_ORE.get(), "Флюоритовая руда");
+        add(ModBlocks.FLUORITE_ORE_DEEPSLATE.get(), "Флюоритоносный глубинный сланец");
+        add(ModBlocks.SEQUESTRUM_ORE.get(), "Селитровая руда");
+        add(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE.get(), "Селитроносный глубинный сланец");
+        add(ModBlocks.SULFUR_ORE.get(), "Серная руда");
+        add(ModBlocks.SULFUR_ORE_DEEPSLATE.get(), "Серноносный глубинный сланец");
+        add(ModBlocks.CONGLOMERATE.get(), "Конгломерат");
+        add(ModBlocks.DEPLETED_CONGLOMERATE.get(), "Истощённый конгломерат");
+        add(ModBlocks.DOLOMITE.get(), "Неочищенная доломитовая залежа");
+        add(ModBlocks.LIMESTONE.get(), "Неочищенная известняковая залежа");
+        add(ModBlocks.SULFUR_CLUSTER.get(), "Неочищенная серная залежа");
+        add(ModBlocks.BAUXITE.get(), "Неочищенная бокситовая залежа");
+        add(ModBlocks.MINERAL1.get(), "Сапфироносный кластер");
+        add(ModBlocks.MINERAL3.get(), "Глубинный сапфироносный кластер");
+        add(ModBlocks.BASALT_ROUGH.get(), "Грубый базальт");
+
+        // Яйца призыва
+        add(ModItems.DEPTH_WORM_SPAWN_EGG.get(), "Яйцо призыва глубинного червя");
+        add(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG.get(), "Яйцо призыва брутального глубинного червя");
+        add(ModItems.GRENADIER_ZOMBIE_SPAWN_EGG.get(), "Яйцо призыва зомби-гренадёра");
+
+        // Сущности
+        add("entity.trd.turret_light", "Лёгкая турель");
+        add("entity.trd.turret_light_linked", "Связанная лёгкая турель");
+        add("entity.trd.turret_bullet", "Пуля турели");
+        add("entity.trd.depth_worm", "Глубинный червь");
+        add("entity.trd.grenade_projectile", "Граната");
+        add("entity.trd.grenadehe_projectile", "Фугасная граната");
+        add("entity.trd.grenadefire_projectile", "Зажигательная граната");
+        add("entity.trd.grenadesmart_projectile", "Умная граната");
+        add("entity.trd.grenadeslime_projectile", "Слизевая граната");
+        add("entity.trd.grenade_if_projectile", "Ударная граната");
+        add("entity.trd.grenade_if_fire_projectile", "Зажигательная ударная граната");
+        add("entity.trd.grenade_if_slime_projectile", "Ударная слизевая граната");
+        add("entity.trd.grenade_if_he_projectile", "Фугасная ударная граната");
+        add("entity.trd.grenade_nuc_projectile", "Ядерная граната");
+
+        // Жидкостный идентификатор
+        add("item.trd.fluid_identifier", "Жидкостный идентификатор");
+        add("message.trd.selected_fluid", "Выбрано");
+        add("tooltip.trd.no_fluid", "Жидкость не выбрана");
+        add("tooltip.trd.shaft_material", "Материал");
+        add("tooltip.trd.max_speed", "Макс. скорость");
+        add("tooltip.trd.max_torque", "Макс. момент");
+        add("tooltip.trd.inertia", "Инерция");
+        add("message.trd.too_far_from_support", "Слишком длинный пролёт! Макс. расстояние от опоры для этого диаметра: %s бл.");
+
+        // Fluids
+        addFluidTranslations("hydrogen_peroxide", "Пероксид водорода", null, "Hydrogen Peroxide");
+        addFluidTranslations("sulfuric_acid", "Серная кислота", null, "Sulfuric Acid");
+        addFluidTranslations("natural_gas", "Природный газ", null, "Natural Gas");
+        addFluidTranslations("steam", "Пар", null, "Steam");
+        addFluidTranslations("low_pressure_steam", "Пар низкого давления", null, "Low Pressure Steam");
+        addFluidTranslations("water", "Вода", "Вода", "Water");
+        addFluidTranslations("lava", "Лава", "Лава", "Lava");
+    }
 }
