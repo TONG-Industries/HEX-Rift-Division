@@ -67,12 +67,6 @@ public class ModLangProvider extends LanguageProvider {
         add("itemGroup.trd.trd_recourses_tab", "Resources");
         add("itemGroup.trd.trd_nature_tab", "Nature");
 
-        // Fluid Pipes
-        add(ModBlocks.BRONZE_FLUID_PIPE.get(), "Bronze Fluid Pipe");
-        add(ModBlocks.STEEL_FLUID_PIPE.get(), "Steel Fluid Pipe");
-        add(ModBlocks.LEAD_FLUID_PIPE.get(), "Lead Fluid Pipe");
-        add(ModBlocks.TUNGSTEN_FLUID_PIPE.get(), "Tungsten Fluid Pipe");
-        add(ModBlocks.PAINTABLE_PIPE.get(), "Paintable Pipe");
 
         // Tooltips & Messages
         add("tooltip.trd.detminer.desc", "Breaks blocks in a natural blast pattern");
@@ -137,12 +131,6 @@ public class ModLangProvider extends LanguageProvider {
         add("item.trd.cast_pickaxe.desc.vein_miner_info", "Vein Miner: %s");
         add("item.trd.cast_pickaxe.desc.tunnel_miner", "Tunnel Miner: %s");
 
-        // Molds
-        add(ModItems.MOLD_INGOT.get(), "Ingot Mold");
-        add(ModItems.MOLD_PICKAXE.get(), "Pickaxe Mold");
-        add(ModItems.MOLD_EMPTY.get(), "Empty Mold");
-        add(ModItems.MOLD_NUGGET.get(), "Nugget Mold");
-        add(ModItems.MOLD_BLOCK.get(), "Block Mold");
 
         // Sequoia
         add(ModBlocks.SEQUOIA_BARK.get(), "Sequoia Bark");
@@ -160,15 +148,10 @@ public class ModLangProvider extends LanguageProvider {
         add(ModBlocks.SEQUOIA_SLAB.get(), "Sequoia Slab");
         add(ModBlocks.SEQUOIA_STAIRS.get(), "Sequoia Stairs");
 
-        // Protectors
-        add(ModItems.PROTECTOR_LEAD.get(), "Lead Protector");
-        add(ModItems.PROTECTOR_STEEL.get(), "Steel Protector");
-        add(ModItems.PROTECTOR_TUNGSTEN.get(), "Tungsten Protector");
 
         // Smelting & Casting
         add(ModBlocks.SMALL_SMELTER.get(), "Small Smelter");
         add(ModBlocks.SMELTER.get(), "Smelter");
-        add(ModBlocks.JERNOVA.get(), "Millstone");
         add(ModBlocks.CASTING_DESCENT.get(), "Casting Trough");
         add(ModBlocks.CASTING_POT.get(), "Casting Pot");
         add(ModItems.HEATER_ITEM.get(), "Heater");
@@ -185,17 +168,11 @@ public class ModLangProvider extends LanguageProvider {
         add(ModBlocks.CONVERTER_BLOCK.get(), "Energy Converter");
         add(ModBlocks.WIRE_COATED.get(), "Coated Copper Wire");
         add(ModBlocks.PAINTABLE_WIRE.get(), "Paintable Wire");
-        add(ModBlocks.CONNECTOR.get(), "Connector");
         add(ModBlocks.MEDIUM_CONNECTOR.get(), "Medium Connector");
         add(ModBlocks.LARGE_CONNECTOR.get(), "Large Connector");
         add(ModBlocks.SWITCH.get(), "Switch");
         add(ModBlocks.VALVE.get(), "Valve");
         add(ModBlocks.TURRET_LIGHT_PLACER.get(), "Light Landing Turret \'Nagual\'");
-
-        // Necrosis
-        add(ModBlocks.DEPTH_WORM_NEST.get(), "Depth Worm Nest");
-        add(ModBlocks.HIVE_SOIL.get(), "Depth Worm Hive Flesh");
-        add(ModBlocks.HIVE_ROOTS.get(), "Hive Roots");
 
         // Concrete Variants
         add(ModBlocks.CONCRETE.get(), "Concrete");
@@ -219,49 +196,40 @@ public class ModLangProvider extends LanguageProvider {
         add(ModBlocks.CONCRETE_TILE.get(), "Concrete Tile");
         add(ModBlocks.CONCRETE_TILE_SLAB.get(), "Concrete Tile Slab");
         add(ModBlocks.CONCRETE_TILE_STAIRS.get(), "Concrete Tile Stairs");
-        add(ModBlocks.CONCRETE_TILE_ALT.get(), "Alternative Concrete Tile");
-        add(ModBlocks.CONCRETE_TILE_ALT_SLAB.get(), "Alternative Concrete Tile Slab");
-        add(ModBlocks.CONCRETE_TILE_ALT_STAIRS.get(), "Alternative Concrete Tile Stairs");
-        add(ModBlocks.CONCRETE_TILE_ALT_BLUE.get(), "Blue Alternative Concrete Tile");
-        add(ModBlocks.CONCRETE_TILE_ALT_BLUE_SLAB.get(), "Blue Alternative Concrete Tile Slab");
-        add(ModBlocks.CONCRETE_TILE_ALT_BLUE_STAIRS.get(), "Blue Alternative Concrete Tile Stairs");
-        add(ModBlocks.CONCRETE_STRIPPED.get(), "Stripped Concrete");
-        add(ModBlocks.CONCRETE_STRIPPED_SLAB.get(), "Stripped Concrete Slab");
-        add(ModBlocks.CONCRETE_STRIPPED_STAIRS.get(), "Stripped Concrete Stairs");
-        add(ModBlocks.CONCRETE_REINFORCED.get(), "Reinforced Concrete");
-        add(ModBlocks.CONCRETE_REINFORCED_SLAB.get(), "Reinforced Concrete Slab");
-        add(ModBlocks.CONCRETE_REINFORCED_STAIRS.get(), "Reinforced Concrete Stairs");
-        add(ModBlocks.CONCRETE_REINFORCED_HEAVY.get(), "Heavy Reinforced Concrete");
-        add(ModBlocks.CONCRETE_REINFORCED_HEAVY_SLAB.get(), "Heavy Reinforced Concrete Slab");
-        add(ModBlocks.CONCRETE_REINFORCED_HEAVY_STAIRS.get(), "Heavy Reinforced Concrete Stairs");
-        add(ModBlocks.CONCRETE_NET.get(), "Concrete Net");
+        add(ModBlocks.CONCRETE_TILE_ALT.get(), "Faceted Concrete Tile");
+        add(ModBlocks.CONCRETE_TILE_ALT_SLAB.get(), "Faceted Concrete Tile Slab");
+        add(ModBlocks.CONCRETE_TILE_ALT_STAIRS.get(), "Faceted Concrete Tile Stairs");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE.get(), "Painted Faceted Concrete Tile");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE_SLAB.get(), "Painted Faceted Concrete Tile Slab");
+        add(ModBlocks.CONCRETE_TILE_ALT_BLUE_STAIRS.get(), "Painted Faceted Concrete Tile Stairs");
+        add(ModBlocks.CONCRETE_STRIPPED.get(), "Light Textured Concrete");
+        add(ModBlocks.CONCRETE_STRIPPED_SLAB.get(), "Light Textured Concrete Slab");
+        add(ModBlocks.CONCRETE_STRIPPED_STAIRS.get(), "Light Textured Concrete Stairs");
+        add(ModBlocks.CONCRETE_REINFORCED.get(), "Gray Textured Concrete");
+        add(ModBlocks.CONCRETE_REINFORCED_SLAB.get(), "Gray Textured Concrete Slab");
+        add(ModBlocks.CONCRETE_REINFORCED_STAIRS.get(), "Gray Textured Concrete Stairs");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY.get(), "Dark Textured Concrete");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY_SLAB.get(), "Dark Textured Concrete Slab");
+        add(ModBlocks.CONCRETE_REINFORCED_HEAVY_STAIRS.get(), "Dark Textured Concrete Stairs");
+        add(ModBlocks.CONCRETE_NET.get(), "Reinforced Concrete");
 
         // Bricks
         add(ModBlocks.FIREBRICK_BLOCK.get(), "Firebrick Block");
         add(ModBlocks.FIREBRICK_SLAB.get(), "Firebrick Slab");
         add(ModBlocks.FIREBRICK_STAIRS.get(), "Firebrick Stairs");
-        add(ModBlocks.REINFORCEDBRICK_BLOCK.get(), "Reinforced Brick Block");
-        add(ModBlocks.REINFORCEDBRICK_SLAB.get(), "Reinforced Brick Slab");
-        add(ModBlocks.REINFORCEDBRICK_STAIRS.get(), "Reinforced Brick Stairs");
+        add(ModBlocks.REINFORCEDBRICK_BLOCK.get(), "Dolomite Brick Block");
+        add(ModBlocks.REINFORCEDBRICK_SLAB.get(), "Dolomite Brick Slab");
+        add(ModBlocks.REINFORCEDBRICK_STAIRS.get(), "Dolomite Brick Stairs");
         add(ModItems.FIREBRICK.get(), "Firebrick");
-        add(ModItems.REINFORCEDBRICK.get(), "Reinforced Brick");
 
         // Decorative Blocks
         add(ModBlocks.CRATE.get(), "Crate");
         add(ModBlocks.CRATE_AMMO.get(), "Ammo Crate");
         add(ModBlocks.BEAM_BLOCK.get(), "Beam Block");
         add(ModBlocks.STEEL_PROPS.get(), "Steel Props");
-        add(ModBlocks.DECO_STEEL.get(), "Decorative Steel");
-        add(ModBlocks.DECO_STEEL_DARK.get(), "Dark Decorative Steel");
-        add(ModBlocks.DECO_STEEL_SMOG.get(), "Smog Decorative Steel");
-        add(ModBlocks.DECO_LEAD.get(), "Decorative Lead");
-        add(ModBlocks.DECO_BEAM.get(), "Decorative Beam");
         add(ModBlocks.DIRT_ROUGH.get(), "Rough Dirt");
         add(ModBlocks.ROUND_LAMP.get(), "Round Lamp");
         add(ModBlocks.MORY_BLOCK.get(), "Mory Block");
-        add(ModBlocks.ANTON_CHIGUR.get(), "Anton Chigur");
-        add(ModBlocks.MINERAL_BLOCK2.get(), "Mineral Block 2");
-        add(ModBlocks.MINERAL_TILE.get(), "Mineral Tile");
         add(ModBlocks.DOLOMITE_TILE.get(), "Dolomite Tile");
         add(ModBlocks.TILE_LIGHT.get(), "Light Tile");
         add(ModBlocks.SULFUR_TILE.get(), "Sulfur Tile");
@@ -296,7 +264,6 @@ public class ModLangProvider extends LanguageProvider {
         add(ModItems.PULLEY.get(), "Pulley");
         add(ModItems.FLYWHEEL_LIGHT.get(), "Light Flywheel");
         add(ModItems.COPPER_ROTOR.get(), "Copper Rotor");
-        add(ModItems.COPPER_COIL.get(), "Copper Coil");
         add(ModBlocks.BEARING_BLOCK.get(), "Bearing");
         add(ModBlocks.MOTOR_ELECTRO.get(), "Electric Motor");
         add(ModBlocks.TACHOMETER.get(), "Tachometer");
@@ -313,9 +280,7 @@ public class ModLangProvider extends LanguageProvider {
         add(ModItems.INFINITE_FLUID_BARREL.get(), "Infinite Fluid Barrel");
         add(ModBlocks.FUEL_TANK_SMALL.get(), "Small Fuel Tank");
         add(ModBlocks.FUEL_TANK_BIG.get(), "Big Fuel Tank");
-        add(ModItems.BOILER_ITEM.get(), "Boiler");
         add(ModBlocks.LOW_PRESSURE_STEAM_CONDENSER.get(), "Low Pressure Steam Condenser");
-        add(ModBlocks.WATER_PUMP_ITEM.get(), "Water Pump");
 
         // Conveyors & Storage
         add(ModBlocks.CONVEYOR_VSTAVSHIK.get(), "Conveyor Inserter");
@@ -327,32 +292,17 @@ public class ModLangProvider extends LanguageProvider {
         add(ModItems.CAST_PICKAXE_IRON.get(), "Cast Iron Pickaxe");
         add(ModItems.CAST_PICKAXE_STEEL.get(), "Cast Steel Pickaxe");
         add(ModItems.GRENADIER_GOGGLES.get(), "Grenadier Goggles");
-        add(ModItems.GRAVITY_GRENADE.get(), "Gravity Grenade");
         add(ModBlocks.DET_MINER.get(), "Mining Charge");
         add(ModItems.DETONATOR.get(), "Detonator");
         add(ModItems.MULTI_DETONATOR.get(), "Multi-Detonator");
         add(ModItems.RANGE_DETONATOR.get(), "Long-Range Detonator");
-        add(ModItems.MORY_LAH.get(), "Mory Lah");
-        add(ModItems.GRENADE.get(), "Grenade");
-        add(ModItems.GRENADEHE.get(), "High Explosive Grenade");
-        add(ModItems.GRENADEFIRE.get(), "Incendiary Grenade");
-        add(ModItems.GRENADESMART.get(), "Smart Grenade");
-        add(ModItems.GRENADESLIME.get(), "Slime Grenade");
-        add(ModItems.GRENADE_IF.get(), "Impact Grenade");
-        add(ModItems.GRENADE_IF_HE.get(), "HE Impact Grenade");
-        add(ModItems.GRENADE_IF_SLIME.get(), "Slime Impact Grenade");
-        add(ModItems.GRENADE_IF_FIRE.get(), "Incendiary Impact Grenade");
-        add(ModItems.GRENADE_NUC.get(), "Nuclear Grenade");
-        add(ModItems.TURRET_CHIP.get(), "Turret Chip");
         add(ModItems.TURRET_LIGHT_PORTATIVE_PLACER.get(), "Portable Light Turret");
         add(ModItems.MACHINEGUN.get(), "\'A.P. 17\'");
-        add(ModBlocks.TROMBONE.get(), "Trombone");
         add(ModItems.AMMO_TURRET.get(), "20mm Turret Round");
         add(ModItems.AMMO_TURRET_PIERCING.get(), "20mm Armor-Piercing Turret Round");
         add(ModItems.AMMO_TURRET_HOLLOW.get(), "20mm Hollow-Point Turret Round");
         add(ModItems.AMMO_TURRET_FIRE.get(), "20mm Incendiary Turret Round");
         add(ModItems.AMMO_TURRET_RADIO.get(), "20mm Turret Round with Radio Fuze");
-        add(ModItems.MISSILE_100MM.get(), "100mm Missile");
         add(ModItems.MISSILE_100MM_HE.get(), "100mm HE Missile");
         add(ModItems.MISSILE_100MM_FIRE.get(), "100mm Incendiary Missile");
 
@@ -380,7 +330,6 @@ public class ModLangProvider extends LanguageProvider {
         add(ModItems.CINNABAR.get(), "Cinnabar");
         add(ModItems.LIGNITE.get(), "Lignite");
         add(ModItems.FLUORITE.get(), "Fluorite");
-        add(ModItems.SEQUESTRUM.get(), "Sequestrum");
         add(ModItems.SULFUR.get(), "Sulfur");
         add(ModItems.CONGLOMERATE_POWDER.get(), "Conglomerate Powder");
         add(ModItems.DOLOMITE_POWDER.get(), "Dolomite Powder");
@@ -390,38 +339,100 @@ public class ModLangProvider extends LanguageProvider {
         add(ModItems.TRASH.get(), "Trash");
         add(ModItems.SLAG.get(), "Slag");
         add(ModItems.BELT.get(), "Belt");
-        add(ModItems.WIRE_COIL.get(), "Wire Coil");
         add(ModItems.BEAM_PLACER.get(), "Beam Placer");
         add(ModItems.POKER.get(), "Poker");
         add(ModItems.SCREWDRIVER.get(), "Screwdriver");
         add(ModItems.CROWBAR.get(), "Crowbar");
         add(ModBlocks.LIGNITE_BLOCK.get(), "Lignite Block");
 
-        // Nature & Ores
+        // Ores & nature (updated)
         add(ModBlocks.ASBESOTS_ORE.get(), "Asbestos Ore");
         add(ModBlocks.LIGNITE_ORE.get(), "Lignite Ore");
         add(ModBlocks.CINNABAR_ORE.get(), "Cinnabar Ore");
         add(ModBlocks.CINNABAR_ORE_DEEPSLATE.get(), "Deepslate Cinnabar Ore");
         add(ModBlocks.FLUORITE_ORE.get(), "Fluorite Ore");
         add(ModBlocks.FLUORITE_ORE_DEEPSLATE.get(), "Deepslate Fluorite Ore");
-        add(ModBlocks.SEQUESTRUM_ORE.get(), "Sequestrum Ore");
+        add(ModBlocks.SEQUESTRUM_ORE.get(), "Saltpeter Ore");
+
         add(ModBlocks.SEQUESTRUM_ORE_DEEPSLATE.get(), "Deepslate Sequestrum Ore");
         add(ModBlocks.SULFUR_ORE.get(), "Sulfur Ore");
         add(ModBlocks.SULFUR_ORE_DEEPSLATE.get(), "Deepslate Sulfur Ore");
         add(ModBlocks.CONGLOMERATE.get(), "Conglomerate");
         add(ModBlocks.DEPLETED_CONGLOMERATE.get(), "Depleted Conglomerate");
-        add(ModBlocks.DOLOMITE.get(), "Dolomite");
-        add(ModBlocks.LIMESTONE.get(), "Limestone");
-        add(ModBlocks.SULFUR_CLUSTER.get(), "Sulfur Cluster");
-        add(ModBlocks.BAUXITE.get(), "Bauxite");
-        add(ModBlocks.MINERAL1.get(), "Mineral 1");
-        add(ModBlocks.MINERAL3.get(), "Mineral 3");
+        add(ModBlocks.DOLOMITE.get(), "Unrefined Dolomite Deposit");
+        add(ModBlocks.LIMESTONE.get(), "Unrefined Limestone Deposit");
+        add(ModBlocks.SULFUR_CLUSTER.get(), "Unrefined Sulfur Deposit");
+        add(ModBlocks.BAUXITE.get(), "Unrefined Bauxite Deposit");
+        add(ModBlocks.MINERAL1.get(), "Sapphire-Bearing Cluster");
+        add(ModBlocks.MINERAL3.get(), "Deep Sapphire-Bearing Cluster");
         add(ModBlocks.BASALT_ROUGH.get(), "Rough Basalt");
 
         // Spawn Eggs
         add(ModItems.DEPTH_WORM_SPAWN_EGG.get(), "Depth Worm Spawn Egg");
         add(ModItems.DEPTH_WORM_BRUTAL_SPAWN_EGG.get(), "Brutal Depth Worm Spawn Egg");
         add(ModItems.GRENADIER_ZOMBIE_SPAWN_EGG.get(), "Grenadier Zombie Spawn Egg");
+
+
+        add(ModBlocks.ANTON_CHIGUR.get(), "Anton Chigur Block");
+        add(ModBlocks.MINERAL_BLOCK2.get(), "Depth Sapphire Decorative Block");
+        add(ModBlocks.MINERAL_TILE.get(), "Depth Sapphire Tile");
+        add(ModBlocks.DECO_STEEL.get(), "Decorative Steel Block");
+        add(ModBlocks.DECO_STEEL_DARK.get(), "Dark Decorative Steel Block");
+        add(ModBlocks.DECO_STEEL_SMOG.get(), "Sooty Decorative Steel Block");
+        add(ModBlocks.DECO_LEAD.get(), "Decorative Lead Block");
+        add(ModBlocks.DECO_BEAM.get(), "Decorative Industrial Block");
+        add(ModItems.WIRE_COIL.get(), "Copper Wire Spool");
+        add(ModItems.COPPER_COIL.get(), "Stator Copper Coil");
+        add(ModBlocks.CONNECTOR.get(), "Small Connector");
+        add(ModBlocks.ELECTRO_FURNACE.get(), "Electric Furnace");
+        add(ModItems.PROTECTOR_LEAD.get(), "Lead Internal Wall Protector");
+        add(ModItems.PROTECTOR_STEEL.get(), "Steel Internal Wall Protector");
+        add(ModItems.PROTECTOR_TUNGSTEN.get(), "Tungsten Internal Wall Protector");
+
+        // Fluid pipes
+        add(ModBlocks.BRONZE_FLUID_PIPE.get(), "Bronze Fluid Pipe");
+        add(ModBlocks.STEEL_FLUID_PIPE.get(), "Steel Fluid Pipe");
+        add(ModBlocks.LEAD_FLUID_PIPE.get(), "Lead Fluid Pipe");
+        add(ModBlocks.TUNGSTEN_FLUID_PIPE.get(), "Tungsten Fluid Pipe");
+        add(ModBlocks.PAINTABLE_PIPE.get(), "Paintable Fluid Pipe");
+
+        // Machines
+        add(ModItems.BOILER_ITEM.get(), "Copper Liquid Boiler");
+        add(ModBlocks.WATER_PUMP_ITEM.get(), "Liquid Pump");
+
+        // Casting molds
+        add(ModItems.MOLD_INGOT.get(), "Ingot Casting Mold");
+        add(ModItems.MOLD_PICKAXE.get(), "Pickaxe Casting Mold");
+        add(ModItems.MOLD_EMPTY.get(), "Empty Casting Mold");
+        add(ModItems.MOLD_NUGGET.get(), "Nugget Casting Mold");
+        add(ModItems.MOLD_BLOCK.get(), "Block Casting Mold");
+        add(ModItems.MOLD_PLATE.get(), "Plate Casting Mold");
+
+        // Misc blocks & items
+        add(ModBlocks.JERNOVA.get(), "Stone Millstone");
+        add(ModItems.MORY_LAH.get(), "Inconceivably Suspicious Artifact Possessing the Power of a Thousand Suns");
+        add(ModItems.GRENADE.get(), "Grenade");
+        add(ModItems.GRENADEHE.get(), "High Explosive Grenade");
+        add(ModItems.GRENADEFIRE.get(), "Incendiary Grenade");
+        add(ModItems.GRENADESMART.get(), "Smart Grenade");
+        add(ModItems.GRENADESLIME.get(), "Sticky Grenade");
+        add(ModItems.GRENADE_IF.get(), "Impact Grenade");
+        add(ModItems.GRENADE_IF_HE.get(), "HE Impact Grenade");
+        add(ModItems.GRENADE_IF_SLIME.get(), "Sticky Impact Grenade");
+        add(ModItems.GRENADE_IF_FIRE.get(), "Incendiary Impact Grenade");
+        add(ModItems.GRENADE_NUC.get(), "Hydrogen-Cremating Grenade");
+        add(ModItems.TURRET_CHIP.get(), "Turret Combat Chip");
+        add(ModItems.GRAVITY_GRENADE.get(), "Gravi-Grenade");
+        add(ModItems.MISSILE_100MM.get(), "100mm Missile (Small Charge)");
+        add(ModBlocks.TROMBONE.get(), "Stationary Rocket Launcher 'Trombone'");
+        add(ModItems.REINFORCEDBRICK.get(), "Dolomite Brick");
+        add(ModItems.SEQUESTRUM.get(), "Saltpeter");
+
+
+        // Necrosis
+        add(ModBlocks.DEPTH_WORM_NEST.get(), "Depth Worm Hive Node");
+        add(ModBlocks.HIVE_SOIL.get(), "Depth Worm Hive Flesh");
+        add(ModBlocks.HIVE_ROOTS.get(), "Depth Worm Hive Nerve Endings");
 
         // Entities
         add("entity.trd.turret_light", "Light Turret");
@@ -542,6 +553,7 @@ public class ModLangProvider extends LanguageProvider {
         add(ModItems.MOLD_EMPTY.get(), "Пустая литейная форма");
         add(ModItems.MOLD_NUGGET.get(), "Литейная форма самородка");
         add(ModItems.MOLD_BLOCK.get(), "Литейная форма блока");
+        add(ModItems.MOLD_PLATE.get(), "Литейная форма пластины");
 
         // Плавильные установки
         add(ModBlocks.SMALL_SMELTER.get(), "Малая плавильня");
@@ -600,9 +612,9 @@ public class ModLangProvider extends LanguageProvider {
         add(ModBlocks.FIREBRICK_BLOCK.get(), "Блок огнеупорного кирпича");
         add(ModBlocks.FIREBRICK_SLAB.get(), "Плита из огнеупорного кирпича");
         add(ModBlocks.FIREBRICK_STAIRS.get(), "Ступени из огнеупорного кирпича");
-        add(ModBlocks.REINFORCEDBRICK_BLOCK.get(), "Блок армированного кирпича");
-        add(ModBlocks.REINFORCEDBRICK_SLAB.get(), "Плита из армированного кирпича");
-        add(ModBlocks.REINFORCEDBRICK_STAIRS.get(), "Ступени из армированного кирпича");
+        add(ModBlocks.REINFORCEDBRICK_BLOCK.get(), "Блок доломитового кирпича");
+        add(ModBlocks.REINFORCEDBRICK_SLAB.get(), "Плита из доломитового кирпича");
+        add(ModBlocks.REINFORCEDBRICK_STAIRS.get(), "Ступени из доломитового кирпича");
         add(ModItems.FIREBRICK.get(), "Огнеупорный кирпич");
         add(ModItems.REINFORCEDBRICK.get(), "Доломитовый кирпич");
 
@@ -619,7 +631,7 @@ public class ModLangProvider extends LanguageProvider {
         add(ModBlocks.DIRT_ROUGH.get(), "Грубая земля");
         add(ModBlocks.ROUND_LAMP.get(), "Круглая лампа");
         add(ModBlocks.MORY_BLOCK.get(), "Блок Мори");
-        add(ModBlocks.ANTON_CHIGUR.get(), "Блок Антон Чигура");
+        add(ModBlocks.ANTON_CHIGUR.get(), "Блок Антона Чигура");
         add(ModBlocks.MINERAL_BLOCK2.get(), "Декоративный блок из глубинного сапфира");
         add(ModBlocks.MINERAL_TILE.get(), "Плитка из глубинного сапфира");
         add(ModBlocks.DOLOMITE_TILE.get(), "Доломитовая плитка");
